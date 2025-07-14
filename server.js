@@ -12,11 +12,44 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// In-memory storage for listings and purchases
-let listings = [];
-let purchases = [];
-let nextId = 1;
-let nextPurchaseId = 1;
+// File-based storage for listings and purchases
+const fs = require('fs');
+const DATA_FILE = './data.json';
+
+// Load data from file or initialize empty data
+function loadData() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      return data;
+    }
+  } catch (error) {
+    console.log('Error loading data:', error);
+  }
+  
+  return {
+    listings: [],
+    purchases: [],
+    nextId: 1,
+    nextPurchaseId: 1
+  };
+}
+
+// Save data to file
+function saveData(data) {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Error saving data:', error);
+  }
+}
+
+// Initialize data
+let data = loadData();
+let listings = data.listings;
+let purchases = data.purchases;
+let nextId = data.nextId;
+let nextPurchaseId = data.nextPurchaseId;
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -45,6 +78,15 @@ app.post('/api/listings', upload.array('images', 5), (req, res) => {
     };
 
     listings.push(newListing);
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      nextId,
+      nextPurchaseId
+    });
+    
     res.json(newListing);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -102,6 +144,14 @@ app.post('/api/purchases', (req, res) => {
     };
     
     purchases.push(newPurchase);
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      nextId,
+      nextPurchaseId
+    });
     
     // In a real application, you would:
     // 1. Process the payment with a payment processor
