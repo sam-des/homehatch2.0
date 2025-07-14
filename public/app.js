@@ -5,7 +5,37 @@ let listings = [];
 document.addEventListener('DOMContentLoaded', function() {
     loadListings();
     setupForm();
+    setupScrollGradient();
 });
+
+function setupScrollGradient() {
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollProgress = Math.min(scrolled / maxScroll, 1);
+        
+        // Interpolate from purple (#667eea, #764ba2) to red (#ff6b6b, #ee5a24)
+        const startColor1 = { r: 102, g: 126, b: 234 }; // #667eea
+        const startColor2 = { r: 118, g: 75, b: 162 };  // #764ba2
+        const endColor1 = { r: 255, g: 107, b: 107 };   // #ff6b6b
+        const endColor2 = { r: 238, g: 90, b: 36 };     // #ee5a24
+        
+        const color1 = {
+            r: Math.round(startColor1.r + (endColor1.r - startColor1.r) * scrollProgress),
+            g: Math.round(startColor1.g + (endColor1.g - startColor1.g) * scrollProgress),
+            b: Math.round(startColor1.b + (endColor1.b - startColor1.b) * scrollProgress)
+        };
+        
+        const color2 = {
+            r: Math.round(startColor2.r + (endColor2.r - startColor2.r) * scrollProgress),
+            g: Math.round(startColor2.g + (endColor2.g - startColor2.g) * scrollProgress),
+            b: Math.round(startColor2.b + (endColor2.b - startColor2.b) * scrollProgress)
+        };
+        
+        const gradient = `linear-gradient(135deg, rgb(${color1.r}, ${color1.g}, ${color1.b}) 0%, rgb(${color2.r}, ${color2.g}, ${color2.b}) 100%)`;
+        document.body.style.background = gradient;
+    });
+}
 
 async function loadListings() {
     try {
