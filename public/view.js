@@ -132,7 +132,10 @@ function renderListings() {
                     <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg">
                         👁️ View Details
                     </button>
-                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg">📧 Contact</button>` : ''}
+                    <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg">
+                        💰 Purchase
+                    </button>
+                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg">📧 Contact</button>` : ''}
                 </div>
             </div>
         </div>
@@ -219,4 +222,85 @@ function contactSeller(email, propertyTitle) {
     const subject = encodeURIComponent(`Inquiry about: ${propertyTitle}`);
     const body = encodeURIComponent(`Hi,\n\nI'm interested in your rental property "${propertyTitle}". Could you please provide more information?\n\nThanks!`);
     window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+}
+
+function openPurchaseModal(listingId, title, price) {
+    document.getElementById('purchasePropertyTitle').textContent = title;
+    document.getElementById('purchasePropertyPrice').textContent = `$${price}/month`;
+    document.getElementById('purchaseModal').classList.remove('hidden');
+    
+    // Store listing ID for form submission
+    document.getElementById('purchaseForm').dataset.listingId = listingId;
+    
+    // Setup form handlers
+    setupPurchaseForm();
+}
+
+function closePurchaseModal() {
+    document.getElementById('purchaseModal').classList.add('hidden');
+    document.getElementById('purchaseForm').reset();
+}
+
+function setupPurchaseForm() {
+    const form = document.getElementById('purchaseForm');
+    
+    // Format card number input
+    document.getElementById('cardNumber').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        let formattedInputValue = value.match(/.{1,4}/g)?.join(' ') || value;
+        e.target.value = formattedInputValue;
+    });
+    
+    // Format expiry date input
+    document.getElementById('expiryDate').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 2) {
+            value = value.substring(0,2) + '/' + value.substring(2,4);
+        }
+        e.target.value = value;
+    });
+    
+    // CVV input restriction
+    document.getElementById('cvv').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    });
+    
+    form.removeEventListener('submit', handlePurchaseSubmit);
+    form.addEventListener('submit', handlePurchaseSubmit);
+}
+
+async function handlePurchaseSubmit(e) {
+    e.preventDefault();
+    
+    const formData = {
+        listingId: e.target.dataset.listingId,
+        buyer: {
+            firstName: document.getElementById('buyerFirstName').value,
+            lastName: document.getElementById('buyerLastName').value,
+            age: parseInt(document.getElementById('buyerAge').value),
+            email: document.getElementById('buyerEmail').value,
+            phone: document.getElementById('buyerPhone').value,
+            address: document.getElementById('buyerAddress').value
+        },
+        payment: {
+            cardType: document.getElementById('cardType').value,
+            cardNumber: document.getElementById('cardNumber').value.replace(/\s/g, ''),
+            expiryDate: document.getElementById('expiryDate').value,
+            cvv: document.getElementById('cvv').value,
+            cardholderName: document.getElementById('cardholderName').value
+        },
+        purchaseDate: new Date().toISOString()
+    };
+    
+    try {
+        const response = await axios.post('/api/purchases', formData);
+        
+        if (response.status === 200) {
+            alert('🎉 Purchase completed successfully! You will receive a confirmation email shortly.');
+            closePurchaseModal();
+        }
+    } catch (error) {
+        console.error('Purchase error:', error);
+        alert('❌ Purchase failed. Please check your information and try again.');
+    }
 }

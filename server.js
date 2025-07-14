@@ -12,9 +12,11 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// In-memory storage for listings
+// In-memory storage for listings and purchases
 let listings = [];
+let purchases = [];
 let nextId = 1;
+let nextPurchaseId = 1;
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -26,9 +28,6 @@ const upload = multer({ storage });
 // API Routes
 app.post('/api/listings', upload.array('images', 5), (req, res) => {
   try {
-    const { title, address, price, description, amenities, contact } = req.body;
-    const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
-
     const { title, address, country, price, description, amenities, contact } = req.body;
     const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
 
@@ -55,6 +54,74 @@ app.post('/api/listings', upload.array('images', 5), (req, res) => {
 app.get('/api/listings', (req, res) => {
   try {
     res.json(listings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/purchases', (req, res) => {
+  try {
+    const { listingId, buyer, payment, purchaseDate } = req.body;
+    
+    // Find the listing
+    const listing = listings.find(l => l._id == listingId);
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    
+    // Validate buyer age
+    if (buyer.age < 18) {
+      return res.status(400).json({ error: 'Buyer must be at least 18 years old' });
+    }
+    
+    // Create purchase record (in real app, you'd process payment here)
+    const newPurchase = {
+      _id: nextPurchaseId++,
+      listingId: parseInt(listingId),
+      listing: {
+        title: listing.title,
+        address: listing.address,
+        country: listing.country,
+        price: listing.price
+      },
+      buyer: {
+        firstName: buyer.firstName,
+        lastName: buyer.lastName,
+        age: buyer.age,
+        email: buyer.email,
+        phone: buyer.phone,
+        address: buyer.address
+      },
+      payment: {
+        cardType: payment.cardType,
+        cardLast4: payment.cardNumber.slice(-4), // Only store last 4 digits
+        cardholderName: payment.cardholderName
+      },
+      purchaseDate: purchaseDate,
+      status: 'completed'
+    };
+    
+    purchases.push(newPurchase);
+    
+    // In a real application, you would:
+    // 1. Process the payment with a payment processor
+    // 2. Send confirmation emails
+    // 3. Update listing availability
+    
+    res.json({ 
+      success: true, 
+      purchaseId: newPurchase._id,
+      message: 'Purchase completed successfully'
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/purchases', (req, res) => {
+  try {
+    res.json(purchases);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
