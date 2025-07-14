@@ -16,7 +16,13 @@
 </head>
 <body>
     <div id="app" class="p-6 max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-4">HomeHatch - List Your Rental</h1>
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">HomeHatch - List Your Rental</h1>
+            <div class="space-x-4">
+                <a href="/" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">List Property</a>
+                <a href="/view" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Browse Rentals</a>
+            </div>
+        </div>
         
         <form id="listingForm" class="grid grid-cols-1 gap-4 mb-8">
             <input id="title" name="title" placeholder="Title" class="p-2 border border-gray-300 rounded" required>
@@ -25,6 +31,14 @@
             <textarea id="description" name="description" placeholder="Description" class="p-2 border border-gray-300 rounded" required></textarea>
             <input id="amenities" name="amenities" placeholder="Amenities (comma-separated)" class="p-2 border border-gray-300 rounded" required>
             <input id="images" type="file" multiple class="p-2 border border-gray-300 rounded" required>
+            
+            <div class="border-t pt-4">
+                <h3 class="text-lg font-semibold mb-3">Contact Information</h3>
+                <input id="contactName" name="contactName" placeholder="Your Name" class="p-2 border border-gray-300 rounded mb-2" required>
+                <input id="contactEmail" name="contactEmail" type="email" placeholder="Your Email" class="p-2 border border-gray-300 rounded mb-2" required>
+                <input id="contactPhone" name="contactPhone" type="tel" placeholder="Your Phone Number" class="p-2 border border-gray-300 rounded mb-2" required>
+            </div>
+            
             <button type="submit" class="bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Submit Listing</button>
         </form>
 

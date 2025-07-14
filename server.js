@@ -1,7 +1,6 @@
 
 const express = require('express');
 const multer = require('multer');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
@@ -14,23 +13,9 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/homehatch', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-// Listing schema
-const listingSchema = new mongoose.Schema({
-  title: String,
-  address: String,
-  price: Number,
-  description: String,
-  amenities: [String],
-  images: [String],
-});
-
-const Listing = mongoose.model('Listing', listingSchema);
+// In-memory storage for listings
+let listings = [];
+let nextId = 1;
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -40,30 +25,32 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // API Routes
-app.post('/api/listings', upload.array('images', 5), async (req, res) => {
+app.post('/api/listings', upload.array('images', 5), (req, res) => {
   try {
-    const { title, address, price, description, amenities } = req.body;
+    const { title, address, price, description, amenities, contact } = req.body;
     const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
 
-    const newListing = new Listing({
+    const newListing = {
+      _id: nextId++,
       title,
       address,
-      price,
+      price: parseFloat(price),
       description,
       amenities: JSON.parse(amenities),
       images: imagePaths,
-    });
+      contact: JSON.parse(contact),
+      createdAt: new Date(),
+    };
     
-    await newListing.save();
+    listings.push(newListing);
     res.json(newListing);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/listings', async (req, res) => {
+app.get('/api/listings', (req, res) => {
   try {
-    const listings = await Listing.find();
     res.json(listings);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -73,6 +60,10 @@ app.get('/api/listings', async (req, res) => {
 // Serve frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/view', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'view.html'));
 });
 
 // Health check endpoint

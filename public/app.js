@@ -69,6 +69,11 @@ function setupForm() {
         formData.append('amenities', JSON.stringify(
             document.getElementById('amenities').value.split(',').map(a => a.trim())
         ));
+        formData.append('contact', JSON.stringify({
+            name: document.getElementById('contactName').value,
+            email: document.getElementById('contactEmail').value,
+            phone: document.getElementById('contactPhone').value
+        }));
         
         try {
             await axios.post('/api/listings', formData, {
