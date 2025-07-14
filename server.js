@@ -69,6 +69,17 @@ app.get('/api/listings', async (req, res) => {
   }
 });
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'HomeHatch API Server', 
+    endpoints: {
+      health: '/health',
+      listings: '/api/listings'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
