@@ -1,0 +1,41 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeHatch - Rental Listings</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="p-6 max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-4">HomeHatch - List Your Rental</h1>
+        
+        <form id="listingForm" class="grid grid-cols-1 gap-4 mb-8">
+            <input id="title" name="title" placeholder="Title" class="p-2 border border-gray-300 rounded" required>
+            <input id="address" name="address" placeholder="Address" class="p-2 border border-gray-300 rounded" required>
+            <input id="price" name="price" type="number" placeholder="Price" class="p-2 border border-gray-300 rounded" required>
+            <textarea id="description" name="description" placeholder="Description" class="p-2 border border-gray-300 rounded" required></textarea>
+            <input id="amenities" name="amenities" placeholder="Amenities (comma-separated)" class="p-2 border border-gray-300 rounded" required>
+            <input id="images" type="file" multiple class="p-2 border border-gray-300 rounded" required>
+            <button type="submit" class="bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Submit Listing</button>
+        </form>
+
+        <hr class="my-6">
+
+        <h2 class="text-2xl font-semibold mb-4">Current Listings</h2>
+        <div id="listings" class="grid md:grid-cols-2 gap-4">
+            <!-- Listings will be populated here -->
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

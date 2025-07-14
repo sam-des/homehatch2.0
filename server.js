@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB connection
 mongoose.connect('mongodb://127.0.0.1:27017/homehatch', {
@@ -69,15 +70,9 @@ app.get('/api/listings', async (req, res) => {
   }
 });
 
-// Root route
+// Serve frontend
 app.get('/', (req, res) => {
-  res.json({ 
-    message: 'HomeHatch API Server', 
-    endpoints: {
-      health: '/health',
-      listings: '/api/listings'
-    }
-  });
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Health check endpoint
