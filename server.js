@@ -29,10 +29,14 @@ app.post('/api/listings', upload.array('images', 5), (req, res) => {
     const { title, address, price, description, amenities, contact } = req.body;
     const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
 
+    const { title, address, country, price, description, amenities, contact } = req.body;
+    const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
+
     const newListing = {
       _id: nextId++,
       title,
       address,
+      country,
       price: parseFloat(price),
       description,
       amenities: JSON.parse(amenities),

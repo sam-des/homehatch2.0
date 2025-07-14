@@ -76,6 +76,10 @@ function renderListings() {
                     <span class="text-sm mr-1">📍</span>
                     ${listing.address}
                 </p>
+                <p class="text-gray-500 mb-2 flex items-center text-sm">
+                    <span class="mr-1">🌍</span>
+                    ${listing.country}
+                </p>
                 <p class="text-gray-700 mb-4 text-sm leading-relaxed">${listing.description}</p>
                 
                 <div class="mb-4">
@@ -128,6 +132,7 @@ function setupForm() {
         // Add other form fields
         formData.append('title', document.getElementById('title').value);
         formData.append('address', document.getElementById('address').value);
+        formData.append('country', document.getElementById('country').value);
         formData.append('price', document.getElementById('price').value);
         formData.append('description', document.getElementById('description').value);
         formData.append('amenities', JSON.stringify(

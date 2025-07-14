@@ -87,6 +87,10 @@ function renderListings() {
                         <span class="text-lg mr-2">📍</span>
                         ${listing.address}
                     </p>
+                    <p class="text-gray-500 flex items-center text-sm mt-1">
+                        <span class="text-sm mr-2">🌍</span>
+                        ${listing.country}
+                    </p>
                 </div>
                 
                 <p class="text-gray-700 mb-6 leading-relaxed">${listing.description}</p>
@@ -186,6 +190,7 @@ function viewDetails(listingId) {
                 
                 <div class="space-y-4">
                     <div><strong>Address:</strong> ${listing.address}</div>
+                    <div><strong>Country:</strong> ${listing.country}</div>
                     <div><strong>Price:</strong> $${listing.price}</div>
                     <div><strong>Description:</strong> ${listing.description}</div>
                     <div>
