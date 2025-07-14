@@ -128,14 +128,17 @@ function renderListings() {
                     </div>
                 </div>
                 
-                <div class="flex space-x-3">
-                    <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg">
-                        👁️ View Details
+                <div class="flex space-x-2">
+                    <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg text-sm">
+                        👁️ Details
                     </button>
-                    <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg">
+                    <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg text-sm">
                         💰 Purchase
                     </button>
-                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg">📧 Contact</button>` : ''}
+                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 Contact</button>` : ''}
+                    <button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
+                        🗑️
+                    </button>
                 </div>
             </div>
         </div>
@@ -302,5 +305,23 @@ async function handlePurchaseSubmit(e) {
     } catch (error) {
         console.error('Purchase error:', error);
         alert('❌ Purchase failed. Please check your information and try again.');
+    }
+}
+
+async function deleteListing(listingId) {
+    if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await axios.delete(`/api/listings/${listingId}`);
+        
+        if (response.data.success) {
+            await loadListings();
+            alert('Listing deleted successfully!');
+        }
+    } catch (error) {
+        console.error('Error deleting listing:', error);
+        alert('Error deleting listing. Please try again.');
     }
 }

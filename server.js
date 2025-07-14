@@ -177,6 +177,32 @@ app.get('/api/purchases', (req, res) => {
   }
 });
 
+app.delete('/api/listings/:id', (req, res) => {
+  try {
+    const listingId = parseInt(req.params.id);
+    const listingIndex = listings.findIndex(l => l._id === listingId);
+    
+    if (listingIndex === -1) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    
+    // Remove the listing
+    const deletedListing = listings.splice(listingIndex, 1)[0];
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      nextId,
+      nextPurchaseId
+    });
+    
+    res.json({ success: true, message: 'Listing deleted successfully', deletedListing });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

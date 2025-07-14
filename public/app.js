@@ -106,8 +106,13 @@ function renderListings() {
                     <div class="text-sm text-gray-500">
                         <span class="font-semibold">Listed by:</span> ${listing.contact?.name || 'Anonymous'}
                     </div>
-                    <div class="text-2xl font-bold text-green-600">
-                        $${listing.price}
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl font-bold text-green-600">
+                            $${listing.price}
+                        </div>
+                        <button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors">
+                            🗑️ Delete
+                        </button>
                     </div>
                 </div>
             </div>
@@ -160,4 +165,22 @@ function setupForm() {
             alert('Error adding listing. Please try again.');
         }
     });
+}
+
+async function deleteListing(listingId) {
+    if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await axios.delete(`/api/listings/${listingId}`);
+        
+        if (response.data.success) {
+            await loadListings();
+            alert('Listing deleted successfully!');
+        }
+    } catch (error) {
+        console.error('Error deleting listing:', error);
+        alert('Error deleting listing. Please try again.');
+    }
 }
