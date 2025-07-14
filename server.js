@@ -16,9 +16,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 const fs = require('fs');
 const DATA_FILE = './data.json';
 
-// Simple session storage (in production, use Redis or database)
-const sessions = new Map();
-
 // Load data from file or initialize empty data
 function loadData() {
   try {
@@ -64,7 +61,8 @@ let data = loadData();
 let listings = data.listings;
 let purchases = data.purchases;
 let users = data.users || [];
-let sessions = data.sessions;
+// Simple session storage (in production, use Redis or database)
+let sessions = new Map();
 let nextId = data.nextId;
 let nextPurchaseId = data.nextPurchaseId;
 let nextUserId = data.nextUserId || 2;
