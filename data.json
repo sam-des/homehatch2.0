@@ -1,26 +1,5 @@
 {
-  "listings": [
-    {
-      "_id": 1,
-      "title": "house  test",
-      "address": "123 test",
-      "country": "canada",
-      "price": 1200,
-      "description": "test",
-      "amenities": [
-        "pool"
-      ],
-      "images": [
-        "/uploads/1752532422122-house.jpg"
-      ],
-      "contact": {
-        "name": "test",
-        "email": "test@test.com",
-        "phone": "1111111111"
-      },
-      "createdAt": "2025-07-14T22:33:42.126Z"
-    }
-  ],
+  "listings": [],
   "purchases": [],
   "nextId": 2,
   "nextPurchaseId": 1
