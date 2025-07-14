@@ -118,7 +118,7 @@ app.post('/api/listings', upload.array('images', 5), (req, res) => {
       listings,
       purchases,
       users,
-      sessions,
+      sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId
@@ -187,7 +187,7 @@ app.post('/api/purchases', (req, res) => {
       listings,
       purchases,
       users,
-      sessions,
+      sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId
@@ -239,7 +239,7 @@ app.delete('/api/listings/:id', requireAuth, (req, res) => {
       listings,
       purchases,
       users,
-      sessions,
+      sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId
