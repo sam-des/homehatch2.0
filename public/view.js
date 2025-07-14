@@ -1,31 +1,52 @@
 let allListings = [];
 let filteredListings = [];
 let currentUser = null;
+let sessionId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
+    loadListings();
+    setupSearch();
+    setupPurchaseForm();
+    setupScrollGradient();
 });
 
-function checkAuth() {
-    const sessionId = localStorage.getItem('sessionId');
-    const user = localStorage.getItem('user');
+// Set up axios interceptor to include session ID
+axios.interceptors.request.use(function (config) {
+    if (sessionId) {
+        config.headers['x-session-id'] = sessionId;
+    }
+    return config;
+});
 
-    if (!sessionId || !user) {
+async function checkAuth() {
+    sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+        try {
+            const response = await axios.get('/api/me');
+            currentUser = response.data;
+        } catch (error) {
+            // Session invalid, clear it
+            localStorage.removeItem('sessionId');
+            sessionId = null;
+            currentUser = null;
+        }
+    } else {
         window.location.href = '/login.html';
         return;
     }
 
-    currentUser = JSON.parse(user);
     setupAuthenticatedApp();
 }
 
 function setupAuthenticatedApp() {
     updateHeader();
-    loadListings();
-    setupSearch();
-    setupPurchaseForm();
-    setupScrollGradient();
+    //loadListings(); // Load listings is already called in document load
+    //setupSearch(); // Setup search is already called in document load
+    //setupPurchaseForm(); // Setup purchase form is already called in document load
+    //setupScrollGradient(); // Setup scroll gradient is already called in document load
 }
+
 
 function updateHeader() {
     const nav = document.querySelector('nav');
@@ -40,7 +61,7 @@ function updateHeader() {
         userInfo.className = 'flex items-center space-x-4 user-info'; // Added user-info class
         userInfo.innerHTML = `
             <span class="text-white font-semibold">Welcome, ${currentUser.username}</span>
-            ${currentUser.isAdmin ? '<span class="bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">ADMIN</span>' : ''}
+            ${currentUser.role === 'admin' ? '<span class="bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">ADMIN</span>' : ''}
             <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-semibold transition-colors">
                 Logout
             </button>
@@ -50,20 +71,15 @@ function updateHeader() {
 }
 
 async function logout() {
-    const sessionId = localStorage.getItem('sessionId');
-
     try {
-        await axios.post('/api/logout', {}, {
-            headers: {
-                'X-Session-Id': sessionId
-            }
-        });
+        await axios.post('/api/logout');
     } catch (error) {
         console.log('Logout error:', error);
     }
 
     localStorage.removeItem('sessionId');
-    localStorage.removeItem('user');
+    currentUser = null;
+    sessionId = null;
     window.location.href = '/login.html';
 }
 
@@ -194,7 +210,7 @@ function renderListings() {
                         💰 Purchase
                     </button>
                     ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 Contact</button>` : ''}
-                    ${currentUser?.isAdmin ? `<button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
+                    ${canDeleteListing(listing) ? `<button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
                         🗑️
                     </button>` : ''}
                 </div>
@@ -366,7 +382,17 @@ async function handlePurchaseSubmit(e) {
     }
 }
 
+function canDeleteListing(listing) {
+    if (!currentUser) return false;
+    return currentUser.role === 'admin' || listing.createdBy === currentUser._id;
+}
+
 async function deleteListing(listingId) {
+    if (!currentUser) {
+        alert('Please login to delete listings');
+        return;
+    }
+
     if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
         return;
     }
@@ -380,6 +406,7 @@ async function deleteListing(listingId) {
         }
     } catch (error) {
         console.error('Error deleting listing:', error);
-        alert('Error deleting listing. Please try again.');
+        const errorMsg = error.response?.data?.error || 'Error deleting listing. Please try again.';
+        alert(errorMsg);
     }
 }

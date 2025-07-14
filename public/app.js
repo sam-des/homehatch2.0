@@ -1,13 +1,133 @@
 let listings = [];
+let currentUser = null;
+let sessionId = null;
 
 // Load listings when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
     loadListings();
+    setupImagePreview();
+    setupAuthForms();
     setupForm();
     setupScrollGradient();
 });
 
-function setupScrollGradient() {
+// Set up axios interceptor to include session ID
+axios.interceptors.request.use(function (config) {
+    if (sessionId) {
+        config.headers['x-session-id'] = sessionId;
+    }
+    return config;
+});
+
+async function checkAuth() {
+    sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+        try {
+            const response = await axios.get('/api/me');
+            currentUser = response.data;
+            updateAuthUI();
+        } catch (error) {
+            // Session invalid, clear it
+            localStorage.removeItem('sessionId');
+            sessionId = null;
+            currentUser = null;
+            updateAuthUI();
+        }
+    }
+}
+
+function updateAuthUI() {
+    const loginSection = document.getElementById('loginSection');
+    const userSection = document.getElementById('userSection');
+    const welcomeText = document.getElementById('welcomeText');
+
+    if (currentUser) {
+        loginSection.classList.add('hidden');
+        userSection.classList.remove('hidden');
+        welcomeText.textContent = `Welcome, ${currentUser.username}${currentUser.role === 'admin' ? ' (Admin)' : ''}`;
+    } else {
+        loginSection.classList.remove('hidden');
+        userSection.classList.add('hidden');
+    }
+}
+
+function setupAuthForms() {
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    document.getElementById('registerForm').addEventListener('submit', handleRegister);
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+        const response = await axios.post('/api/login', { username, password });
+        sessionId = response.data.sessionId;
+        currentUser = response.data.user;
+        localStorage.setItem('sessionId', sessionId);
+
+        hideLoginModal();
+        updateAuthUI();
+        loadListings(); // Reload to show delete buttons where appropriate
+        alert('Login successful!');
+    } catch (error) {
+        alert('Login failed: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    try {
+        await axios.post('/api/register', { username, email, password });
+        hideRegisterModal();
+        alert('Registration successful! You can now login.');
+    } catch (error) {
+        alert('Registration failed: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+async function logout() {
+    try {
+        await axios.post('/api/logout');
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+
+    localStorage.removeItem('sessionId');
+    sessionId = null;
+    currentUser = null;
+    updateAuthUI();
+    loadListings(); // Reload to hide delete buttons
+    alert('Logged out successfully!');
+}
+
+function showLoginModal() {
+    document.getElementById('loginModal').classList.remove('hidden');
+}
+
+function hideLoginModal() {
+    document.getElementById('loginModal').classList.add('hidden');
+    document.getElementById('loginForm').reset();
+}
+
+function showRegisterModal() {
+    document.getElementById('registerModal').classList.remove('hidden');
+}
+
+function hideRegisterModal() {
+    document.getElementById('registerModal').classList.add('hidden');
+    document.getElementById('registerForm').reset();
+}
+
+function setupImagePreview() {
     window.addEventListener('scroll', function() {
         const scrolled = window.pageYOffset;
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -112,9 +232,11 @@ function renderListings() {
                         <div class="text-2xl font-bold text-green-600">
                             $${listing.price}
                         </div>
-                        <button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors">
-                            🗑️ Delete
-                        </button>
+                        ${canDeleteListing(listing) ? `
+                            <button onclick="deleteListing('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors">
+                                🗑️ Delete
+                            </button>
+                        `: ''}
                     </div>
                 </div>
             </div>
@@ -127,6 +249,11 @@ function setupForm() {
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
+
+        if (!currentUser) {
+        alert('Please login to create a listing');
+        return;
+    }
 
         const formData = new FormData();
         const images = document.getElementById('images').files;
@@ -170,7 +297,17 @@ function setupForm() {
     });
 }
 
+function canDeleteListing(listing) {
+    if (!currentUser) return false;
+    return currentUser.role === 'admin' || listing.createdBy === currentUser._id;
+}
+
 async function deleteListing(listingId) {
+    if (!currentUser) {
+        alert('Please login to delete listings');
+        return;
+    }
+
     if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
         return;
     }
@@ -184,6 +321,36 @@ async function deleteListing(listingId) {
         }
     } catch (error) {
         console.error('Error deleting listing:', error);
-        alert('Error deleting listing. Please try again.');
+        const errorMsg = error.response?.data?.error || 'Error deleting listing. Please try again.';
+        alert(errorMsg);
     }
+}
+
+function setupScrollGradient() {
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollProgress = Math.min(scrolled / maxScroll, 1);
+
+        // Interpolate from purple (#667eea, #764ba2) to red (#ff6b6b, #ee5a24)
+        const startColor1 = { r: 102, g: 126, b: 234 }; // #667eea
+        const startColor2 = { r: 118, g: 75, b: 162 };  // #764ba2
+        const endColor1 = { r: 255, g: 107, b: 107 };   // #ff6b6b
+        const endColor2 = { r: 238, g: 90, b: 36 };     // #ee5a24
+
+        const color1 = {
+            r: Math.round(startColor1.r + (endColor1.r - startColor1.r) * scrollProgress),
+            g: Math.round(startColor1.g + (endColor1.g - startColor1.g) * scrollProgress),
+            b: Math.round(startColor1.b + (endColor1.b - startColor1.b) * scrollProgress)
+        };
+
+        const color2 = {
+            r: Math.round(startColor2.r + (endColor2.r - startColor2.r) * scrollProgress),
+            g: Math.round(startColor2.g + (endColor2.g - startColor2.g) * scrollProgress),
+            b: Math.round(startColor2.b + (endColor2.b - startColor2.b) * scrollProgress)
+        };
+
+        const gradient = `linear-gradient(135deg, rgb(${color1.r}, ${color1.g}, ${color1.b}) 0%, rgb(${color2.r}, ${color2.g}, ${color2.b}) 100%)`;
+        document.body.style.background = gradient;
+    });
 }

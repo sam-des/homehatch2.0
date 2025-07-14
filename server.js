@@ -16,6 +16,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const fs = require('fs');
 const DATA_FILE = './data.json';
 
+// Simple session storage (in production, use Redis or database)
+const sessions = new Map();
+
 // Load data from file or initialize empty data
 function loadData() {
   try {
@@ -30,11 +33,20 @@ function loadData() {
   return {
     listings: [],
     purchases: [],
-    users: [],
+    users: [
+      {
+        _id: 1,
+        username: 'admin',
+        password: 'admin123',
+        role: 'admin',
+        email: 'admin@homehatch.com',
+        createdAt: new Date()
+      }
+    ],
     sessions: [],
     nextId: 1,
     nextPurchaseId: 1,
-    nextUserId: 1
+    nextUserId: 2
   };
 }
 
@@ -51,11 +63,28 @@ function saveData(data) {
 let data = loadData();
 let listings = data.listings;
 let purchases = data.purchases;
-let users = data.users;
+let users = data.users || [];
 let sessions = data.sessions;
 let nextId = data.nextId;
 let nextPurchaseId = data.nextPurchaseId;
-let nextUserId = data.nextUserId;
+let nextUserId = data.nextUserId || 2;
+
+// Authentication middleware
+function requireAuth(req, res, next) {
+  const sessionId = req.headers['x-session-id'];
+  if (!sessionId || !sessions.has(sessionId)) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  req.user = sessions.get(sessionId);
+  next();
+}
+
+function requireAdmin(req, res, next) {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+}
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -81,6 +110,7 @@ app.post('/api/listings', upload.array('images', 5), (req, res) => {
       images: imagePaths,
       contact: JSON.parse(contact),
       createdAt: new Date(),
+      createdBy: req.user._id,
     };
 
     listings.push(newListing);
@@ -189,16 +219,21 @@ app.get('/api/purchases', (req, res) => {
   }
 });
 
-app.delete('/api/listings/:id', (req, res) => {
+app.delete('/api/listings/:id', requireAuth, (req, res) => {
   try {
     const listingId = parseInt(req.params.id);
-    const listingIndex = listings.findIndex(l => l._id === listingId);
+    const listing = listings.find(l => l._id === listingId);
 
-    if (listingIndex === -1) {
+    if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    // Remove the listing
+    // Check if user owns the listing or is admin
+    if (listing.createdBy !== req.user._id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'You can only delete your own listings' });
+    }
+
+    const listingIndex = listings.findIndex(l => l._id === listingId);
     const deletedListing = listings.splice(listingIndex, 1)[0];
 
     // Save to file
