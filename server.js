@@ -26,12 +26,15 @@ function loadData() {
   } catch (error) {
     console.log('Error loading data:', error);
   }
-  
+
   return {
     listings: [],
     purchases: [],
+    users: [],
+    sessions: [],
     nextId: 1,
-    nextPurchaseId: 1
+    nextPurchaseId: 1,
+    nextUserId: 1
   };
 }
 
@@ -48,8 +51,11 @@ function saveData(data) {
 let data = loadData();
 let listings = data.listings;
 let purchases = data.purchases;
+let users = data.users;
+let sessions = data.sessions;
 let nextId = data.nextId;
 let nextPurchaseId = data.nextPurchaseId;
+let nextUserId = data.nextUserId;
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -78,15 +84,18 @@ app.post('/api/listings', upload.array('images', 5), (req, res) => {
     };
 
     listings.push(newListing);
-    
+
     // Save to file
     saveData({
       listings,
       purchases,
+      users,
+      sessions,
       nextId,
-      nextPurchaseId
+      nextPurchaseId,
+      nextUserId
     });
-    
+
     res.json(newListing);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -104,18 +113,18 @@ app.get('/api/listings', (req, res) => {
 app.post('/api/purchases', (req, res) => {
   try {
     const { listingId, buyer, payment, purchaseDate } = req.body;
-    
+
     // Find the listing
     const listing = listings.find(l => l._id == listingId);
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
-    
+
     // Validate buyer age
     if (buyer.age < 18) {
       return res.status(400).json({ error: 'Buyer must be at least 18 years old' });
     }
-    
+
     // Create purchase record (in real app, you'd process payment here)
     const newPurchase = {
       _id: nextPurchaseId++,
@@ -142,28 +151,31 @@ app.post('/api/purchases', (req, res) => {
       purchaseDate: purchaseDate,
       status: 'completed'
     };
-    
+
     purchases.push(newPurchase);
-    
+
     // Save to file
     saveData({
       listings,
       purchases,
+      users,
+      sessions,
       nextId,
-      nextPurchaseId
+      nextPurchaseId,
+      nextUserId
     });
-    
+
     // In a real application, you would:
     // 1. Process the payment with a payment processor
     // 2. Send confirmation emails
     // 3. Update listing availability
-    
+
     res.json({ 
       success: true, 
       purchaseId: newPurchase._id,
       message: 'Purchase completed successfully'
     });
-    
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -181,22 +193,25 @@ app.delete('/api/listings/:id', (req, res) => {
   try {
     const listingId = parseInt(req.params.id);
     const listingIndex = listings.findIndex(l => l._id === listingId);
-    
+
     if (listingIndex === -1) {
       return res.status(404).json({ error: 'Listing not found' });
     }
-    
+
     // Remove the listing
     const deletedListing = listings.splice(listingIndex, 1)[0];
-    
+
     // Save to file
     saveData({
       listings,
       purchases,
+      users,
+      sessions,
       nextId,
-      nextPurchaseId
+      nextPurchaseId,
+      nextUserId
     });
-    
+
     res.json({ success: true, message: 'Listing deleted successfully', deletedListing });
   } catch (error) {
     res.status(500).json({ error: error.message });

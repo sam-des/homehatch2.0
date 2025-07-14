@@ -1,38 +1,96 @@
-
 let allListings = [];
 let filteredListings = [];
+let currentUser = null;
 
-// Load listings when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+});
+
+function checkAuth() {
+    const sessionId = localStorage.getItem('sessionId');
+    const user = localStorage.getItem('user');
+
+    if (!sessionId || !user) {
+        window.location.href = '/login.html';
+        return;
+    }
+
+    currentUser = JSON.parse(user);
+    setupAuthenticatedApp();
+}
+
+function setupAuthenticatedApp() {
+    updateHeader();
     loadListings();
     setupSearch();
+    setupPurchaseForm();
     setupScrollGradient();
-});
+}
+
+function updateHeader() {
+    const nav = document.querySelector('nav');
+    if (nav && currentUser) {
+        // Clear existing user info if it exists
+        let existingUserInfo = nav.querySelector('.user-info');
+        if (existingUserInfo) {
+            nav.removeChild(existingUserInfo);
+        }
+
+        const userInfo = document.createElement('div');
+        userInfo.className = 'flex items-center space-x-4 user-info'; // Added user-info class
+        userInfo.innerHTML = `
+            <span class="text-white font-semibold">Welcome, ${currentUser.username}</span>
+            ${currentUser.isAdmin ? '<span class="bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">ADMIN</span>' : ''}
+            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-semibold transition-colors">
+                Logout
+            </button>
+        `;
+        nav.appendChild(userInfo);
+    }
+}
+
+async function logout() {
+    const sessionId = localStorage.getItem('sessionId');
+
+    try {
+        await axios.post('/api/logout', {}, {
+            headers: {
+                'X-Session-Id': sessionId
+            }
+        });
+    } catch (error) {
+        console.log('Logout error:', error);
+    }
+
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('user');
+    window.location.href = '/login.html';
+}
 
 function setupScrollGradient() {
     window.addEventListener('scroll', function() {
         const scrolled = window.pageYOffset;
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
         const scrollProgress = Math.min(scrolled / maxScroll, 1);
-        
+
         // Interpolate from purple (#667eea, #764ba2) to red (#ff6b6b, #ee5a24)
         const startColor1 = { r: 102, g: 126, b: 234 }; // #667eea
         const startColor2 = { r: 118, g: 75, b: 162 };  // #764ba2
         const endColor1 = { r: 255, g: 107, b: 107 };   // #ff6b6b
         const endColor2 = { r: 238, g: 90, b: 36 };     // #ee5a24
-        
+
         const color1 = {
             r: Math.round(startColor1.r + (endColor1.r - startColor1.r) * scrollProgress),
             g: Math.round(startColor1.g + (endColor1.g - startColor1.g) * scrollProgress),
             b: Math.round(startColor1.b + (endColor1.b - startColor1.b) * scrollProgress)
         };
-        
+
         const color2 = {
             r: Math.round(startColor2.r + (endColor2.r - startColor2.r) * scrollProgress),
             g: Math.round(startColor2.g + (endColor2.g - startColor2.g) * scrollProgress),
             b: Math.round(startColor2.b + (endColor2.b - startColor2.b) * scrollProgress)
         };
-        
+
         const gradient = `linear-gradient(135deg, rgb(${color1.r}, ${color1.g}, ${color1.b}) 0%, rgb(${color2.r}, ${color2.g}, ${color2.b}) 100%)`;
         document.body.style.background = gradient;
     });
@@ -52,12 +110,12 @@ async function loadListings() {
 
 function renderListings() {
     const listingsContainer = document.getElementById('listings');
-    
+
     if (filteredListings.length === 0) {
         listingsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500">No rentals found matching your criteria.</div>';
         return;
     }
-    
+
     listingsContainer.innerHTML = filteredListings.map(listing => `
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover animate-fade-in">
             ${listing.images.length > 0 ? `
@@ -79,7 +137,7 @@ function renderListings() {
                     </div>
                 </div>
             `}
-            
+
             <div class="p-6">
                 <div class="mb-4">
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">${listing.title}</h3>
@@ -92,9 +150,9 @@ function renderListings() {
                         ${listing.country}
                     </p>
                 </div>
-                
+
                 <p class="text-gray-700 mb-6 leading-relaxed">${listing.description}</p>
-                
+
                 <div class="mb-6">
                     <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
                         <span class="text-lg mr-2">✨</span>
@@ -106,7 +164,7 @@ function renderListings() {
                         `).join('')}
                     </div>
                 </div>
-                
+
                 <div class="bg-gray-50 rounded-xl p-4 mb-6">
                     <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
                         <span class="text-lg mr-2">👤</span>
@@ -127,7 +185,7 @@ function renderListings() {
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="flex space-x-2">
                     <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg text-sm">
                         👁️ Details
@@ -136,9 +194,9 @@ function renderListings() {
                         💰 Purchase
                     </button>
                     ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 Contact</button>` : ''}
-                    <button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
+                    ${currentUser?.isAdmin ? `<button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
                         🗑️
-                    </button>
+                    </button>` : ''}
                 </div>
             </div>
         </div>
@@ -149,7 +207,7 @@ function setupSearch() {
     const searchBtn = document.getElementById('searchBtn');
     const searchTitle = document.getElementById('searchTitle');
     const maxPrice = document.getElementById('maxPrice');
-    
+
     searchBtn.addEventListener('click', performSearch);
     searchTitle.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') performSearch();
@@ -162,20 +220,20 @@ function setupSearch() {
 function performSearch() {
     const titleQuery = document.getElementById('searchTitle').value.toLowerCase();
     const maxPriceValue = parseFloat(document.getElementById('maxPrice').value);
-    
+
     filteredListings = allListings.filter(listing => {
         const matchesTitle = !titleQuery || listing.title.toLowerCase().includes(titleQuery);
         const matchesPrice = !maxPriceValue || listing.price <= maxPriceValue;
         return matchesTitle && matchesPrice;
     });
-    
+
     renderListings();
 }
 
 function viewDetails(listingId) {
     const listing = allListings.find(l => l._id === listingId);
     if (!listing) return;
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -185,7 +243,7 @@ function viewDetails(listingId) {
                     <h2 class="text-2xl font-bold">${listing.title}</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 ${listing.images.length > 0 ? `
                     <div class="grid grid-cols-2 gap-2 mb-4">
                         ${listing.images.map(src => `
@@ -193,7 +251,7 @@ function viewDetails(listingId) {
                         `).join('')}
                     </div>
                 ` : ''}
-                
+
                 <div class="space-y-4">
                     <div><strong>Address:</strong> ${listing.address}</div>
                     <div><strong>Country:</strong> ${listing.country}</div>
@@ -217,7 +275,7 @@ function viewDetails(listingId) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 }
 
@@ -231,10 +289,10 @@ function openPurchaseModal(listingId, title, price) {
     document.getElementById('purchasePropertyTitle').textContent = title;
     document.getElementById('purchasePropertyPrice').textContent = `$${price}/month`;
     document.getElementById('purchaseModal').classList.remove('hidden');
-    
+
     // Store listing ID for form submission
     document.getElementById('purchaseForm').dataset.listingId = listingId;
-    
+
     // Setup form handlers
     setupPurchaseForm();
 }
@@ -246,14 +304,14 @@ function closePurchaseModal() {
 
 function setupPurchaseForm() {
     const form = document.getElementById('purchaseForm');
-    
+
     // Format card number input
     document.getElementById('cardNumber').addEventListener('input', function(e) {
         let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
         let formattedInputValue = value.match(/.{1,4}/g)?.join(' ') || value;
         e.target.value = formattedInputValue;
     });
-    
+
     // Format expiry date input
     document.getElementById('expiryDate').addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, '');
@@ -262,19 +320,19 @@ function setupPurchaseForm() {
         }
         e.target.value = value;
     });
-    
+
     // CVV input restriction
     document.getElementById('cvv').addEventListener('input', function(e) {
         e.target.value = e.target.value.replace(/\D/g, '');
     });
-    
+
     form.removeEventListener('submit', handlePurchaseSubmit);
     form.addEventListener('submit', handlePurchaseSubmit);
 }
 
 async function handlePurchaseSubmit(e) {
     e.preventDefault();
-    
+
     const formData = {
         listingId: e.target.dataset.listingId,
         buyer: {
@@ -294,10 +352,10 @@ async function handlePurchaseSubmit(e) {
         },
         purchaseDate: new Date().toISOString()
     };
-    
+
     try {
         const response = await axios.post('/api/purchases', formData);
-        
+
         if (response.status === 200) {
             alert('🎉 Purchase completed successfully! You will receive a confirmation email shortly.');
             closePurchaseModal();
@@ -312,10 +370,10 @@ async function deleteListing(listingId) {
     if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
         return;
     }
-    
+
     try {
         const response = await axios.delete(`/api/listings/${listingId}`);
-        
+
         if (response.data.success) {
             await loadListings();
             alert('Listing deleted successfully!');

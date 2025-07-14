@@ -1,4 +1,3 @@
-
 let listings = [];
 
 // Load listings when page loads
@@ -13,25 +12,25 @@ function setupScrollGradient() {
         const scrolled = window.pageYOffset;
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
         const scrollProgress = Math.min(scrolled / maxScroll, 1);
-        
+
         // Interpolate from purple (#667eea, #764ba2) to red (#ff6b6b, #ee5a24)
         const startColor1 = { r: 102, g: 126, b: 234 }; // #667eea
         const startColor2 = { r: 118, g: 75, b: 162 };  // #764ba2
         const endColor1 = { r: 255, g: 107, b: 107 };   // #ff6b6b
         const endColor2 = { r: 238, g: 90, b: 36 };     // #ee5a24
-        
+
         const color1 = {
             r: Math.round(startColor1.r + (endColor1.r - startColor1.r) * scrollProgress),
             g: Math.round(startColor1.g + (endColor1.g - startColor1.g) * scrollProgress),
             b: Math.round(startColor1.b + (endColor1.b - startColor1.b) * scrollProgress)
         };
-        
+
         const color2 = {
             r: Math.round(startColor2.r + (endColor2.r - startColor2.r) * scrollProgress),
             g: Math.round(startColor2.g + (endColor2.g - startColor2.g) * scrollProgress),
             b: Math.round(startColor2.b + (endColor2.b - startColor2.b) * scrollProgress)
         };
-        
+
         const gradient = `linear-gradient(135deg, rgb(${color1.r}, ${color1.g}, ${color1.b}) 0%, rgb(${color2.r}, ${color2.g}, ${color2.b}) 100%)`;
         document.body.style.background = gradient;
     });
@@ -44,17 +43,20 @@ async function loadListings() {
         renderListings();
     } catch (error) {
         console.error('Error loading listings:', error);
+        if (error.response?.status === 401) {
+            logout();
+        }
     }
 }
 
 function renderListings() {
     const listingsContainer = document.getElementById('listings');
-    
+
     if (listings.length === 0) {
         listingsContainer.innerHTML = '<p class="text-gray-500">No listings yet. Add the first one!</p>';
         return;
     }
-    
+
     listingsContainer.innerHTML = listings.map(listing => `
         <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg card-hover overflow-hidden border border-gray-100">
             ${listing.images.length > 0 ? `
@@ -69,7 +71,7 @@ function renderListings() {
                     <span class="text-white text-6xl">🏠</span>
                 </div>
             `}
-            
+
             <div class="p-6">
                 <h3 class="text-xl font-bold text-gray-800 mb-2">${listing.title}</h3>
                 <p class="text-gray-600 mb-1 flex items-center">
@@ -81,7 +83,7 @@ function renderListings() {
                     ${listing.country}
                 </p>
                 <p class="text-gray-700 mb-4 text-sm leading-relaxed">${listing.description}</p>
-                
+
                 <div class="mb-4">
                     <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
                         <span class="text-sm mr-1">✨</span>
@@ -93,7 +95,7 @@ function renderListings() {
                         `).join('')}
                     </div>
                 </div>
-                
+
                 ${listing.images.length > 1 ? `
                     <div class="grid grid-cols-3 gap-2 mb-4">
                         ${listing.images.slice(1, 4).map(src => `
@@ -101,7 +103,7 @@ function renderListings() {
                         `).join('')}
                     </div>
                 ` : ''}
-                
+
                 <div class="flex items-center justify-between pt-4 border-t border-gray-200">
                     <div class="text-sm text-gray-500">
                         <span class="font-semibold">Listed by:</span> ${listing.contact?.name || 'Anonymous'}
@@ -122,18 +124,18 @@ function renderListings() {
 
 function setupForm() {
     const form = document.getElementById('listingForm');
-    
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData();
         const images = document.getElementById('images').files;
-        
+
         // Add images to FormData
         for (let i = 0; i < images.length; i++) {
             formData.append('images', images[i]);
         }
-        
+
         // Add other form fields
         formData.append('title', document.getElementById('title').value);
         formData.append('address', document.getElementById('address').value);
@@ -148,14 +150,15 @@ function setupForm() {
             email: document.getElementById('contactEmail').value,
             phone: document.getElementById('contactPhone').value
         }));
-        
+
         try {
-            await axios.post('/api/listings', formData, {
+            const response = await axios.post('/api/listings', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'multipart/form-data',
+                    'X-Session-Id': localStorage.getItem('sessionId')
                 }
             });
-            
+
             // Reset form and reload listings
             form.reset();
             await loadListings();
@@ -171,10 +174,10 @@ async function deleteListing(listingId) {
     if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
         return;
     }
-    
+
     try {
         const response = await axios.delete(`/api/listings/${listingId}`);
-        
+
         if (response.data.success) {
             await loadListings();
             alert('Listing deleted successfully!');
