@@ -1,4 +1,3 @@
-
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
@@ -41,7 +40,7 @@ app.post('/api/listings', upload.array('images', 5), (req, res) => {
       contact: JSON.parse(contact),
       createdAt: new Date(),
     };
-    
+
     listings.push(newListing);
     res.json(newListing);
   } catch (error) {

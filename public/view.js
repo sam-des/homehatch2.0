@@ -29,44 +29,76 @@ function renderListings() {
     }
     
     listingsContainer.innerHTML = filteredListings.map(listing => `
-        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover animate-fade-in">
             ${listing.images.length > 0 ? `
-                <div class="relative h-48 bg-gray-200">
+                <div class="relative h-56 bg-gradient-to-r from-blue-400 to-purple-500">
                     <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-full object-cover">
-                    ${listing.images.length > 1 ? `<div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">+${listing.images.length - 1} more</div>` : ''}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black from-opacity-50 to-transparent"></div>
+                    ${listing.images.length > 1 ? `<div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">+${listing.images.length - 1} photos</div>` : ''}
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <div class="text-3xl font-bold">$${listing.price}</div>
+                        <div class="text-sm opacity-80">per month</div>
+                    </div>
                 </div>
-            ` : '<div class="h-48 bg-gray-200 flex items-center justify-center"><span class="text-gray-400">No Image</span></div>'}
+            ` : `
+                <div class="h-56 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center relative">
+                    <span class="text-white text-8xl opacity-50">🏠</span>
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <div class="text-3xl font-bold">$${listing.price}</div>
+                        <div class="text-sm opacity-80">per month</div>
+                    </div>
+                </div>
+            `}
             
             <div class="p-6">
-                <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-xl font-bold text-gray-900">${listing.title}</h3>
-                    <span class="text-2xl font-bold text-green-600">$${listing.price}</span>
+                <div class="mb-4">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">${listing.title}</h3>
+                    <p class="text-gray-600 flex items-center">
+                        <span class="text-lg mr-2">📍</span>
+                        ${listing.address}
+                    </p>
                 </div>
                 
-                <p class="text-gray-600 mb-2">${listing.address}</p>
-                <p class="text-gray-700 mb-4">${listing.description}</p>
+                <p class="text-gray-700 mb-6 leading-relaxed">${listing.description}</p>
                 
-                <div class="mb-4">
-                    <h4 class="font-semibold text-gray-900 mb-2">Amenities:</h4>
+                <div class="mb-6">
+                    <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                        <span class="text-lg mr-2">✨</span>
+                        Amenities
+                    </h4>
                     <div class="flex flex-wrap gap-2">
                         ${listing.amenities.map(amenity => `
-                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">${amenity.trim()}</span>
+                            <span class="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">${amenity.trim()}</span>
                         `).join('')}
                     </div>
                 </div>
                 
-                <div class="border-t pt-4">
-                    <h4 class="font-semibold text-gray-900 mb-2">Contact Information:</h4>
-                    <div class="space-y-1 text-sm text-gray-600">
-                        <p><strong>Name:</strong> ${listing.contact?.name || 'Not provided'}</p>
-                        <p><strong>Email:</strong> ${listing.contact?.email ? `<a href="mailto:${listing.contact.email}" class="text-blue-600 hover:underline">${listing.contact.email}</a>` : 'Not provided'}</p>
-                        <p><strong>Phone:</strong> ${listing.contact?.phone ? `<a href="tel:${listing.contact.phone}" class="text-blue-600 hover:underline">${listing.contact.phone}</a>` : 'Not provided'}</p>
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                        <span class="text-lg mr-2">👤</span>
+                        Contact Information
+                    </h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center">
+                            <span class="font-medium text-gray-700 w-16">Name:</span>
+                            <span class="text-gray-600">${listing.contact?.name || 'Not provided'}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-medium text-gray-700 w-16">Email:</span>
+                            ${listing.contact?.email ? `<a href="mailto:${listing.contact.email}" class="text-blue-600 hover:text-blue-800 transition-colors">${listing.contact.email}</a>` : '<span class="text-gray-600">Not provided</span>'}
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-medium text-gray-700 w-16">Phone:</span>
+                            ${listing.contact?.phone ? `<a href="tel:${listing.contact.phone}" class="text-blue-600 hover:text-blue-800 transition-colors">${listing.contact.phone}</a>` : '<span class="text-gray-600">Not provided</span>'}
+                        </div>
                     </div>
                 </div>
                 
-                <div class="mt-4 flex space-x-2">
-                    <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View Details</button>
-                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Contact</button>` : ''}
+                <div class="flex space-x-3">
+                    <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg">
+                        👁️ View Details
+                    </button>
+                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg">📧 Contact</button>` : ''}
                 </div>
             </div>
         </div>

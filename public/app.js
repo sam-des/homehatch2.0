@@ -26,23 +26,57 @@ function renderListings() {
     }
     
     listingsContainer.innerHTML = listings.map(listing => `
-        <div class="border p-4 rounded shadow bg-white">
-            <h3 class="text-xl font-bold mb-2">${listing.title}</h3>
-            <p class="text-gray-600 mb-2">${listing.address} • $${listing.price}</p>
-            <p class="mb-3">${listing.description}</p>
-            <div class="mb-3">
-                <h4 class="font-semibold mb-1">Amenities:</h4>
-                <ul class="text-sm">
-                    ${listing.amenities.map(amenity => `<li>✔ ${amenity.trim()}</li>`).join('')}
-                </ul>
-            </div>
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg card-hover overflow-hidden border border-gray-100">
             ${listing.images.length > 0 ? `
-                <div class="grid grid-cols-2 gap-2">
-                    ${listing.images.map(src => `
-                        <img src="${src}" alt="Property image" class="h-32 w-full object-cover rounded">
-                    `).join('')}
+                <div class="relative h-48 bg-gradient-to-r from-blue-400 to-purple-500">
+                    <img src="${listing.images[0]}" alt="Property image" class="w-full h-full object-cover">
+                    <div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        $${listing.price}/mo
+                    </div>
                 </div>
-            ` : ''}
+            ` : `
+                <div class="h-48 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
+                    <span class="text-white text-6xl">🏠</span>
+                </div>
+            `}
+            
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">${listing.title}</h3>
+                <p class="text-gray-600 mb-1 flex items-center">
+                    <span class="text-sm mr-1">📍</span>
+                    ${listing.address}
+                </p>
+                <p class="text-gray-700 mb-4 text-sm leading-relaxed">${listing.description}</p>
+                
+                <div class="mb-4">
+                    <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                        <span class="text-sm mr-1">✨</span>
+                        Amenities
+                    </h4>
+                    <div class="flex flex-wrap gap-1">
+                        ${listing.amenities.map(amenity => `
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${amenity.trim()}</span>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                ${listing.images.length > 1 ? `
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        ${listing.images.slice(1, 4).map(src => `
+                            <img src="${src}" alt="Property image" class="h-20 w-full object-cover rounded-lg">
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div class="text-sm text-gray-500">
+                        <span class="font-semibold">Listed by:</span> ${listing.contact?.name || 'Anonymous'}
+                    </div>
+                    <div class="text-2xl font-bold text-green-600">
+                        $${listing.price}
+                    </div>
+                </div>
+            </div>
         </div>
     `).join('');
 }
