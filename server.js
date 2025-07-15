@@ -92,7 +92,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // API Routes
-app.post('/api/listings', upload.array('images', 5), (req, res) => {
+app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => {
   try {
     const { title, address, country, price, description, amenities, contact } = req.body;
     const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
