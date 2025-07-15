@@ -224,29 +224,86 @@ function renderListings() {
 
 function setupSearch() {
     const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const searchTitle = document.getElementById('searchTitle');
+    const searchLocation = document.getElementById('searchLocation');
     const maxPrice = document.getElementById('maxPrice');
+    const minPrice = document.getElementById('minPrice');
 
     searchBtn.addEventListener('click', performSearch);
-    searchTitle.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') performSearch();
+    clearBtn.addEventListener('click', clearFilters);
+    
+    // Add Enter key listeners for text inputs
+    [searchTitle, searchLocation, maxPrice, minPrice].forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') performSearch();
+        });
     });
-    maxPrice.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') performSearch();
-    });
+
+    // Add change listeners for dropdowns to auto-search
+    document.getElementById('countryFilter').addEventListener('change', performSearch);
+    document.getElementById('amenityFilter').addEventListener('change', performSearch);
+    document.getElementById('sortFilter').addEventListener('change', performSearch);
 }
 
 function performSearch() {
     const titleQuery = document.getElementById('searchTitle').value.toLowerCase();
+    const locationQuery = document.getElementById('searchLocation').value.toLowerCase();
+    const countryFilter = document.getElementById('countryFilter').value;
+    const amenityFilter = document.getElementById('amenityFilter').value.toLowerCase();
+    const minPriceValue = parseFloat(document.getElementById('minPrice').value);
     const maxPriceValue = parseFloat(document.getElementById('maxPrice').value);
+    const sortBy = document.getElementById('sortFilter').value;
 
+    // Filter listings
     filteredListings = allListings.filter(listing => {
         const matchesTitle = !titleQuery || listing.title.toLowerCase().includes(titleQuery);
-        const matchesPrice = !maxPriceValue || listing.price <= maxPriceValue;
-        return matchesTitle && matchesPrice;
+        const matchesLocation = !locationQuery || 
+            listing.address.toLowerCase().includes(locationQuery) ||
+            listing.country.toLowerCase().includes(locationQuery);
+        const matchesCountry = !countryFilter || listing.country.toLowerCase().includes(countryFilter.toLowerCase());
+        const matchesAmenity = !amenityFilter || 
+            listing.amenities.some(amenity => amenity.toLowerCase().includes(amenityFilter));
+        const matchesMinPrice = !minPriceValue || listing.price >= minPriceValue;
+        const matchesMaxPrice = !maxPriceValue || listing.price <= maxPriceValue;
+        
+        return matchesTitle && matchesLocation && matchesCountry && 
+               matchesAmenity && matchesMinPrice && matchesMaxPrice;
     });
 
+    // Sort listings
+    switch(sortBy) {
+        case 'newest':
+            filteredListings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            break;
+        case 'oldest':
+            filteredListings.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            break;
+        case 'price-low':
+            filteredListings.sort((a, b) => a.price - b.price);
+            break;
+        case 'price-high':
+            filteredListings.sort((a, b) => b.price - a.price);
+            break;
+        case 'title':
+            filteredListings.sort((a, b) => a.title.localeCompare(b.title));
+            break;
+    }
+
     renderListings();
+}
+
+function clearFilters() {
+    document.getElementById('searchTitle').value = '';
+    document.getElementById('searchLocation').value = '';
+    document.getElementById('countryFilter').value = '';
+    document.getElementById('amenityFilter').value = '';
+    document.getElementById('minPrice').value = '';
+    document.getElementById('maxPrice').value = '';
+    document.getElementById('sortFilter').value = 'newest';
+    
+    filteredListings = [...allListings];
+    performSearch(); // Apply default sorting
 }
 
 function viewDetails(listingId) {
