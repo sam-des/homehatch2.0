@@ -41,9 +41,11 @@ function loadData() {
       }
     ],
     sessions: [],
+    chats: [],
     nextId: 1,
     nextPurchaseId: 1,
-    nextUserId: 2
+    nextUserId: 2,
+    nextChatId: 1
   };
 }
 
@@ -61,11 +63,13 @@ let data = loadData();
 let listings = data.listings;
 let purchases = data.purchases;
 let users = data.users || [];
+let chats = data.chats || [];
 // Simple session storage (in production, use Redis or database)
 let sessions = new Map();
 let nextId = data.nextId;
 let nextPurchaseId = data.nextPurchaseId;
 let nextUserId = data.nextUserId || 2;
+let nextChatId = data.nextChatId || 1;
 
 // Authentication middleware
 function requireAuth(req, res, next) {
@@ -118,10 +122,12 @@ app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => 
       listings,
       purchases,
       users,
+      chats,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
-      nextUserId
+      nextUserId,
+      nextChatId
     });
 
     res.json(newListing);
@@ -187,10 +193,12 @@ app.post('/api/purchases', (req, res) => {
       listings,
       purchases,
       users,
+      chats,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
-      nextUserId
+      nextUserId,
+      nextChatId
     });
 
     // In a real application, you would:
@@ -239,10 +247,12 @@ app.delete('/api/listings/:id', requireAuth, (req, res) => {
       listings,
       purchases,
       users,
+      chats,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
-      nextUserId
+      nextUserId,
+      nextChatId
     });
 
     res.json({ success: true, message: 'Listing deleted successfully', deletedListing });
@@ -293,10 +303,12 @@ app.post('/api/register', (req, res) => {
       listings,
       purchases,
       users,
+      chats,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
-      nextUserId
+      nextUserId,
+      nextChatId
     });
 
     res.json({ success: true, message: 'User registered successfully' });

@@ -206,6 +206,9 @@ function renderListings() {
                     <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg text-sm">
                         👁️ Details
                     </button>
+                    <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm">
+                        💬 Chat
+                    </button>
                     <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg text-sm">
                         💰 Purchase
                     </button>
@@ -408,5 +411,120 @@ async function deleteListing(listingId) {
         console.error('Error deleting listing:', error);
         const errorMsg = error.response?.data?.error || 'Error deleting listing. Please try again.';
         alert(errorMsg);
+    }
+}
+
+let currentChatListingId = null;
+let chatRefreshInterval = null;
+
+function openChatModal(listingId, listingTitle) {
+    if (!currentUser) {
+        alert('Please login to chat with property owners');
+        return;
+    }
+
+    currentChatListingId = listingId;
+    
+    const modal = document.createElement('div');
+    modal.id = 'chatModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full h-96 flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">💬 Chat about: ${listingTitle}</h2>
+                <button onclick="closeChatModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3">
+                <div class="text-center text-gray-500">Loading messages...</div>
+            </div>
+            
+            <div class="p-4 border-t">
+                <div class="flex space-x-2">
+                    <input id="chatInput" type="text" placeholder="Type your message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="sendChatMessage()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    loadChatMessages();
+    
+    // Auto-refresh messages every 3 seconds
+    chatRefreshInterval = setInterval(loadChatMessages, 3000);
+    
+    // Focus on input
+    document.getElementById('chatInput').focus();
+    
+    // Handle Enter key to send message
+    document.getElementById('chatInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+    });
+}
+
+function closeChatModal() {
+    const modal = document.getElementById('chatModal');
+    if (modal) {
+        modal.remove();
+    }
+    
+    if (chatRefreshInterval) {
+        clearInterval(chatRefreshInterval);
+        chatRefreshInterval = null;
+    }
+    
+    currentChatListingId = null;
+}
+
+async function loadChatMessages() {
+    if (!currentChatListingId) return;
+    
+    try {
+        const response = await axios.get(`/api/chats/${currentChatListingId}/messages`);
+        const messages = response.data;
+        
+        const chatContainer = document.getElementById('chatMessages');
+        if (!chatContainer) return;
+        
+        if (messages.length === 0) {
+            chatContainer.innerHTML = '<div class="text-center text-gray-500">No messages yet. Start the conversation!</div>';
+            return;
+        }
+        
+        chatContainer.innerHTML = messages.map(msg => `
+            <div class="flex ${msg.userId === currentUser._id ? 'justify-end' : 'justify-start'}">
+                <div class="max-w-xs lg:max-w-md ${msg.userId === currentUser._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} rounded-lg px-3 py-2">
+                    <div class="text-xs opacity-75 mb-1">${msg.username}</div>
+                    <div class="text-sm">${msg.message}</div>
+                    <div class="text-xs opacity-60 mt-1">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Scroll to bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    } catch (error) {
+        console.error('Error loading chat messages:', error);
+    }
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message || !currentChatListingId) return;
+    
+    try {
+        await axios.post(`/api/chats/${currentChatListingId}/messages`, { message });
+        input.value = '';
+        loadChatMessages(); // Refresh messages immediately
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Failed to send message. Please try again.');
     }
 }
