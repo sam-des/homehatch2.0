@@ -265,6 +265,80 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// Authentication endpoints
+app.post('/api/register', (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = users.find(u => u.username === username || u.email === email);
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    // Create new user
+    const newUser = {
+      _id: nextUserId++,
+      username,
+      email,
+      password, // In production, hash this password
+      role: 'user',
+      createdAt: new Date()
+    };
+
+    users.push(newUser);
+
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      users,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId
+    });
+
+    res.json({ success: true, message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/login', (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Find user
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    // Create session
+    const sessionId = Date.now().toString() + Math.random().toString(36).substr(2);
+    sessions.set(sessionId, user);
+
+    res.json({ 
+      success: true, 
+      sessionId, 
+      user: { ...user, password: undefined } // Don't send password back
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/me', requireAuth, (req, res) => {
+  res.json(req.user);
+});
+
+app.post('/api/logout', requireAuth, (req, res) => {
+  const sessionId = req.headers['x-session-id'];
+  sessions.delete(sessionId);
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
