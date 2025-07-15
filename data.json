@@ -1,6 +1,26 @@
 {
   "listings": [],
   "purchases": [],
+  "users": [
+    {
+      "_id": 2,
+      "username": "sam",
+      "email": "sammydessup@gmail.com",
+      "password": "!!SAMMAH9009mar",
+      "role": "user",
+      "createdAt": "2025-07-15T19:00:51.086Z"
+    },
+    {
+      "_id": 3,
+      "username": "des",
+      "email": "desyiz@yahoo.com",
+      "password": "90092024",
+      "role": "user",
+      "createdAt": "2025-07-15T19:26:50.440Z"
+    }
+  ],
+  "sessions": [],
   "nextId": 2,
-  "nextPurchaseId": 1
+  "nextPurchaseId": 1,
+  "nextUserId": 4
 }
