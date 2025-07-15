@@ -39,22 +39,20 @@
       "password": "90092024",
       "role": "user",
       "createdAt": "2025-07-15T19:26:50.440Z"
+    },
+    {
+      "_id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin",
+      "email": "admin@homehatch.com",
+      "createdAt": "2025-07-15T22:05:56.703Z"
     }
   ],
-  "sessions": [
-    [
-      "1752608154826k32hbiu9z9",
-      {
-        "_id": 3,
-        "username": "des",
-        "email": "desyiz@yahoo.com",
-        "password": "90092024",
-        "role": "user",
-        "createdAt": "2025-07-15T19:26:50.440Z"
-      }
-    ]
-  ],
+  "chats": [],
+  "sessions": [],
   "nextId": 3,
   "nextPurchaseId": 1,
-  "nextUserId": 4
+  "nextUserId": 4,
+  "nextChatId": 1
 }
