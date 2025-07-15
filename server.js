@@ -64,6 +64,33 @@ let listings = data.listings;
 let purchases = data.purchases;
 let users = data.users || [];
 let chats = data.chats || [];
+
+// Ensure admin account exists
+const adminExists = users.find(u => u.username === 'admin');
+if (!adminExists) {
+  users.push({
+    _id: 1,
+    username: 'admin',
+    password: 'admin123',
+    role: 'admin',
+    email: 'admin@homehatch.com',
+    createdAt: new Date()
+  });
+  
+  // Save the updated data with admin account
+  saveData({
+    listings,
+    purchases,
+    users,
+    chats: chats,
+    sessions: [],
+    nextId: data.nextId || 1,
+    nextPurchaseId: data.nextPurchaseId || 1,
+    nextUserId: data.nextUserId || 2,
+    nextChatId: data.nextChatId || 1
+  });
+}
+
 // Simple session storage (in production, use Redis or database)
 let sessions = new Map();
 let nextId = data.nextId;
