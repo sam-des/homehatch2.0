@@ -378,6 +378,19 @@ app.post('/api/logout', requireAuth, (req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
+app.get('/api/my-purchases', requireAuth, (req, res) => {
+  try {
+    // For now, return empty array since we don't have user-specific purchase tracking
+    // In a real app, you'd filter purchases by user ID
+    const userPurchases = purchases.filter(purchase => 
+      purchase.buyer && purchase.buyer.email === req.user.email
+    );
+    res.json(userPurchases);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);

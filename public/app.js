@@ -40,12 +40,69 @@ async function checkAuth() {
 function updateAuthUI() {
     const loginSection = document.getElementById('loginSection');
     const userSection = document.getElementById('userSection');
-    const welcomeText = document.getElementById('welcomeText');
 
     if (currentUser) {
         loginSection.classList.add('hidden');
         userSection.classList.remove('hidden');
-        welcomeText.textContent = `Welcome, ${currentUser.username}${currentUser.role === 'admin' ? ' (Admin)' : ''}`;
+        
+        // Update user section with profile dropdown
+        userSection.innerHTML = `
+            <div class="relative">
+                <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-20">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-sm font-bold">
+                        ${currentUser.username.charAt(0).toUpperCase()}
+                    </div>
+                    <span class="hidden md:block">${currentUser.username}</span>
+                    <svg class="w-4 h-4 transition-transform duration-200" id="profileArrow" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+                
+                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                    <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">
+                                ${currentUser.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">${currentUser.username}</h3>
+                                <p class="text-sm opacity-90">${currentUser.email}</p>
+                                ${currentUser.role === 'admin' ? '<span class="inline-block bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">Administrator</span>' : '<span class="inline-block bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">User</span>'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="py-2">
+                        <a href="/view" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3 block">
+                            <span class="text-blue-500 text-lg">🏠</span>
+                            <span class="text-gray-700">Browse Rentals</span>
+                        </a>
+                        <button onclick="viewMyListings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                            <span class="text-green-500 text-lg">📝</span>
+                            <span class="text-gray-700">My Listings</span>
+                        </button>
+                        <button onclick="viewAccountSettings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                            <span class="text-gray-500 text-lg">⚙️</span>
+                            <span class="text-gray-700">Account Settings</span>
+                        </button>
+                        ${currentUser.role === 'admin' ? `
+                        <hr class="my-2 border-gray-200">
+                        <button onclick="viewAdminPanel()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                            <span class="text-yellow-500 text-lg">👑</span>
+                            <span class="text-gray-700">Admin Panel</span>
+                        </button>
+                        ` : ''}
+                        <hr class="my-2 border-gray-200">
+                        <button onclick="logout()" class="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center space-x-3 text-red-600">
+                            <span class="text-lg">🚪</span>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        setupProfileDropdown();
     } else {
         loginSection.classList.remove('hidden');
         userSection.classList.add('hidden');
@@ -353,4 +410,146 @@ function setupScrollGradient() {
         const gradient = `linear-gradient(135deg, rgb(${color1.r}, ${color1.g}, ${color1.b}) 0%, rgb(${color2.r}, ${color2.g}, ${color2.b}) 100%)`;
         document.body.style.background = gradient;
     });
+}
+
+function setupProfileDropdown() {
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const profileArrow = document.getElementById('profileArrow');
+    
+    if (!profileBtn || !profileDropdown || !profileArrow) return;
+    
+    profileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isHidden = profileDropdown.classList.contains('hidden');
+        
+        if (isHidden) {
+            profileDropdown.classList.remove('hidden');
+            profileArrow.style.transform = 'rotate(180deg)';
+        } else {
+            profileDropdown.classList.add('hidden');
+            profileArrow.style.transform = 'rotate(0deg)';
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+            profileDropdown.classList.add('hidden');
+            profileArrow.style.transform = 'rotate(0deg)';
+        }
+    });
+}
+
+function viewMyListings() {
+    // Filter listings to show only current user's listings
+    const myListings = listings.filter(listing => listing.createdBy === currentUser._id);
+    
+    // Close dropdown
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
+    
+    // Scroll to listings section
+    document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
+    
+    alert(`You have ${myListings.length} listings. Scroll down to see them.`);
+}
+
+function viewAccountSettings() {
+    // Close dropdown
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">⚙️ Account Settings</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">Account Information</h3>
+                        <p><strong>Username:</strong> ${currentUser.username}</p>
+                        <p><strong>Email:</strong> ${currentUser.email}</p>
+                        <p><strong>Role:</strong> ${currentUser.role}</p>
+                        <p><strong>Member Since:</strong> ${new Date(currentUser.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
+                            Change Password
+                        </button>
+                        <button class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors">
+                            Update Email
+                        </button>
+                        <button class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition-colors">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function viewAdminPanel() {
+    // Close dropdown
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-blue-800 mb-2">📊 Statistics</h3>
+                        <p class="text-sm text-blue-600">Total Listings: ${listings.length}</p>
+                        <p class="text-sm text-blue-600">Your Listings: ${listings.filter(l => l.createdBy === currentUser._id).length}</p>
+                    </div>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-green-800 mb-2">👥 User Management</h3>
+                        <button class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-colors">
+                            View All Users
+                        </button>
+                    </div>
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-yellow-800 mb-2">🏠 Listing Management</h3>
+                        <button class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-colors">
+                            Moderate Listings
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-red-800 mb-2">⚠️ Admin Actions</h3>
+                    <p class="text-sm text-red-600 mb-3">Use these features carefully. They affect all users.</p>
+                    <div class="space-x-2">
+                        <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors">
+                            Clear All Data
+                        </button>
+                        <button class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm transition-colors">
+                            Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
 }
