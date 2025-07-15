@@ -1,5 +1,27 @@
 {
-  "listings": [],
+  "listings": [
+    {
+      "_id": 2,
+      "title": "test",
+      "address": "123 main ",
+      "country": "test",
+      "price": 1200,
+      "description": "test",
+      "amenities": [
+        "test"
+      ],
+      "images": [
+        "/uploads/1752608212263-house.jpg"
+      ],
+      "contact": {
+        "name": "des",
+        "email": "desyiz@yahoo.com",
+        "phone": "2043334057"
+      },
+      "createdAt": "2025-07-15T19:36:52.269Z",
+      "createdBy": 3
+    }
+  ],
   "purchases": [],
   "users": [
     {
@@ -19,8 +41,20 @@
       "createdAt": "2025-07-15T19:26:50.440Z"
     }
   ],
-  "sessions": [],
-  "nextId": 2,
+  "sessions": [
+    [
+      "1752608154826k32hbiu9z9",
+      {
+        "_id": 3,
+        "username": "des",
+        "email": "desyiz@yahoo.com",
+        "password": "90092024",
+        "role": "user",
+        "createdAt": "2025-07-15T19:26:50.440Z"
+      }
+    ]
+  ],
+  "nextId": 3,
   "nextPurchaseId": 1,
   "nextUserId": 4
 }
