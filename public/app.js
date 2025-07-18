@@ -1,14 +1,13 @@
+
 let listings = [];
 let currentUser = null;
 let sessionId = null;
+let isGuest = false;
 
 // Load listings when page loads
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
-    loadListings();
-    setupImagePreview();
     setupAuthForms();
-    setupForm();
     setupScrollGradient();
 });
 
@@ -26,24 +25,52 @@ async function checkAuth() {
         try {
             const response = await axios.get('/api/me');
             currentUser = response.data;
+            showMainApp();
             updateAuthUI();
+            loadListings();
+            setupForm();
         } catch (error) {
             // Session invalid, clear it
             localStorage.removeItem('sessionId');
             sessionId = null;
             currentUser = null;
-            updateAuthUI();
+            showWelcomeScreen();
         }
+    } else {
+        showWelcomeScreen();
     }
+}
+
+function showWelcomeScreen() {
+    document.getElementById('welcomeScreen').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+}
+
+function showMainApp() {
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+}
+
+function browseAsGuest() {
+    isGuest = true;
+    showMainApp();
+    updateAuthUI();
+    loadListings();
+    document.getElementById('headerSubtitle').textContent = 'Browse rental properties (Guest Mode)';
+    document.getElementById('guestNotice').classList.remove('hidden');
 }
 
 function updateAuthUI() {
     const loginSection = document.getElementById('loginSection');
     const userSection = document.getElementById('userSection');
+    const listPropertyBtn = document.getElementById('listPropertyBtn');
 
     if (currentUser) {
         loginSection.classList.add('hidden');
         userSection.classList.remove('hidden');
+        listPropertyBtn.classList.remove('hidden');
+        document.getElementById('headerSubtitle').textContent = 'List your rental property with ease';
+        document.getElementById('guestNotice').classList.add('hidden');
         
         // Update user section with profile dropdown
         userSection.innerHTML = `
@@ -73,10 +100,6 @@ function updateAuthUI() {
                     </div>
                     
                     <div class="py-2">
-                        <a href="/view" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3 block">
-                            <span class="text-blue-500 text-lg">🏠</span>
-                            <span class="text-gray-700">Browse Rentals</span>
-                        </a>
                         <button onclick="viewMyListings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                             <span class="text-green-500 text-lg">📝</span>
                             <span class="text-gray-700">My Listings</span>
@@ -103,9 +126,14 @@ function updateAuthUI() {
         `;
         
         setupProfileDropdown();
+    } else if (isGuest) {
+        loginSection.classList.remove('hidden');
+        userSection.classList.add('hidden');
+        listPropertyBtn.classList.add('hidden');
     } else {
         loginSection.classList.remove('hidden');
         userSection.classList.add('hidden');
+        listPropertyBtn.classList.add('hidden');
     }
 }
 
@@ -127,8 +155,11 @@ async function handleLogin(e) {
         localStorage.setItem('sessionId', sessionId);
 
         hideLoginModal();
+        isGuest = false;
+        showMainApp();
         updateAuthUI();
-        loadListings(); // Reload to show delete buttons where appropriate
+        loadListings();
+        setupForm();
         alert('Login successful!');
     } catch (error) {
         alert('Login failed: ' + (error.response?.data?.error || 'Unknown error'));
@@ -161,8 +192,8 @@ async function logout() {
     localStorage.removeItem('sessionId');
     sessionId = null;
     currentUser = null;
-    updateAuthUI();
-    loadListings(); // Reload to hide delete buttons
+    isGuest = false;
+    showWelcomeScreen();
     alert('Logged out successfully!');
 }
 
@@ -184,33 +215,19 @@ function hideRegisterModal() {
     document.getElementById('registerForm').reset();
 }
 
-function setupImagePreview() {
-    window.addEventListener('scroll', function() {
-        const scrolled = window.pageYOffset;
-        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        const scrollProgress = Math.min(scrolled / maxScroll, 1);
-
-        // Interpolate from purple (#667eea, #764ba2) to red (#ff6b6b, #ee5a24)
-        const startColor1 = { r: 102, g: 126, b: 234 }; // #667eea
-        const startColor2 = { r: 118, g: 75, b: 162 };  // #764ba2
-        const endColor1 = { r: 255, g: 107, b: 107 };   // #ff6b6b
-        const endColor2 = { r: 238, g: 90, b: 36 };     // #ee5a24
-
-        const color1 = {
-            r: Math.round(startColor1.r + (endColor1.r - startColor1.r) * scrollProgress),
-            g: Math.round(startColor1.g + (endColor1.g - startColor1.g) * scrollProgress),
-            b: Math.round(startColor1.b + (endColor1.b - startColor1.b) * scrollProgress)
-        };
-
-        const color2 = {
-            r: Math.round(startColor2.r + (endColor2.r - startColor2.r) * scrollProgress),
-            g: Math.round(startColor2.g + (endColor2.g - startColor2.g) * scrollProgress),
-            b: Math.round(startColor2.b + (endColor2.b - startColor2.b) * scrollProgress)
-        };
-
-        const gradient = `linear-gradient(135deg, rgb(${color1.r}, ${color1.g}, ${color1.b}) 0%, rgb(${color2.r}, ${color2.g}, ${color2.b}) 100%)`;
-        document.body.style.background = gradient;
-    });
+function showListingForm() {
+    if (!currentUser) {
+        alert('Please login to create a listing');
+        showLoginModal();
+        return;
+    }
+    
+    const formSection = document.getElementById('listingFormSection');
+    formSection.classList.toggle('hidden');
+    
+    if (!formSection.classList.contains('hidden')) {
+        formSection.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 async function loadListings() {
@@ -283,7 +300,15 @@ function renderListings() {
 
                 <div class="flex items-center justify-between pt-4 border-t border-gray-200">
                     <div class="text-sm text-gray-500">
-                        <span class="font-semibold">Listed by:</span> ${listing.contact?.name || 'Anonymous'}
+                        ${currentUser || !isGuest ? `
+                            <span class="font-semibold">Contact:</span> ${listing.contact?.name || 'Anonymous'}
+                            ${listing.contact?.email ? `<br><span class="text-blue-600">${listing.contact.email}</span>` : ''}
+                            ${listing.contact?.phone ? `<br><span class="text-green-600">${listing.contact.phone}</span>` : ''}
+                        ` : `
+                            <button onclick="showLoginModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                Login to see contact
+                            </button>
+                        `}
                     </div>
                     <div class="flex items-center space-x-3">
                         <div class="text-2xl font-bold text-green-600">
@@ -308,9 +333,10 @@ function setupForm() {
         e.preventDefault();
 
         if (!currentUser) {
-        alert('Please login to create a listing');
-        return;
-    }
+            alert('Please login to create a listing');
+            showLoginModal();
+            return;
+        }
 
         const formData = new FormData();
         const images = document.getElementById('images').files;
@@ -345,6 +371,7 @@ function setupForm() {
 
             // Reset form and reload listings
             form.reset();
+            document.getElementById('listingFormSection').classList.add('hidden');
             await loadListings();
             alert('Listing added successfully!');
         } catch (error) {
