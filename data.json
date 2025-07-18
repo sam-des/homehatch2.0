@@ -1,27 +1,5 @@
 {
-  "listings": [
-    {
-      "_id": 2,
-      "title": "test",
-      "address": "123 main ",
-      "country": "test",
-      "price": 1200,
-      "description": "test",
-      "amenities": [
-        "test"
-      ],
-      "images": [
-        "/uploads/1752608212263-house.jpg"
-      ],
-      "contact": {
-        "name": "des",
-        "email": "desyiz@yahoo.com",
-        "phone": "2043334057"
-      },
-      "createdAt": "2025-07-15T19:36:52.269Z",
-      "createdBy": 3
-    }
-  ],
+  "listings": [],
   "purchases": [],
   "users": [
     {
@@ -50,8 +28,20 @@
     }
   ],
   "chats": [],
-  "sessions": [],
-  "nextId": 3,
+  "sessions": [
+    [
+      "17526181033590jdaoaf2w9yp",
+      {
+        "_id": 1,
+        "username": "admin",
+        "password": "admin123",
+        "role": "admin",
+        "email": "admin@homehatch.com",
+        "createdAt": "2025-07-15T22:05:56.703Z"
+      }
+    ]
+  ],
+  "nextId": 4,
   "nextPurchaseId": 1,
   "nextUserId": 4,
   "nextChatId": 1
