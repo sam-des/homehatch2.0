@@ -1,0 +1,17 @@
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# These files should always have LF line endings
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+
+# Binary files
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary

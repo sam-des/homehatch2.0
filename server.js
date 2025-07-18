@@ -16,6 +16,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 const fs = require('fs');
 const DATA_FILE = './data.json';
 
+// Ensure uploads directory exists
+if (!fs.existsSync('./uploads')) {
+  fs.mkdirSync('./uploads', { recursive: true });
+}
+
 // Load data from file or initialize empty data
 function loadData() {
   try {
