@@ -378,6 +378,50 @@ app.post('/api/logout', requireAuth, (req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
+app.post('/api/change-password', requireAuth, (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+    
+    // Find user and verify current password
+    const userIndex = users.findIndex(u => u._id === req.user._id);
+    if (userIndex === -1 || users[userIndex].password !== currentPassword) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+    
+    // Update password
+    users[userIndex].password = newPassword;
+    
+    // Update session with new user data
+    const sessionId = req.headers['x-session-id'];
+    sessions.set(sessionId, users[userIndex]);
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      users,
+      chats,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId
+    });
+    
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/my-purchases', requireAuth, (req, res) => {
   try {
     // For now, return empty array since we don't have user-specific purchase tracking

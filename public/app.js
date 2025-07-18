@@ -104,6 +104,10 @@ function updateAuthUI() {
                             <span class="text-green-500 text-lg">📝</span>
                             <span class="text-gray-700">My Listings</span>
                         </button>
+                        <button onclick="showChangePasswordModal()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                            <span class="text-blue-500 text-lg">🔐</span>
+                            <span class="text-gray-700">Change Password</span>
+                        </button>
                         <button onclick="viewAccountSettings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                             <span class="text-gray-500 text-lg">⚙️</span>
                             <span class="text-gray-700">Account Settings</span>
@@ -579,4 +583,86 @@ function viewAdminPanel() {
     `;
     
     document.body.appendChild(modal);
+}
+
+function showChangePasswordModal() {
+    // Close dropdown
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">🔐 Change Password</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <form id="changePasswordForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+                        <input type="password" id="currentPassword" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter current password">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                        <input type="password" id="newPassword" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter new password (min 6 characters)" minlength="6">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Confirm new password" minlength="6">
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-4">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                            Change Password
+                        </button>
+                        <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Setup form handler
+    document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+}
+
+async function handleChangePassword(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        alert('New passwords do not match');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        alert('New password must be at least 6 characters long');
+        return;
+    }
+    
+    try {
+        const response = await axios.post('/api/change-password', {
+            currentPassword,
+            newPassword
+        });
+        
+        if (response.data.success) {
+            alert('Password changed successfully!');
+            document.querySelector('.fixed').remove();
+        }
+    } catch (error) {
+        alert('Error changing password: ' + (error.response?.data?.error || 'Unknown error'));
+    }
 }
