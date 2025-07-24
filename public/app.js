@@ -3,9 +3,41 @@ let listings = [];
 let currentUser = null;
 let sessionId = null;
 let isGuest = false;
+let currentLanguage = 'en';
+
+// Language translations
+const translations = {
+    en: {
+        welcome: 'Welcome',
+        admin: 'ADMIN', 
+        myListings: 'My Listings',
+        changePassword: 'Change Password',
+        accountSettings: 'Account Settings',
+        adminPanel: 'Admin Panel',
+        signOut: 'Sign Out',
+        changeProfilePicture: 'Change Profile Picture'
+    },
+    fr: {
+        welcome: 'Bienvenue',
+        admin: 'ADMIN',
+        myListings: 'Mes Annonces', 
+        changePassword: 'Changer le Mot de Passe',
+        accountSettings: 'Paramètres du Compte',
+        adminPanel: 'Panneau Admin',
+        signOut: 'Déconnexion',
+        changeProfilePicture: 'Changer la Photo de Profil'
+    }
+};
+
+function t(key) {
+    return translations[currentLanguage][key] || translations.en[key] || key;
+}
 
 // Load listings when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    // Load saved language preference
+    currentLanguage = localStorage.getItem('language') || 'en';
+    
     checkAuth();
     setupAuthForms();
     setupScrollGradient();
@@ -74,10 +106,17 @@ function updateAuthUI() {
         
         // Update user section with profile dropdown
         userSection.innerHTML = `
+            <select id="languageSelector" class="bg-white bg-opacity-10 text-white px-3 py-1 rounded border border-white border-opacity-20 text-sm mr-4">
+                <option value="en" ${currentLanguage === 'en' ? 'selected' : ''}>English</option>
+                <option value="fr" ${currentLanguage === 'fr' ? 'selected' : ''}>Français</option>
+            </select>
             <div class="relative">
                 <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-20">
-                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-sm font-bold">
-                        ${currentUser.username.charAt(0).toUpperCase()}
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
+                        ${currentUser.profilePicture ? 
+                            `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
+                            `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                        }
                     </div>
                     <span class="hidden md:block">${currentUser.username}</span>
                     <svg class="w-4 h-4 transition-transform duration-200" id="profileArrow" fill="currentColor" viewBox="0 0 20 20">
@@ -88,41 +127,48 @@ function updateAuthUI() {
                 <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
                     <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                         <div class="flex items-center space-x-3">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">
-                                ${currentUser.username.charAt(0).toUpperCase()}
+                            <div class="w-12 h-12 rounded-full overflow-hidden">
+                                ${currentUser.profilePicture ? 
+                                    `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
+                                    `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                                }
                             </div>
                             <div>
                                 <h3 class="font-semibold text-lg">${currentUser.username}</h3>
                                 <p class="text-sm opacity-90">${currentUser.email}</p>
-                                ${currentUser.role === 'admin' ? '<span class="inline-block bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">Administrator</span>' : '<span class="inline-block bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">User</span>'}
+                                ${currentUser.role === 'admin' ? `<span class="inline-block bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">${t('admin')}</span>` : '<span class="inline-block bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">User</span>'}
                             </div>
                         </div>
                     </div>
                     
                     <div class="py-2">
+                        <button onclick="changeProfilePicture()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                            <span class="text-purple-500 text-lg">📷</span>
+                            <span class="text-gray-700">${t('changeProfilePicture')}</span>
+                        </button>
                         <button onclick="viewMyListings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                             <span class="text-green-500 text-lg">📝</span>
-                            <span class="text-gray-700">My Listings</span>
+                            <span class="text-gray-700">${t('myListings')}</span>
                         </button>
                         <button onclick="showChangePasswordModal()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                             <span class="text-blue-500 text-lg">🔐</span>
-                            <span class="text-gray-700">Change Password</span>
+                            <span class="text-gray-700">${t('changePassword')}</span>
                         </button>
                         <button onclick="viewAccountSettings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                             <span class="text-gray-500 text-lg">⚙️</span>
-                            <span class="text-gray-700">Account Settings</span>
+                            <span class="text-gray-700">${t('accountSettings')}</span>
                         </button>
                         ${currentUser.role === 'admin' ? `
                         <hr class="my-2 border-gray-200">
                         <button onclick="viewAdminPanel()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                             <span class="text-yellow-500 text-lg">👑</span>
-                            <span class="text-gray-700">Admin Panel</span>
+                            <span class="text-gray-700">${t('adminPanel')}</span>
                         </button>
                         ` : ''}
                         <hr class="my-2 border-gray-200">
                         <button onclick="logout()" class="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center space-x-3 text-red-600">
                             <span class="text-lg">🚪</span>
-                            <span>Sign Out</span>
+                            <span>${t('signOut')}</span>
                         </button>
                     </div>
                 </div>
@@ -130,6 +176,7 @@ function updateAuthUI() {
         `;
         
         setupProfileDropdown();
+        setupLanguageSelector();
     } else if (isGuest) {
         loginSection.classList.remove('hidden');
         userSection.classList.add('hidden');
@@ -138,6 +185,18 @@ function updateAuthUI() {
         loginSection.classList.remove('hidden');
         userSection.classList.add('hidden');
         listPropertyBtn.classList.add('hidden');
+    }
+}
+
+function setupLanguageSelector() {
+    const languageSelector = document.getElementById('languageSelector');
+    if (languageSelector) {
+        languageSelector.addEventListener('change', function(e) {
+            currentLanguage = e.target.value;
+            localStorage.setItem('language', currentLanguage);
+            updateAuthUI();
+            renderListings();
+        });
     }
 }
 
@@ -664,5 +723,86 @@ async function handleChangePassword(e) {
         }
     } catch (error) {
         alert('Error changing password: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+function changeProfilePicture() {
+    // Close dropdown
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">📷 ${t('changeProfilePicture')}</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <form id="profilePictureForm" class="space-y-4">
+                    <div class="text-center mb-4">
+                        <div class="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4">
+                            ${currentUser.profilePicture ? 
+                                `<img src="${currentUser.profilePicture}" alt="Current Profile" class="w-full h-full object-cover">` :
+                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                            }
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select New Profile Picture</label>
+                        <input id="profilePictureInput" type="file" accept="image/*" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-4">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                            Upload Picture
+                        </button>
+                        <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Setup form handler
+    document.getElementById('profilePictureForm').addEventListener('submit', handleProfilePictureUpload);
+}
+
+async function handleProfilePictureUpload(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('profilePictureInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a file');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+    
+    try {
+        const response = await axios.post('/api/profile-picture', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        
+        if (response.data.success) {
+            currentUser.profilePicture = response.data.profilePictureUrl;
+            updateAuthUI();
+            alert('Profile picture updated successfully!');
+            document.querySelector('.fixed').remove();
+        }
+    } catch (error) {
+        alert('Error uploading profile picture: ' + (error.response?.data?.error || 'Unknown error'));
     }
 }

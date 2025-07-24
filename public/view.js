@@ -72,7 +72,7 @@ function updateHeader() {
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
                 </button>
-                
+
                 <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
                     <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                         <div class="flex items-center space-x-3">
@@ -86,7 +86,7 @@ function updateHeader() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="py-2">
                         <button onclick="viewMyListings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                             <span class="text-blue-500 text-lg">🏠</span>
@@ -117,7 +117,7 @@ function updateHeader() {
             </div>
         `;
         nav.appendChild(userInfo);
-        
+
         // Add event listeners for profile dropdown
         setupProfileDropdown();
     }
@@ -194,7 +194,7 @@ function renderListings() {
                     ${listing.images.length > 1 ? `<div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">+${listing.images.length - 1} photos</div>` : ''}
                     <div class="absolute bottom-4 left-4 text-white">
                         <div class="text-3xl font-bold">$${listing.price}</div>
-                        <div class="text-sm opacity-80">per month</div>
+                        <div class="text-sm opacity-80">${t('perMonth')}</div>
                     </div>
                 </div>
             ` : `
@@ -202,7 +202,7 @@ function renderListings() {
                     <span class="text-white text-8xl opacity-50">🏠</span>
                     <div class="absolute bottom-4 left-4 text-white">
                         <div class="text-3xl font-bold">$${listing.price}</div>
-                        <div class="text-sm opacity-80">per month</div>
+                        <div class="text-sm opacity-80">${t('perMonth')}</div>
                     </div>
                 </div>
             `}
@@ -285,7 +285,7 @@ function setupSearch() {
 
     searchBtn.addEventListener('click', performSearch);
     clearBtn.addEventListener('click', clearFilters);
-    
+
     // Add Enter key listeners for text inputs
     [searchTitle, searchLocation, maxPrice, minPrice].forEach(input => {
         input.addEventListener('keypress', function(e) {
@@ -319,7 +319,7 @@ function performSearch() {
             listing.amenities.some(amenity => amenity.toLowerCase().includes(amenityFilter));
         const matchesMinPrice = !minPriceValue || listing.price >= minPriceValue;
         const matchesMaxPrice = !maxPriceValue || listing.price <= maxPriceValue;
-        
+
         return matchesTitle && matchesLocation && matchesCountry && 
                matchesAmenity && matchesMinPrice && matchesMaxPrice;
     });
@@ -354,7 +354,7 @@ function clearFilters() {
     document.getElementById('minPrice').value = '';
     document.getElementById('maxPrice').value = '';
     document.getElementById('sortFilter').value = 'newest';
-    
+
     filteredListings = [...allListings];
     performSearch(); // Apply default sorting
 }
@@ -534,7 +534,7 @@ function openChatModal(listingId, listingTitle) {
     }
 
     currentChatListingId = listingId;
-    
+
     const modal = document.createElement('div');
     modal.id = 'chatModal';
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
@@ -544,11 +544,11 @@ function openChatModal(listingId, listingTitle) {
                 <h2 class="text-xl font-bold text-gray-800">💬 Chat about: ${listingTitle}</h2>
                 <button onclick="closeChatModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
-            
+
             <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3">
                 <div class="text-center text-gray-500">Loading messages...</div>
             </div>
-            
+
             <div class="p-4 border-t">
                 <div class="flex space-x-2">
                     <input id="chatInput" type="text" placeholder="Type your message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -562,13 +562,13 @@ function openChatModal(listingId, listingTitle) {
 
     document.body.appendChild(modal);
     loadChatMessages();
-    
+
     // Auto-refresh messages every 3 seconds
     chatRefreshInterval = setInterval(loadChatMessages, 3000);
-    
+
     // Focus on input
     document.getElementById('chatInput').focus();
-    
+
     // Handle Enter key to send message
     document.getElementById('chatInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
@@ -582,30 +582,30 @@ function closeChatModal() {
     if (modal) {
         modal.remove();
     }
-    
+
     if (chatRefreshInterval) {
         clearInterval(chatRefreshInterval);
         chatRefreshInterval = null;
     }
-    
+
     currentChatListingId = null;
 }
 
 async function loadChatMessages() {
     if (!currentChatListingId) return;
-    
+
     try {
         const response = await axios.get(`/api/chats/${currentChatListingId}/messages`);
         const messages = response.data;
-        
+
         const chatContainer = document.getElementById('chatMessages');
         if (!chatContainer) return;
-        
+
         if (messages.length === 0) {
             chatContainer.innerHTML = '<div class="text-center text-gray-500">No messages yet. Start the conversation!</div>';
             return;
         }
-        
+
         chatContainer.innerHTML = messages.map(msg => `
             <div class="flex ${msg.userId === currentUser._id ? 'justify-end' : 'justify-start'}">
                 <div class="max-w-xs lg:max-w-md ${msg.userId === currentUser._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} rounded-lg px-3 py-2">
@@ -615,7 +615,7 @@ async function loadChatMessages() {
                 </div>
             </div>
         `).join('');
-        
+
         // Scroll to bottom
         chatContainer.scrollTop = chatContainer.scrollHeight;
     } catch (error) {
@@ -626,9 +626,9 @@ async function loadChatMessages() {
 async function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
-    
+
     if (!message || !currentChatListingId) return;
-    
+
     try {
         await axios.post(`/api/chats/${currentChatListingId}/messages`, { message });
         input.value = '';
@@ -643,13 +643,13 @@ function setupProfileDropdown() {
     const profileBtn = document.getElementById('profileBtn');
     const profileDropdown = document.getElementById('profileDropdown');
     const profileArrow = document.getElementById('profileArrow');
-    
+
     if (!profileBtn || !profileDropdown || !profileArrow) return;
-    
+
     profileBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         const isHidden = profileDropdown.classList.contains('hidden');
-        
+
         if (isHidden) {
             profileDropdown.classList.remove('hidden');
             profileArrow.style.transform = 'rotate(180deg)';
@@ -658,7 +658,7 @@ function setupProfileDropdown() {
             profileArrow.style.transform = 'rotate(0deg)';
         }
     });
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
         if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
@@ -672,14 +672,14 @@ function viewMyListings() {
     // Filter listings to show only current user's listings
     filteredListings = allListings.filter(listing => listing.createdBy === currentUser._id);
     renderListings();
-    
+
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     // Scroll to listings
     document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
-    
+
     alert(`Showing ${filteredListings.length} of your listings`);
 }
 
@@ -687,7 +687,7 @@ function viewMyPurchases() {
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     // Show purchases modal
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
@@ -704,7 +704,7 @@ function viewMyPurchases() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
     loadUserPurchases();
 }
@@ -713,15 +713,15 @@ async function loadUserPurchases() {
     try {
         const response = await axios.get('/api/my-purchases');
         const purchases = response.data;
-        
+
         const container = document.getElementById('purchasesList');
         if (!container) return;
-        
+
         if (purchases.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500">No purchases yet.</div>';
             return;
         }
-        
+
         container.innerHTML = purchases.map(purchase => `
             <div class="border border-gray-200 rounded-lg p-4">
                 <h3 class="font-semibold text-lg text-gray-800">Purchase #${purchase._id}</h3>
@@ -743,7 +743,7 @@ function viewAccountSettings() {
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -753,7 +753,7 @@ function viewAccountSettings() {
                     <h2 class="text-2xl font-bold text-gray-800">⚙️ Account Settings</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <div class="space-y-4">
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="font-semibold text-gray-800 mb-2">Account Information</h3>
@@ -762,7 +762,7 @@ function viewAccountSettings() {
                         <p><strong>Role:</strong> ${currentUser.role}</p>
                         <p><strong>Member Since:</strong> ${new Date(currentUser.createdAt).toLocaleDateString()}</p>
                     </div>
-                    
+
                     <div class="space-y-2">
                         <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
                             Change Password
@@ -778,7 +778,7 @@ function viewAccountSettings() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 }
 
@@ -786,7 +786,7 @@ function viewAdminPanel() {
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -796,21 +796,21 @@ function viewAdminPanel() {
                     <h2 class="text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h3 class="font-semibold text-blue-800 mb-2">📊 Statistics</h3>
                         <p class="text-sm text-blue-600">Total Listings: ${allListings.length}</p>
                         <p class="text-sm text-blue-600">Total Users: ${allListings.reduce((acc, listing) => acc + (listing.createdBy ? 1 : 0), 0)}</p>
                     </div>
-                    
+
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h3 class="font-semibold text-green-800 mb-2">👥 User Management</h3>
                         <button class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-colors">
                             View All Users
                         </button>
                     </div>
-                    
+
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <h3 class="font-semibold text-yellow-800 mb-2">🏠 Listing Management</h3>
                         <button class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-colors">
@@ -818,7 +818,7 @@ function viewAdminPanel() {
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
                     <h3 class="font-semibold text-red-800 mb-2">⚠️ Admin Actions</h3>
                     <p class="text-sm text-red-600 mb-3">Use these features carefully. They affect all users.</p>
@@ -834,6 +834,181 @@ function viewAdminPanel() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
+}
+
+// Function to include translation
+function t(key) {
+    const translations = {
+        'perMonth': {
+            'en': 'per month',
+            'fr': 'par mois'
+        },
+        // Add more translations here
+    };
+    const lang = localStorage.getItem('language') || 'en'; // Default to English
+    return translations[key] && translations[key][lang] ? translations[key][lang] : translations[key]['en'];
+}
+
+// Function to change language
+function changeLanguage(lang) {
+    localStorage.setItem('language', lang);
+    renderListings();
+    updateHeader();
+}
+
+// Call this function on the body of the html
+function setupLanguageSwitcher() {
+    const languageSwitcher = document.createElement('div');
+    languageSwitcher.className = 'fixed bottom-4 left-4 bg-white bg-opacity-70 rounded-full shadow-lg z-50';
+    languageSwitcher.innerHTML = `
+        <button onclick="changeLanguage('en')" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors">English</button>
+        <button onclick="changeLanguage('fr')" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors">Français</button>
+    `;
+    document.body.appendChild(languageSwitcher);
+}
+
+// Modify setupAuthenticatedApp to include Language Switcher
+
+function setupAuthenticatedApp() {
+    updateHeader();
+    setupLanguageSwitcher();
+}
+// Modify renderListings to use t() for translations
+
+// Add the button to go back to the main page
+function setupBottomButtons() {
+    const bottomButtonsContainer = document.createElement('div');
+    bottomButtonsContainer.className = 'fixed bottom-0 left-0 w-full bg-gray-100 py-4 border-t border-gray-200 flex justify-center';
+    bottomButtonsContainer.innerHTML = `
+        <button onclick="goToHomePage()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md">
+            Return to Home Page
+        </button>
+    `;
+    document.body.appendChild(bottomButtonsContainer);
+}
+
+function goToHomePage() {
+    // Reload listings to go to the "home page"
+    loadListings();
+
+    // Scroll to listings
+    document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    loadListings();
+    setupSearch();
+    setupPurchaseForm();
+    setupScrollGradient();
+    setupBottomButtons();
+});
+
+// Add profile picture option
+
+// Account Settings Page
+
+// Add a button to change profile picture in the Account Settings Modal
+
+function viewAccountSettings() {
+    // Close dropdown
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">⚙️ Account Settings</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">Account Information</h3>
+                        <p><strong>Username:</strong> ${currentUser.username}</p>
+                        <p><strong>Email:</strong> ${currentUser.email}</p>
+                        <p><strong>Role:</strong> ${currentUser.role}</p>
+                        <p><strong>Member Since:</strong> ${new Date(currentUser.createdAt).toLocaleDateString()}</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
+                            Change Password
+                        </button>
+                        <button class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors">
+                            Update Email
+                        </button>
+                        <button onclick="openProfilePictureModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg transition-colors">
+                            Change Profile Picture
+                        </button>
+                        <button class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition-colors">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function openProfilePictureModal() {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">📸 Change Profile Picture</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                    <p>Upload a new profile picture:</p>
+                    <input type="file" id="profilePictureInput" accept="image/*">
+                    <button onclick="uploadProfilePicture()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition-colors">Upload</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+async function uploadProfilePicture() {
+    const input = document.getElementById('profilePictureInput');
+    const file = input.files[0];
+
+    if (!file) {
+        alert('Please select a file to upload.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    try {
+        const response = await axios.post('/api/upload-profile-picture', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        if (response.data.success) {
+            alert('Profile picture updated successfully!');
+            // Optionally refresh the page or update the profile picture in the header
+            window.location.reload();
+        } else {
+            alert('Failed to upload profile picture. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        alert('Failed to upload profile picture. Please try again.');
+    }
 }

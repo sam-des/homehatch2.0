@@ -440,6 +440,49 @@ app.get('/api/my-purchases', requireAuth, (req, res) => {
   }
 });
 
+app.post('/api/profile-picture', requireAuth, upload.single('profilePicture'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const profilePictureUrl = `/uploads/${req.file.filename}`;
+    
+    // Update user's profile picture
+    const userIndex = users.findIndex(u => u._id === req.user._id);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    users[userIndex].profilePicture = profilePictureUrl;
+    
+    // Update session with new user data
+    const sessionId = req.headers['x-session-id'];
+    sessions.set(sessionId, users[userIndex]);
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      users,
+      chats,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId
+    });
+    
+    res.json({ 
+      success: true, 
+      profilePictureUrl,
+      message: 'Profile picture updated successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
