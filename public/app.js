@@ -92,6 +92,10 @@ function browseAsGuest() {
     document.getElementById('guestNotice').classList.remove('hidden');
 }
 
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function updateAuthUI() {
     const loginSection = document.getElementById('loginSection');
     const userSection = document.getElementById('userSection');

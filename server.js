@@ -78,6 +78,7 @@ if (!adminExists) {
     username: 'admin',
     password: 'admin123',
     role: 'admin',
+    isAdmin: true,
     email: 'admin@homehatch.com',
     createdAt: new Date()
   });
@@ -366,7 +367,7 @@ app.post('/api/login', (req, res) => {
     res.json({ 
       success: true, 
       sessionId, 
-      user: { ...user, password: undefined } // Don't send password back
+      user: { ...user, password: undefined, isAdmin: user.role === 'admin' } // Don't send password back
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
