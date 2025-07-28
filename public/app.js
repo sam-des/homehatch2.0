@@ -110,10 +110,6 @@ function updateAuthUI() {
         
         // Update user section with profile dropdown
         userSection.innerHTML = `
-            <select id="languageSelector" class="bg-white bg-opacity-10 text-white px-3 py-1 rounded border border-white border-opacity-20 text-sm mr-4">
-                <option value="en" ${currentLanguage === 'en' ? 'selected' : ''}>English</option>
-                <option value="fr" ${currentLanguage === 'fr' ? 'selected' : ''}>Français</option>
-            </select>
             <div class="relative">
                 <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-20">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
@@ -193,9 +189,10 @@ function updateAuthUI() {
 }
 
 function setupLanguageSelector() {
-    const languageSelector = document.getElementById('languageSelector');
-    if (languageSelector) {
-        languageSelector.addEventListener('change', function(e) {
+    const topLanguageSelector = document.getElementById('topLanguageSelector');
+    if (topLanguageSelector) {
+        topLanguageSelector.value = currentLanguage;
+        topLanguageSelector.addEventListener('change', function(e) {
             currentLanguage = e.target.value;
             localStorage.setItem('language', currentLanguage);
             updateAuthUI();
@@ -322,7 +319,12 @@ function renderListings() {
         <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg card-hover overflow-hidden border border-gray-100">
             ${listing.images.length > 0 ? `
                 <div class="relative h-48 bg-gradient-to-r from-blue-400 to-purple-500">
-                    <img src="${listing.images[0]}" alt="Property image" class="w-full h-full object-cover">
+                    <img src="${listing.images[0]}" alt="Property image" class="w-full h-full object-cover cursor-pointer" onclick="openImageGallery('${listing._id}', ${JSON.stringify(listing.images).replace(/"/g, '&quot;')})">
+                    ${listing.images.length > 1 ? `
+                        <div class="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-xs">
+                            +${listing.images.length - 1} photos
+                        </div>
+                    ` : ''}
                     <div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
                         $${listing.price}/mo
                     </div>
@@ -357,15 +359,7 @@ function renderListings() {
                     </div>
                 </div>
 
-                ${listing.images.length > 1 ? `
-                    <div class="grid grid-cols-3 gap-2 mb-4">
-                        ${listing.images.slice(1, 4).map(src => `
-                            <img src="${src}" alt="Property image" class="h-20 w-full object-cover rounded-lg">
-                        `).join('')}
-                    </div>
-                ` : ''}
-
-                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div class="mb-4">
                     <div class="text-sm text-gray-500">
                         ${currentUser || !isGuest ? `
                             <span class="font-semibold">Contact:</span> ${listing.contact?.name || 'Anonymous'}
@@ -377,13 +371,24 @@ function renderListings() {
                             </button>
                         `}
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <div class="text-2xl font-bold text-green-600">
-                            $${listing.price}
-                        </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div class="text-2xl font-bold text-green-600">
+                        $${listing.price}/mo
+                    </div>
+                    <div class="flex space-x-2">
+                        ${currentUser && !isGuest ? `
+                            <button onclick="openBookingModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                📅 Book
+                            </button>
+                            <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                💬 Chat
+                            </button>
+                        ` : ''}
                         ${canDeleteListing(listing) ? `
                             <button onclick="deleteListing('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors">
-                                🗑️ Delete
+                                🗑️
                             </button>
                         `: ''}
                     </div>
@@ -395,6 +400,30 @@ function renderListings() {
 
 function setupForm() {
     const form = document.getElementById('listingForm');
+    
+    // Setup character counter for description
+    const descriptionField = document.getElementById('description');
+    const descriptionCount = document.getElementById('descriptionCount');
+    
+    descriptionField.addEventListener('input', function() {
+        const currentLength = this.value.length;
+        descriptionCount.textContent = currentLength;
+        
+        if (currentLength > 450) {
+            descriptionCount.style.color = 'red';
+        } else {
+            descriptionCount.style.color = '#6b7280';
+        }
+    });
+    
+    // Setup photo limit validation
+    const imagesInput = document.getElementById('images');
+    imagesInput.addEventListener('change', function() {
+        if (this.files.length > 5) {
+            alert('You can only upload a maximum of 5 images');
+            this.value = '';
+        }
+    });
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -808,5 +837,284 @@ async function handleProfilePictureUpload(e) {
         }
     } catch (error) {
         alert('Error uploading profile picture: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+// Image Gallery Functions
+function openImageGallery(listingId, images) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="max-w-4xl w-full relative">
+            <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white text-3xl z-10 hover:text-gray-300">×</button>
+            <div class="relative">
+                <img id="galleryImage" src="${images[0]}" alt="Property image" class="w-full h-auto max-h-[80vh] object-contain">
+                <div class="absolute top-1/2 left-4 transform -translate-y-1/2">
+                    <button onclick="previousImage()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">‹</button>
+                </div>
+                <div class="absolute top-1/2 right-4 transform -translate-y-1/2">
+                    <button onclick="nextImage()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">›</button>
+                </div>
+            </div>
+            <div class="flex justify-center mt-4 space-x-2">
+                ${images.map((img, index) => 
+                    `<img src="${img}" alt="Thumbnail" class="w-16 h-16 object-cover rounded cursor-pointer border-2 ${index === 0 ? 'border-white' : 'border-transparent'}" onclick="showImage(${index})">`
+                ).join('')}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Store images for navigation
+    window.currentGalleryImages = images;
+    window.currentImageIndex = 0;
+}
+
+function previousImage() {
+    if (window.currentImageIndex > 0) {
+        window.currentImageIndex--;
+        showImage(window.currentImageIndex);
+    }
+}
+
+function nextImage() {
+    if (window.currentImageIndex < window.currentGalleryImages.length - 1) {
+        window.currentImageIndex++;
+        showImage(window.currentImageIndex);
+    }
+}
+
+function showImage(index) {
+    window.currentImageIndex = index;
+    document.getElementById('galleryImage').src = window.currentGalleryImages[index];
+    
+    // Update thumbnails
+    const thumbnails = document.querySelectorAll('.fixed img[onclick*="showImage"]');
+    thumbnails.forEach((thumb, i) => {
+        thumb.className = `w-16 h-16 object-cover rounded cursor-pointer border-2 ${i === index ? 'border-white' : 'border-transparent'}`;
+    });
+}
+
+// Booking Functions
+function openBookingModal(listingId, title, price) {
+    if (!currentUser) {
+        alert('Please login to make a booking');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">📅 Book Property</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <div class="mb-4">
+                    <h3 class="font-semibold text-lg">${title}</h3>
+                    <p class="text-green-600 font-bold">$${price}/month</p>
+                </div>
+                
+                <form id="bookingForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Check-in Date</label>
+                        <input type="date" id="checkInDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Check-out Date</label>
+                        <input type="date" id="checkOutDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <span>Total Cost:</span>
+                            <span id="totalCost" class="font-bold text-green-600">$0</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-semibold transition-colors">
+                            Confirm Booking
+                        </button>
+                        <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-md font-semibold transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Setup booking form
+    setupBookingForm(listingId, price);
+}
+
+function setupBookingForm(listingId, dailyPrice) {
+    const checkInInput = document.getElementById('checkInDate');
+    const checkOutInput = document.getElementById('checkOutDate');
+    const totalCostSpan = document.getElementById('totalCost');
+    const bookingForm = document.getElementById('bookingForm');
+    
+    const calculateTotal = () => {
+        const checkIn = new Date(checkInInput.value);
+        const checkOut = new Date(checkOutInput.value);
+        
+        if (checkIn && checkOut && checkOut > checkIn) {
+            const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+            const total = days * (dailyPrice / 30); // Convert monthly to daily rate
+            totalCostSpan.textContent = `$${total.toFixed(2)}`;
+        } else {
+            totalCostSpan.textContent = '$0';
+        }
+    };
+    
+    checkInInput.addEventListener('change', () => {
+        checkOutInput.min = checkInInput.value;
+        calculateTotal();
+    });
+    
+    checkOutInput.addEventListener('change', calculateTotal);
+    
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const checkIn = checkInInput.value;
+        const checkOut = checkOutInput.value;
+        const totalPrice = parseFloat(totalCostSpan.textContent.replace('$', ''));
+        
+        try {
+            const response = await axios.post('/api/bookings', {
+                listingId,
+                checkIn,
+                checkOut,
+                totalPrice
+            });
+            
+            if (response.data.success) {
+                alert('Booking confirmed successfully!');
+                document.querySelector('.fixed').remove();
+            }
+        } catch (error) {
+            alert('Booking failed: ' + (error.response?.data?.error || 'Unknown error'));
+        }
+    });
+}
+
+// Chat Functions
+let currentChatListingId = null;
+let chatRefreshInterval = null;
+
+function openChatModal(listingId, listingTitle) {
+    if (!currentUser) {
+        alert('Please login to chat');
+        return;
+    }
+
+    currentChatListingId = listingId;
+
+    const modal = document.createElement('div');
+    modal.id = 'chatModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full h-96 flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">💬 Chat: ${listingTitle}</h2>
+                <button onclick="closeChatModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3">
+                <div class="text-center text-gray-500">Loading messages...</div>
+            </div>
+
+            <div class="p-4 border-t">
+                <div class="flex space-x-2">
+                    <input id="chatInput" type="text" placeholder="Type your message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="sendChatMessage()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    loadChatMessages();
+
+    // Auto-refresh messages every 3 seconds
+    chatRefreshInterval = setInterval(loadChatMessages, 3000);
+
+    // Focus on input
+    document.getElementById('chatInput').focus();
+
+    // Handle Enter key to send message
+    document.getElementById('chatInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+    });
+}
+
+function closeChatModal() {
+    const modal = document.getElementById('chatModal');
+    if (modal) {
+        modal.remove();
+    }
+
+    if (chatRefreshInterval) {
+        clearInterval(chatRefreshInterval);
+        chatRefreshInterval = null;
+    }
+
+    currentChatListingId = null;
+}
+
+async function loadChatMessages() {
+    if (!currentChatListingId) return;
+
+    try {
+        const response = await axios.get(`/api/chats/${currentChatListingId}/messages`);
+        const messages = response.data;
+
+        const chatContainer = document.getElementById('chatMessages');
+        if (!chatContainer) return;
+
+        if (messages.length === 0) {
+            chatContainer.innerHTML = '<div class="text-center text-gray-500">No messages yet. Start the conversation!</div>';
+            return;
+        }
+
+        chatContainer.innerHTML = messages.map(msg => `
+            <div class="flex ${msg.userId === currentUser._id ? 'justify-end' : 'justify-start'}">
+                <div class="max-w-xs lg:max-w-md ${msg.userId === currentUser._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} rounded-lg px-3 py-2">
+                    <div class="text-xs opacity-75 mb-1">${msg.username}</div>
+                    <div class="text-sm">${msg.message}</div>
+                    <div class="text-xs opacity-60 mt-1">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Scroll to bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    } catch (error) {
+        console.error('Error loading chat messages:', error);
+    }
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+
+    if (!message || !currentChatListingId) return;
+
+    try {
+        await axios.post(`/api/chats/${currentChatListingId}/messages`, { message });
+        input.value = '';
+        loadChatMessages(); // Refresh messages immediately
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Failed to send message. Please try again.');
     }
 }

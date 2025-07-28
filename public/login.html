@@ -59,13 +59,31 @@
                 <div class="text-center mb-6">
                     <h2 class="text-2xl font-bold text-white" id="createAccountTitle">Create Account</h2>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-white mb-2" id="regUsernameLabel">Username</label>
-                    <input id="regUsername" type="text" placeholder="Choose a username" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-white mb-2" id="regFirstNameLabel">First Name</label>
+                        <input id="regFirstName" type="text" placeholder="First name" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-white mb-2" id="regLastNameLabel">Last Name</label>
+                        <input id="regLastName" type="text" placeholder="Last name" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-white mb-2" id="regEmailLabel">Email</label>
                     <input id="regEmail" type="email" placeholder="Enter your email" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-white mb-2" id="regDateOfBirthLabel">Date of Birth</label>
+                    <input id="regDateOfBirth" type="date" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-white mb-2" id="regUsernameLabel">Username</label>
+                    <input id="regUsername" type="text" placeholder="Choose a username" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    <div id="usernameSuggestions" class="mt-2 hidden">
+                        <p class="text-sm text-white mb-2">Suggested usernames:</p>
+                        <div id="suggestionsList" class="flex flex-wrap gap-2"></div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-white mb-2" id="regPasswordLabel">Password</label>

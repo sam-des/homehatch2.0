@@ -12,6 +12,9 @@ const translations = {
         signUpHere: 'Sign up here',
         createAccount: 'Create Account',
         email: 'Email',
+        firstName: 'First Name',
+        lastName: 'Last Name',
+        dateOfBirth: 'Date of Birth',
         backToLogin: 'Back to Login',
         enterUsername: 'Enter your username',
         enterPassword: 'Enter your password',
@@ -28,6 +31,9 @@ const translations = {
         signUpHere: 'Inscrivez-vous ici',
         createAccount: 'Créer un compte',
         email: 'Email',
+        firstName: 'Prénom',
+        lastName: 'Nom',
+        dateOfBirth: 'Date de Naissance',
         backToLogin: 'Retour à la connexion',
         enterUsername: "Entrez votre nom d'utilisateur",
         enterPassword: 'Entrez votre mot de passe',
@@ -49,8 +55,11 @@ function updateLanguage() {
     document.getElementById('noAccountText').textContent = t('noAccount');
     document.getElementById('signUpLink').textContent = t('signUpHere');
     document.getElementById('createAccountTitle').textContent = t('createAccount');
-    document.getElementById('regUsernameLabel').textContent = t('username');
+    document.getElementById('regFirstNameLabel').textContent = t('firstName');
+    document.getElementById('regLastNameLabel').textContent = t('lastName');
     document.getElementById('regEmailLabel').textContent = t('email');
+    document.getElementById('regDateOfBirthLabel').textContent = t('dateOfBirth');
+    document.getElementById('regUsernameLabel').textContent = t('username');
     document.getElementById('regPasswordLabel').textContent = t('password');
     document.getElementById('createAccountBtn').textContent = t('createAccount');
     document.getElementById('backToLoginBtn').textContent = t('backToLogin');
@@ -93,6 +102,53 @@ function setupForms() {
     
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handleRegister);
+    
+    // Setup username suggestions
+    const firstNameInput = document.getElementById('regFirstName');
+    const lastNameInput = document.getElementById('regLastName');
+    const emailInput = document.getElementById('regEmail');
+    
+    const triggerSuggestions = () => {
+        if (firstNameInput.value && lastNameInput.value && emailInput.value) {
+            generateUsernameSuggestions();
+        }
+    };
+    
+    firstNameInput.addEventListener('blur', triggerSuggestions);
+    lastNameInput.addEventListener('blur', triggerSuggestions);
+    emailInput.addEventListener('blur', triggerSuggestions);
+}
+
+async function generateUsernameSuggestions() {
+    const firstName = document.getElementById('regFirstName').value;
+    const lastName = document.getElementById('regLastName').value;
+    const email = document.getElementById('regEmail').value;
+    
+    try {
+        const response = await axios.post('/api/suggest-usernames', {
+            firstName,
+            lastName,
+            email
+        });
+        
+        const suggestions = response.data.suggestions;
+        const suggestionsContainer = document.getElementById('usernameSuggestions');
+        const suggestionsList = document.getElementById('suggestionsList');
+        
+        if (suggestions.length > 0) {
+            suggestionsList.innerHTML = suggestions.map(suggestion => 
+                `<button type="button" onclick="selectUsername('${suggestion}')" class="bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm hover:bg-opacity-30 transition-colors">${suggestion}</button>`
+            ).join('');
+            suggestionsContainer.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error generating suggestions:', error);
+    }
+}
+
+function selectUsername(username) {
+    document.getElementById('regUsername').value = username;
+    document.getElementById('usernameSuggestions').classList.add('hidden');
 }
 
 async function handleLogin(e) {
@@ -125,14 +181,20 @@ async function handleLogin(e) {
 async function handleRegister(e) {
     e.preventDefault();
     
-    const username = document.getElementById('regUsername').value;
+    const firstName = document.getElementById('regFirstName').value;
+    const lastName = document.getElementById('regLastName').value;
     const email = document.getElementById('regEmail').value;
+    const dateOfBirth = document.getElementById('regDateOfBirth').value;
+    const username = document.getElementById('regUsername').value;
     const password = document.getElementById('regPassword').value;
     
     try {
         const response = await axios.post('/api/register', {
-            username,
+            firstName,
+            lastName,
             email,
+            dateOfBirth,
+            username,
             password
         });
         

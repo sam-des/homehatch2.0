@@ -50,7 +50,9 @@ function loadData() {
     nextId: 1,
     nextPurchaseId: 1,
     nextUserId: 2,
-    nextChatId: 1
+    nextChatId: 1,
+    bookings: [],
+    nextBookingId: 1
   };
 }
 
@@ -69,6 +71,7 @@ let listings = data.listings;
 let purchases = data.purchases;
 let users = data.users || [];
 let chats = data.chats || [];
+let bookings = data.bookings || [];
 
 // Ensure admin account exists
 const adminExists = users.find(u => u.username === 'admin');
@@ -82,18 +85,20 @@ if (!adminExists) {
     email: 'admin@homehatch.com',
     createdAt: new Date()
   });
-  
+
   // Save the updated data with admin account
   saveData({
     listings,
     purchases,
     users,
     chats: chats,
+    bookings,
     sessions: [],
     nextId: data.nextId || 1,
     nextPurchaseId: data.nextPurchaseId || 1,
     nextUserId: data.nextUserId || 2,
-    nextChatId: data.nextChatId || 1
+    nextChatId: data.nextChatId || 1,
+    nextBookingId: data.nextBookingId || 1
   });
 }
 
@@ -103,6 +108,7 @@ let nextId = data.nextId;
 let nextPurchaseId = data.nextPurchaseId;
 let nextUserId = data.nextUserId || 2;
 let nextChatId = data.nextChatId || 1;
+let nextBookingId = data.nextBookingId || 1;
 
 // Authentication middleware
 function requireAuth(req, res, next) {
@@ -156,11 +162,13 @@ app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => 
       purchases,
       users,
       chats,
+      bookings,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId,
-      nextChatId
+      nextChatId,
+      nextBookingId
     });
 
     res.json(newListing);
@@ -227,11 +235,13 @@ app.post('/api/purchases', (req, res) => {
       purchases,
       users,
       chats,
+      bookings,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId,
-      nextChatId
+      nextChatId,
+      nextBookingId
     });
 
     // In a real application, you would:
@@ -281,11 +291,13 @@ app.delete('/api/listings/:id', requireAuth, (req, res) => {
       purchases,
       users,
       chats,
+      bookings,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId,
-      nextChatId
+      nextChatId,
+      nextBookingId
     });
 
     res.json({ success: true, message: 'Listing deleted successfully', deletedListing });
@@ -337,11 +349,13 @@ app.post('/api/register', (req, res) => {
       purchases,
       users,
       chats,
+      bookings,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId,
-      nextChatId
+      nextChatId,
+      nextBookingId
     });
 
     res.json({ success: true, message: 'User registered successfully' });
@@ -387,41 +401,43 @@ app.post('/api/logout', requireAuth, (req, res) => {
 app.post('/api/change-password', requireAuth, (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
+
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'Current password and new password are required' });
     }
-    
+
     if (newPassword.length < 6) {
       return res.status(400).json({ error: 'New password must be at least 6 characters long' });
     }
-    
+
     // Find user and verify current password
     const userIndex = users.findIndex(u => u._id === req.user._id);
     if (userIndex === -1 || users[userIndex].password !== currentPassword) {
       return res.status(400).json({ error: 'Current password is incorrect' });
     }
-    
+
     // Update password
     users[userIndex].password = newPassword;
-    
+
     // Update session with new user data
     const sessionId = req.headers['x-session-id'];
     sessions.set(sessionId, users[userIndex]);
-    
+
     // Save to file
     saveData({
       listings,
       purchases,
       users,
       chats,
+      bookings,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId,
-      nextChatId
+      nextChatId,
+      nextBookingId
     });
-    
+
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -448,32 +464,34 @@ app.post('/api/profile-picture', requireAuth, upload.single('profilePicture'), (
     }
 
     const profilePictureUrl = `/uploads/${req.file.filename}`;
-    
+
     // Update user's profile picture
     const userIndex = users.findIndex(u => u._id === req.user._id);
     if (userIndex === -1) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     users[userIndex].profilePicture = profilePictureUrl;
-    
+
     // Update session with new user data
     const sessionId = req.headers['x-session-id'];
     sessions.set(sessionId, users[userIndex]);
-    
+
     // Save to file
     saveData({
       listings,
       purchases,
       users,
       chats,
+      bookings,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
       nextUserId,
-      nextChatId
+      nextChatId,
+      nextBookingId
     });
-    
+
     res.json({ 
       success: true, 
       profilePictureUrl,
