@@ -942,7 +942,21 @@ document.addEventListener('DOMContentLoaded', function() {
     setupPurchaseForm();
     setupScrollGradient();
     setupBottomButtons();
+    setupLanguageSelector();
 });
+
+function setupLanguageSelector() {
+    const languageSelector = document.getElementById('languageSelector');
+    if (languageSelector) {
+        const currentLanguage = localStorage.getItem('language') || 'en';
+        languageSelector.value = currentLanguage;
+        languageSelector.addEventListener('change', function(e) {
+            localStorage.setItem('language', e.target.value);
+            // Reload page to apply language changes
+            window.location.reload();
+        });
+    }
+}
 
 // Add profile picture option
 

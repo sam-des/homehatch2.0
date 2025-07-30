@@ -116,24 +116,23 @@
                                 <!-- User profile dropdown will be populated here -->
                             </div>
                         </div>
-                        <div class="flex space-x-2">
-                            <a href="/view.html" class="glass-effect text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-20">
-                                Browse Properties
-                            </a>
-                            <button id="listPropertyBtn" onclick="showListingForm()" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-600 shadow-lg hidden">
-                                List Property
-                            </button>
+                        <div class="flex items-center space-x-4">
+                            <select id="topLanguageSelector" class="bg-white bg-opacity-20 text-white px-3 py-2 rounded border border-white border-opacity-30 text-sm">
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                            </select>
+                            <div class="flex space-x-2">
+                                <a href="/view.html" class="glass-effect text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-20">
+                                    Browse Properties
+                                </a>
+                                <button id="listPropertyBtn" onclick="showListingForm()" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-600 shadow-lg hidden">
+                                    List Property
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Language Selector in Top Corner -->
-                <div class="fixed top-4 right-4 z-50">
-                    <select id="topLanguageSelector" class="bg-white bg-opacity-20 text-white px-3 py-2 rounded border border-white border-opacity-30 text-sm">
-                        <option value="en">English</option>
-                        <option value="fr">Français</option>
-                    </select>
-                </div>
                 </div>
             </div>
 
