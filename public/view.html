@@ -54,19 +54,22 @@
                             <h1 class="text-4xl font-bold text-white mb-2">🏠 HomeHatch</h1>
                             <p class="text-white text-opacity-80">Find your perfect rental home</p>
                         </div>
-                        <div class="flex items-center space-x-4 relative">
-                            <div class="relative z-50">
-                                <select id="languageSelector" class="bg-white bg-opacity-20 text-white px-3 py-2 rounded border border-white border-opacity-30 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-30">
-                                    <option value="en">English</option>
-                                    <option value="fr">Français</option>
-                                </select>
-                            </div>
-                            <div class="flex space-x-4">
-                                <a href="/" class="glass-effect text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:bg-opacity-20 transition-all duration-300">List Property</a>
-                                <a href="/view.html" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg">Browse Rentals</a>
-                            </div>
+                        <div class="flex space-x-4">
+                            <a href="/" class="glass-effect text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:bg-opacity-20 transition-all duration-300">List Property</a>
+                            <a href="/view.html" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg">Browse Rentals</a>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Top Right Controls - Outside the header box -->
+            <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+                <select id="languageSelector" class="bg-white bg-opacity-20 text-white px-3 py-2 rounded border border-white border-opacity-30 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-30">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                </select>
+                <div id="topRightProfileSection" class="hidden">
+                    <!-- Profile dropdown will be populated here -->
                 </div>
             </div>
         </header>

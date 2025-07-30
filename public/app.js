@@ -108,72 +108,76 @@ function updateAuthUI() {
         document.getElementById('headerSubtitle').textContent = 'List your rental property with ease';
         document.getElementById('guestNotice').classList.add('hidden');
         
-        // Update user section with profile dropdown
-        userSection.innerHTML = `
-            <div class="relative" style="z-index: 9998;">
-                <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-20">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
-                        ${currentUser.profilePicture ? 
-                            `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
-                            `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${currentUser.username.charAt(0).toUpperCase()}</div>`
-                        }
-                    </div>
-                    <span class="hidden md:block">${currentUser.username}</span>
-                    <svg class="w-4 h-4 transition-transform duration-200" id="profileArrow" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-                
-                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden" style="z-index: 9999;">
-                    <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-12 h-12 rounded-full overflow-hidden">
-                                ${currentUser.profilePicture ? 
-                                    `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
-                                    `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
-                                }
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-lg">${currentUser.username}</h3>
-                                <p class="text-sm opacity-90">${currentUser.email}</p>
-                                ${currentUser.role === 'admin' ? `<span class="inline-block bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">${t('admin')}</span>` : '<span class="inline-block bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">User</span>'}
+        // Update top-right user section with profile dropdown
+        const topRightUserSection = document.getElementById('topRightUserSection');
+        if (topRightUserSection) {
+            topRightUserSection.classList.remove('hidden');
+            topRightUserSection.innerHTML = `
+                <div class="relative">
+                    <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-30">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
+                            ${currentUser.profilePicture ? 
+                                `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
+                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                            }
+                        </div>
+                        <span class="hidden md:block">${currentUser.username}</span>
+                        <svg class="w-4 h-4 transition-transform duration-200" id="profileArrow" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                    
+                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden" style="z-index: 99999;">
+                        <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-full overflow-hidden">
+                                    ${currentUser.profilePicture ? 
+                                        `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
+                                        `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                                    }
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg">${currentUser.username}</h3>
+                                    <p class="text-sm opacity-90">${currentUser.email}</p>
+                                    ${currentUser.role === 'admin' ? `<span class="inline-block bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">${t('admin')}</span>` : '<span class="inline-block bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">User</span>'}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="py-2">
-                        <button onclick="changeProfilePicture()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
-                            <span class="text-purple-500 text-lg">📷</span>
-                            <span class="text-gray-700">${t('changeProfilePicture')}</span>
-                        </button>
-                        <button onclick="viewMyListings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
-                            <span class="text-green-500 text-lg">📝</span>
-                            <span class="text-gray-700">${t('myListings')}</span>
-                        </button>
-                        <button onclick="showChangePasswordModal()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
-                            <span class="text-blue-500 text-lg">🔐</span>
-                            <span class="text-gray-700">${t('changePassword')}</span>
-                        </button>
-                        <button onclick="viewAccountSettings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
-                            <span class="text-gray-500 text-lg">⚙️</span>
-                            <span class="text-gray-700">${t('accountSettings')}</span>
-                        </button>
-                        ${currentUser.role === 'admin' ? `
-                        <hr class="my-2 border-gray-200">
-                        <button onclick="viewAdminPanel()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
-                            <span class="text-yellow-500 text-lg">👑</span>
-                            <span class="text-gray-700">${t('adminPanel')}</span>
-                        </button>
-                        ` : ''}
-                        <hr class="my-2 border-gray-200">
-                        <button onclick="logout()" class="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center space-x-3 text-red-600">
-                            <span class="text-lg">🚪</span>
-                            <span>${t('signOut')}</span>
-                        </button>
+                        
+                        <div class="py-2">
+                            <button onclick="changeProfilePicture()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                                <span class="text-purple-500 text-lg">📷</span>
+                                <span class="text-gray-700">${t('changeProfilePicture')}</span>
+                            </button>
+                            <button onclick="viewMyListings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                                <span class="text-green-500 text-lg">📝</span>
+                                <span class="text-gray-700">${t('myListings')}</span>
+                            </button>
+                            <button onclick="showChangePasswordModal()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                                <span class="text-blue-500 text-lg">🔐</span>
+                                <span class="text-gray-700">${t('changePassword')}</span>
+                            </button>
+                            <button onclick="viewAccountSettings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                                <span class="text-gray-500 text-lg">⚙️</span>
+                                <span class="text-gray-700">${t('accountSettings')}</span>
+                            </button>
+                            ${currentUser.role === 'admin' ? `
+                            <hr class="my-2 border-gray-200">
+                            <button onclick="viewAdminPanel()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                                <span class="text-yellow-500 text-lg">👑</span>
+                                <span class="text-gray-700">${t('adminPanel')}</span>
+                            </button>
+                            ` : ''}
+                            <hr class="my-2 border-gray-200">
+                            <button onclick="logout()" class="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center space-x-3 text-red-600">
+                                <span class="text-lg">🚪</span>
+                                <span>${t('signOut')}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
         
         setupProfileDropdown();
         setupLanguageSelector();
