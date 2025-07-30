@@ -110,7 +110,7 @@ function updateAuthUI() {
         
         // Update user section with profile dropdown
         userSection.innerHTML = `
-            <div class="relative">
+            <div class="relative" style="z-index: 9998;">
                 <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-20">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
                         ${currentUser.profilePicture ? 
@@ -124,7 +124,7 @@ function updateAuthUI() {
                     </svg>
                 </button>
                 
-                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden" style="z-index: 9999;">
                     <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                         <div class="flex items-center space-x-3">
                             <div class="w-12 h-12 rounded-full overflow-hidden">
