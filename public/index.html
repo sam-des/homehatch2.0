@@ -103,18 +103,8 @@
                         <p class="text-white text-opacity-80" id="headerSubtitle">Browse rental properties</p>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <div id="authSection" class="flex items-center space-x-4">
-                            <div id="loginSection" class="flex space-x-2">
-                                <button onclick="showLoginModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                                    Login
-                                </button>
-                                <button onclick="showRegisterModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                                    Register
-                                </button>
-                            </div>
-                            <div id="userSection" class="hidden flex items-center space-x-3">
-                                <!-- User profile dropdown will be populated here -->
-                            </div>
+                        <div id="userSection" class="hidden flex items-center space-x-3">
+                            <!-- User profile dropdown will be populated here -->
                         </div>
                         <div class="flex space-x-2">
                             <a href="/view.html" class="glass-effect text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-20">
@@ -126,8 +116,16 @@
                         </div>
                     </div>
                 </div>
-                
-                </div>
+            </div>
+
+            <!-- Fixed Top Left Login/Register Buttons -->
+            <div id="loginSection" class="fixed top-4 left-4 z-50 flex space-x-2">
+                <button onclick="showLoginModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg">
+                    Login
+                </button>
+                <button onclick="showRegisterModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg">
+                    Register
+                </button>
             </div>
 
             <!-- Top Right Controls - Outside the header box -->

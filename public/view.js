@@ -2,6 +2,8 @@ let allListings = [];
 let filteredListings = [];
 let currentUser = null;
 let sessionId = null;
+let currentImageZoom = 1;
+let currentLanguage = 'en';
 
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
@@ -385,8 +387,8 @@ function viewDetails(listingId) {
 
                 ${listing.images.length > 0 ? `
                     <div class="grid grid-cols-2 gap-2 mb-4">
-                        ${listing.images.map(src => `
-                            <img src="${src}" alt="Property image" class="w-full h-32 object-cover rounded">
+                        ${listing.images.map((src, index) => `
+                            <img src="${src}" alt="Property image" class="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity" onclick="openImageGallery('${listing._id}', ${JSON.stringify(listing.images).replace(/"/g, '&quot;')}, ${index})">
                         `).join('')}
                     </div>
                 ` : ''}
@@ -416,6 +418,106 @@ function viewDetails(listingId) {
     `;
 
     document.body.appendChild(modal);
+}
+
+// Image Gallery Functions for view.js
+function openImageGallery(listingId, images, startIndex = 0) {
+    currentImageZoom = 1;
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="max-w-4xl w-full relative">
+            <button onclick="closeImageGallery()" class="absolute top-4 right-4 text-white text-3xl z-10 hover:text-red-400 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center">×</button>
+            <div class="relative overflow-hidden rounded-lg">
+                <img id="galleryImage" src="${images[startIndex]}" alt="Property image" class="w-full h-auto max-h-[80vh] object-contain transition-transform duration-200" style="transform: scale(${currentImageZoom})">
+                <div class="absolute top-1/2 left-4 transform -translate-y-1/2">
+                    <button onclick="previousImage()" class="bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 text-xl">‹</button>
+                </div>
+                <div class="absolute top-1/2 right-4 transform -translate-y-1/2">
+                    <button onclick="nextImage()" class="bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 text-xl">›</button>
+                </div>
+                <div class="absolute top-4 left-4 flex flex-col space-y-2">
+                    <button onclick="zoomIn()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 text-lg w-10 h-10 flex items-center justify-center">+</button>
+                    <button onclick="zoomOut()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 text-lg w-10 h-10 flex items-center justify-center">-</button>
+                    <button onclick="resetZoom()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 text-xs w-10 h-10 flex items-center justify-center">1:1</button>
+                </div>
+            </div>
+            <div class="flex justify-center mt-4 space-x-2">
+                ${images.map((img, index) => 
+                    `<img src="${img}" alt="Thumbnail" class="w-16 h-16 object-cover rounded cursor-pointer border-2 ${index === startIndex ? 'border-white' : 'border-transparent'}" onclick="showImage(${index})">`
+                ).join('')}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Store images for navigation
+    window.currentGalleryImages = images;
+    window.currentImageIndex = startIndex;
+}
+
+function closeImageGallery() {
+    const modal = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-90');
+    if (modal) {
+        modal.remove();
+    }
+    currentImageZoom = 1;
+}
+
+function zoomIn() {
+    if (currentImageZoom < 3) {
+        currentImageZoom += 0.25;
+        updateImageZoom();
+    }
+}
+
+function zoomOut() {
+    if (currentImageZoom > 0.5) {
+        currentImageZoom -= 0.25;
+        updateImageZoom();
+    }
+}
+
+function resetZoom() {
+    currentImageZoom = 1;
+    updateImageZoom();
+}
+
+function updateImageZoom() {
+    const galleryImage = document.getElementById('galleryImage');
+    if (galleryImage) {
+        galleryImage.style.transform = `scale(${currentImageZoom})`;
+    }
+}
+
+function previousImage() {
+    if (window.currentImageIndex > 0) {
+        window.currentImageIndex--;
+        showImage(window.currentImageIndex);
+    }
+}
+
+function nextImage() {
+    if (window.currentImageIndex < window.currentGalleryImages.length - 1) {
+        window.currentImageIndex++;
+        showImage(window.currentImageIndex);
+    }
+}
+
+function showImage(index) {
+    window.currentImageIndex = index;
+    document.getElementById('galleryImage').src = window.currentGalleryImages[index];
+    
+    // Update thumbnails
+    const thumbnails = document.querySelectorAll('.fixed img[onclick*="showImage"]');
+    thumbnails.forEach((thumb, i) => {
+        thumb.className = `w-16 h-16 object-cover rounded cursor-pointer border-2 ${i === index ? 'border-white' : 'border-transparent'}`;
+    });
+    
+    // Reset zoom when changing images
+    currentImageZoom = 1;
+    updateImageZoom();
 }
 
 function contactSeller(email, propertyTitle) {
@@ -888,8 +990,8 @@ function t(key) {
             'fr': 'Changer la Photo de Profil'
         }
     };
-    const lang = localStorage.getItem('language') || 'en';
-    return translations[key] && translations[key][lang] ? translations[key][lang] : translations[key]['en'];
+    currentLanguage = localStorage.getItem('language') || 'en';
+    return translations[key] && translations[key][currentLanguage] ? translations[key][currentLanguage] : translations[key]['en'];
 }
 
 // Function to change language
@@ -951,12 +1053,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupLanguageSelector() {
     const languageSelector = document.getElementById('languageSelector');
     if (languageSelector) {
-        const currentLanguage = localStorage.getItem('language') || 'en';
+        currentLanguage = localStorage.getItem('language') || 'en';
         languageSelector.value = currentLanguage;
         languageSelector.addEventListener('change', function(e) {
-            localStorage.setItem('language', e.target.value);
-            // Reload page to apply language changes
-            window.location.reload();
+            currentLanguage = e.target.value;
+            localStorage.setItem('language', currentLanguage);
+            renderListings();
+            updateHeader();
         });
     }
 }

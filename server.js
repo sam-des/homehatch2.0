@@ -315,6 +315,207 @@ app.get('/view', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'view.html'));
 });
 
+// Admin endpoints
+app.get('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const safeUsers = users.map(user => ({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt
+    }));
+    res.json(safeUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/admin/users/:id/role', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { role } = req.body;
+    
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+    
+    const userIndex = users.findIndex(u => u._id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    users[userIndex].role = role;
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, message: 'User role updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/admin/users/:id', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    if (userId === req.user._id) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+    
+    const userIndex = users.findIndex(u => u._id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const deletedUser = users.splice(userIndex, 1)[0];
+    
+    // Remove user's sessions
+    for (let [sessionId, sessionUser] of sessions.entries()) {
+      if (sessionUser._id === userId) {
+        sessions.delete(sessionId);
+      }
+    }
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, message: 'User deleted successfully', deletedUser: { username: deletedUser.username } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/clear-data', requireAuth, requireAdmin, (req, res) => {
+  try {
+    // Keep only admin users
+    users = users.filter(u => u.role === 'admin');
+    listings = [];
+    purchases = [];
+    chats = [];
+    bookings = [];
+    
+    // Reset IDs
+    nextId = 1;
+    nextPurchaseId = 1;
+    nextChatId = 1;
+    nextBookingId = 1;
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, message: 'All data cleared successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/export-data', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const exportData = {
+      listings,
+      purchases: purchases.map(p => ({ ...p, payment: undefined })), // Remove payment info for security
+      users: users.map(u => ({ ...u, password: undefined })), // Remove passwords
+      chats,
+      bookings,
+      exportDate: new Date().toISOString()
+    };
+    res.json(exportData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Chat endpoints
+app.get('/api/chats/:listingId/messages', requireAuth, (req, res) => {
+  try {
+    const listingId = parseInt(req.params.listingId);
+    const chatMessages = chats.filter(chat => chat.listingId === listingId)
+                              .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    res.json(chatMessages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/chats/:listingId/messages', requireAuth, (req, res) => {
+  try {
+    const listingId = parseInt(req.params.listingId);
+    const { message } = req.body;
+    
+    if (!message || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Message cannot be empty' });
+    }
+    
+    const newChat = {
+      _id: nextChatId++,
+      listingId,
+      userId: req.user._id,
+      username: req.user.username,
+      message: message.trim(),
+      timestamp: new Date().toISOString()
+    };
+    
+    chats.push(newChat);
+    
+    // Save to file
+    saveData({
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, message: 'Message sent successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });

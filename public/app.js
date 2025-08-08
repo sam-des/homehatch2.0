@@ -4,6 +4,7 @@ let currentUser = null;
 let sessionId = null;
 let isGuest = false;
 let currentLanguage = 'en';
+let currentImageZoom = 1;
 
 // Language translations
 const translations = {
@@ -199,9 +200,50 @@ function setupLanguageSelector() {
         topLanguageSelector.addEventListener('change', function(e) {
             currentLanguage = e.target.value;
             localStorage.setItem('language', currentLanguage);
+            
+            // Update all UI elements with new language
+            updateLanguageStrings();
             updateAuthUI();
             renderListings();
         });
+    }
+}
+
+function updateLanguageStrings() {
+    // Update header subtitle based on user state
+    const headerSubtitle = document.getElementById('headerSubtitle');
+    if (headerSubtitle) {
+        if (currentUser) {
+            headerSubtitle.textContent = currentLanguage === 'fr' ? 
+                'Listez votre propriété locative facilement' : 
+                'List your rental property with ease';
+        } else if (isGuest) {
+            headerSubtitle.textContent = currentLanguage === 'fr' ? 
+                'Parcourir les propriétés locatives (Mode Invité)' : 
+                'Browse rental properties (Guest Mode)';
+        } else {
+            headerSubtitle.textContent = currentLanguage === 'fr' ? 
+                'Parcourir les propriétés locatives' : 
+                'Browse rental properties';
+        }
+    }
+    
+    // Update guest notice
+    const guestNotice = document.getElementById('guestNotice');
+    if (guestNotice && !guestNotice.classList.contains('hidden')) {
+        guestNotice.innerHTML = currentLanguage === 'fr' ? 
+            `<p class="text-blue-800 text-center">
+                <span class="font-semibold">👋 Navigation en tant qu'invité</span> - 
+                <button onclick="showLoginModal()" class="underline hover:text-blue-600">Connexion</button> ou 
+                <button onclick="showRegisterModal()" class="underline hover:text-blue-600">Inscription</button> 
+                pour voir les détails de contact et créer des annonces
+            </p>` :
+            `<p class="text-blue-800 text-center">
+                <span class="font-semibold">👋 Browsing as Guest</span> - 
+                <button onclick="showLoginModal()" class="underline hover:text-blue-600">Login</button> or 
+                <button onclick="showRegisterModal()" class="underline hover:text-blue-600">Register</button> 
+                to see contact details and create listings
+            </p>`;
     }
 }
 
@@ -633,14 +675,14 @@ function viewAdminPanel() {
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
-        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-6xl w-full max-h-[80vh] overflow-y-auto">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h3 class="font-semibold text-blue-800 mb-2">📊 Statistics</h3>
                         <p class="text-sm text-blue-600">Total Listings: ${listings.length}</p>
@@ -649,27 +691,31 @@ function viewAdminPanel() {
                     
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h3 class="font-semibold text-green-800 mb-2">👥 User Management</h3>
-                        <button class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-colors">
+                        <button onclick="loadAllUsers()" class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-colors">
                             View All Users
                         </button>
                     </div>
                     
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <h3 class="font-semibold text-yellow-800 mb-2">🏠 Listing Management</h3>
-                        <button class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-colors">
+                        <button onclick="moderateListings()" class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-colors">
                             Moderate Listings
                         </button>
                     </div>
                 </div>
+
+                <div id="adminContent" class="mb-6">
+                    <!-- Dynamic content will load here -->
+                </div>
                 
-                <div class="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <h3 class="font-semibold text-red-800 mb-2">⚠️ Admin Actions</h3>
                     <p class="text-sm text-red-600 mb-3">Use these features carefully. They affect all users.</p>
                     <div class="space-x-2">
-                        <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors">
+                        <button onclick="clearAllData()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors">
                             Clear All Data
                         </button>
-                        <button class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm transition-colors">
+                        <button onclick="exportData()" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm transition-colors">
                             Export Data
                         </button>
                     </div>
@@ -679,6 +725,139 @@ function viewAdminPanel() {
     `;
     
     document.body.appendChild(modal);
+}
+
+async function loadAllUsers() {
+    try {
+        const response = await axios.get('/api/admin/users');
+        const users = response.data;
+        
+        const adminContent = document.getElementById('adminContent');
+        adminContent.innerHTML = `
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">👥 All Users</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-2 text-left">Username</th>
+                                <th class="px-4 py-2 text-left">Email</th>
+                                <th class="px-4 py-2 text-left">Role</th>
+                                <th class="px-4 py-2 text-left">Created</th>
+                                <th class="px-4 py-2 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(user => `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">${user.username}</td>
+                                    <td class="px-4 py-2">${user.email}</td>
+                                    <td class="px-4 py-2">
+                                        <select onchange="changeUserRole('${user._id}', this.value)" class="text-sm border rounded px-2 py-1">
+                                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-4 py-2">${new Date(user.createdAt).toLocaleDateString()}</td>
+                                    <td class="px-4 py-2">
+                                        ${user._id !== currentUser._id ? `
+                                            <button onclick="deleteUser('${user._id}', '${user.username}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+                                                Delete
+                                            </button>
+                                        ` : '<span class="text-gray-400 text-xs">Current User</span>'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        alert('Error loading users: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+async function changeUserRole(userId, newRole) {
+    try {
+        await axios.put(`/api/admin/users/${userId}/role`, { role: newRole });
+        alert('User role updated successfully');
+    } catch (error) {
+        alert('Error updating user role: ' + (error.response?.data?.error || 'Unknown error'));
+        loadAllUsers(); // Reload to revert the select
+    }
+}
+
+async function deleteUser(userId, username) {
+    if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        await axios.delete(`/api/admin/users/${userId}`);
+        alert('User deleted successfully');
+        loadAllUsers(); // Reload the user list
+    } catch (error) {
+        alert('Error deleting user: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+function moderateListings() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">🏠 Listing Moderation</h3>
+            <div class="grid gap-4">
+                ${listings.map(listing => `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold">${listing.title}</h4>
+                                <p class="text-sm text-gray-600">${listing.address}</p>
+                                <p class="text-sm text-gray-500">Created: ${new Date(listing.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="deleteListing('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+async function clearAllData() {
+    if (!confirm('Are you sure you want to clear ALL data? This will delete all listings, users (except admin), and purchases. This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        await axios.post('/api/admin/clear-data');
+        alert('All data cleared successfully');
+        loadListings(); // Reload listings
+    } catch (error) {
+        alert('Error clearing data: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+async function exportData() {
+    try {
+        const response = await axios.get('/api/admin/export-data');
+        const dataStr = JSON.stringify(response.data, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `homehatch-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        alert('Error exporting data: ' + (error.response?.data?.error || 'Unknown error'));
+    }
 }
 
 function showChangePasswordModal() {
@@ -846,18 +1025,24 @@ async function handleProfilePictureUpload(e) {
 
 // Image Gallery Functions
 function openImageGallery(listingId, images) {
+    currentImageZoom = 1;
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
         <div class="max-w-4xl w-full relative">
-            <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white text-3xl z-10 hover:text-gray-300">×</button>
-            <div class="relative">
-                <img id="galleryImage" src="${images[0]}" alt="Property image" class="w-full h-auto max-h-[80vh] object-contain">
+            <button onclick="closeImageGallery()" class="absolute top-4 right-4 text-white text-3xl z-10 hover:text-red-400 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center">×</button>
+            <div class="relative overflow-hidden rounded-lg">
+                <img id="galleryImage" src="${images[0]}" alt="Property image" class="w-full h-auto max-h-[80vh] object-contain transition-transform duration-200" style="transform: scale(${currentImageZoom})">
                 <div class="absolute top-1/2 left-4 transform -translate-y-1/2">
-                    <button onclick="previousImage()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">‹</button>
+                    <button onclick="previousImage()" class="bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 text-xl">‹</button>
                 </div>
                 <div class="absolute top-1/2 right-4 transform -translate-y-1/2">
-                    <button onclick="nextImage()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70">›</button>
+                    <button onclick="nextImage()" class="bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 text-xl">›</button>
+                </div>
+                <div class="absolute top-4 left-4 flex flex-col space-y-2">
+                    <button onclick="zoomIn()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 text-lg w-10 h-10 flex items-center justify-center">+</button>
+                    <button onclick="zoomOut()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 text-lg w-10 h-10 flex items-center justify-center">-</button>
+                    <button onclick="resetZoom()" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 text-xs w-10 h-10 flex items-center justify-center">1:1</button>
                 </div>
             </div>
             <div class="flex justify-center mt-4 space-x-2">
@@ -873,6 +1058,40 @@ function openImageGallery(listingId, images) {
     // Store images for navigation
     window.currentGalleryImages = images;
     window.currentImageIndex = 0;
+}
+
+function closeImageGallery() {
+    const modal = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-90');
+    if (modal) {
+        modal.remove();
+    }
+    currentImageZoom = 1;
+}
+
+function zoomIn() {
+    if (currentImageZoom < 3) {
+        currentImageZoom += 0.25;
+        updateImageZoom();
+    }
+}
+
+function zoomOut() {
+    if (currentImageZoom > 0.5) {
+        currentImageZoom -= 0.25;
+        updateImageZoom();
+    }
+}
+
+function resetZoom() {
+    currentImageZoom = 1;
+    updateImageZoom();
+}
+
+function updateImageZoom() {
+    const galleryImage = document.getElementById('galleryImage');
+    if (galleryImage) {
+        galleryImage.style.transform = `scale(${currentImageZoom})`;
+    }
 }
 
 function previousImage() {
