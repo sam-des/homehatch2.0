@@ -267,17 +267,55 @@ function renderListings() {
                     </div>
                 </div>
 
-                <div class="flex space-x-2">
-                    <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg text-sm">
+                <!-- Rating and Reviews -->
+                <div class="mb-4">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <div class="flex">
+                            ${generateStarRating(listing.rating || 4.5)}
+                        </div>
+                        <span class="text-sm text-gray-600">(${listing.reviewCount || 12} reviews)</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${listing.verified ? 'Verified' : 'Pending'}</span>
+                    </div>
+                </div>
+
+                <!-- Quick Features -->
+                <div class="mb-4">
+                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                        <span class="flex items-center">🛏️ ${listing.bedrooms || 2} bed</span>
+                        <span class="flex items-center">🚿 ${listing.bathrooms || 1} bath</span>
+                        <span class="flex items-center">📐 ${listing.sqft || 850} sqft</span>
+                        ${listing.petFriendly ? '<span class="flex items-center text-green-600">🐕 Pet OK</span>' : ''}
+                    </div>
+                </div>
+
+                <!-- Availability Status -->
+                <div class="mb-4">
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${listing.available !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${listing.available !== false ? '✅ Available Now' : '❌ Not Available'}
+                    </span>
+                    ${listing.moveInDate ? `<span class="text-xs text-gray-500 ml-2">Move-in: ${new Date(listing.moveInDate).toLocaleDateString()}</span>` : ''}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button onclick="viewDetails('${listing._id}')" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg text-sm">
                         👁️ Details
                     </button>
-                    <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm">
+                    <button onclick="startVirtualTour('${listing._id}')" class="bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-indigo-600 hover:to-blue-700 transition-all duration-300 shadow-lg text-sm">
+                        🥽 Virtual Tour
+                    </button>
+                    <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm">
                         💬 Chat
                     </button>
-                    <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg text-sm">
-                        💰 Purchase
+                    <button onclick="addToFavorites('${listing._id}')" class="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm" id="fav-${listing._id}">
+                        ${isInFavorites(listing._id) ? '❤️ Saved' : '🤍 Save'}
                     </button>
-                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 Contact</button>` : ''}
+                    <button onclick="scheduleViewing('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 shadow-lg text-sm">
+                        📅 Schedule
+                    </button>
+                    <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg text-sm">
+                        💰 Apply
+                    </button>
+                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 Contact</button>` : ''}
                     ${canDeleteListing(listing) ? `<button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
                         🗑️
                     </button>` : ''}
@@ -309,6 +347,102 @@ function setupSearch() {
     document.getElementById('countryFilter').addEventListener('change', performSearch);
     document.getElementById('amenityFilter').addEventListener('change', performSearch);
     document.getElementById('sortFilter').addEventListener('change', performSearch);
+    
+    // Add advanced filters
+    setupAdvancedFilters();
+    setupMapView();
+    setupSavedSearches();
+}
+
+function setupAdvancedFilters() {
+    // Property type filter
+    const propertyTypeFilter = document.createElement('select');
+    propertyTypeFilter.id = 'propertyTypeFilter';
+    propertyTypeFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    propertyTypeFilter.innerHTML = `
+        <option value="">Property Type</option>
+        <option value="apartment">Apartment</option>
+        <option value="house">House</option>
+        <option value="condo">Condo</option>
+        <option value="studio">Studio</option>
+        <option value="loft">Loft</option>
+    `;
+    
+    // Bedrooms filter
+    const bedroomsFilter = document.createElement('select');
+    bedroomsFilter.id = 'bedroomsFilter';
+    bedroomsFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    bedroomsFilter.innerHTML = `
+        <option value="">Bedrooms</option>
+        <option value="0">Studio</option>
+        <option value="1">1 Bedroom</option>
+        <option value="2">2 Bedrooms</option>
+        <option value="3">3+ Bedrooms</option>
+    `;
+    
+    // Bathrooms filter
+    const bathroomsFilter = document.createElement('select');
+    bathroomsFilter.id = 'bathroomsFilter';
+    bathroomsFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    bathroomsFilter.innerHTML = `
+        <option value="">Bathrooms</option>
+        <option value="1">1 Bathroom</option>
+        <option value="2">2 Bathrooms</option>
+        <option value="3">3+ Bathrooms</option>
+    `;
+    
+    // Pet-friendly filter
+    const petFriendlyFilter = document.createElement('input');
+    petFriendlyFilter.type = 'checkbox';
+    petFriendlyFilter.id = 'petFriendlyFilter';
+    petFriendlyFilter.className = 'mr-2';
+    
+    const petLabel = document.createElement('label');
+    petLabel.htmlFor = 'petFriendlyFilter';
+    petLabel.className = 'text-white flex items-center';
+    petLabel.innerHTML = `<input type="checkbox" id="petFriendlyFilter" class="mr-2"> 🐕 Pet Friendly`;
+    
+    // Add to search container
+    const searchContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4');
+    if (searchContainer) {
+        searchContainer.appendChild(propertyTypeFilter);
+        searchContainer.appendChild(bedroomsFilter);
+        searchContainer.appendChild(bathroomsFilter);
+        searchContainer.appendChild(petLabel);
+        
+        // Add event listeners
+        [propertyTypeFilter, bedroomsFilter, bathroomsFilter, petFriendlyFilter].forEach(filter => {
+            filter.addEventListener('change', performSearch);
+        });
+    }
+}
+
+function setupMapView() {
+    // Add map toggle button
+    const mapToggleBtn = document.createElement('button');
+    mapToggleBtn.id = 'mapToggleBtn';
+    mapToggleBtn.className = 'bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors';
+    mapToggleBtn.innerHTML = '🗺️ Map View';
+    mapToggleBtn.onclick = toggleMapView;
+    
+    const searchButtons = document.querySelector('.flex.space-x-4');
+    if (searchButtons) {
+        searchButtons.appendChild(mapToggleBtn);
+    }
+}
+
+function setupSavedSearches() {
+    // Add save search button
+    const saveSearchBtn = document.createElement('button');
+    saveSearchBtn.id = 'saveSearchBtn';
+    saveSearchBtn.className = 'bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors';
+    saveSearchBtn.innerHTML = '💾 Save Search';
+    saveSearchBtn.onclick = saveCurrentSearch;
+    
+    const searchButtons = document.querySelector('.flex.space-x-4');
+    if (searchButtons) {
+        searchButtons.appendChild(saveSearchBtn);
+    }
 }
 
 function performSearch() {
@@ -1064,11 +1198,318 @@ function setupLanguageSelector() {
     }
 }
 
-// Add profile picture option
+// Advanced Features Functions
 
-// Account Settings Page
+function generateStarRating(rating) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    let stars = '';
+    
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            stars += '<span class="text-yellow-400">★</span>';
+        } else if (i === fullStars && hasHalfStar) {
+            stars += '<span class="text-yellow-400">☆</span>';
+        } else {
+            stars += '<span class="text-gray-300">☆</span>';
+        }
+    }
+    return stars;
+}
 
-// Add a button to change profile picture in the Account Settings Modal
+function isInFavorites(listingId) {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    return favorites.includes(listingId);
+}
+
+function addToFavorites(listingId) {
+    if (!currentUser) {
+        alert('Please login to save favorites');
+        return;
+    }
+    
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const button = document.getElementById(`fav-${listingId}`);
+    
+    if (favorites.includes(listingId)) {
+        favorites = favorites.filter(id => id !== listingId);
+        button.innerHTML = '🤍 Save';
+        alert('Removed from favorites');
+    } else {
+        favorites.push(listingId);
+        button.innerHTML = '❤️ Saved';
+        alert('Added to favorites');
+    }
+    
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+}
+
+function startVirtualTour(listingId) {
+    const listing = allListings.find(l => l._id === listingId);
+    if (!listing) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="max-w-6xl w-full h-5/6 bg-white rounded-lg overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">🥽 Virtual Tour: ${listing.title}</h2>
+                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🏠</div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">360° Virtual Tour</h3>
+                    <p class="text-gray-600 mb-6">Experience this property in immersive 3D</p>
+                    <div class="space-y-4">
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold mr-4">📱 AR View</button>
+                        <button class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold mr-4">🖥️ Desktop Tour</button>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold">📹 Video Tour</button>
+                    </div>
+                    <div class="mt-8 text-sm text-gray-500">
+                        Virtual tours coming soon! This feature will provide 360° property views.
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function scheduleViewing(listingId, title) {
+    if (!currentUser) {
+        alert('Please login to schedule viewings');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">📅 Schedule Viewing</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <h3 class="font-semibold mb-4">${title}</h3>
+                
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
+                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" min="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                            <option value="">Select Time</option>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
+                        <input type="tel" placeholder="(555) 123-4567" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+                        <textarea placeholder="Any special requests or questions..." class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="3"></textarea>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-semibold">
+                            Schedule Viewing
+                        </button>
+                        <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-md font-semibold">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Viewing scheduled successfully! The property owner will contact you to confirm.');
+        modal.remove();
+    });
+}
+
+function toggleMapView() {
+    const mapModal = document.createElement('div');
+    mapModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    mapModal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-4xl w-full h-5/6">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">🗺️ Map View</h2>
+                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="h-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🗺️</div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Interactive Map</h3>
+                    <p class="text-gray-600 mb-6">View all properties on an interactive map</p>
+                    <div class="grid grid-cols-2 gap-4 max-w-md">
+                        ${filteredListings.slice(0, 4).map(listing => `
+                            <div class="bg-white p-4 rounded-lg shadow border">
+                                <h4 class="font-semibold text-sm">${listing.title}</h4>
+                                <p class="text-xs text-gray-600">${listing.address}</p>
+                                <p class="text-sm font-bold text-green-600">$${listing.price}/mo</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-6 text-sm text-gray-500">
+                        Interactive map integration coming soon!
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(mapModal);
+}
+
+function saveCurrentSearch() {
+    if (!currentUser) {
+        alert('Please login to save searches');
+        return;
+    }
+    
+    const searchCriteria = {
+        title: document.getElementById('searchTitle').value,
+        location: document.getElementById('searchLocation').value,
+        minPrice: document.getElementById('minPrice').value,
+        maxPrice: document.getElementById('maxPrice').value,
+        country: document.getElementById('countryFilter').value,
+        amenity: document.getElementById('amenityFilter').value,
+        propertyType: document.getElementById('propertyTypeFilter')?.value,
+        bedrooms: document.getElementById('bedroomsFilter')?.value,
+        bathrooms: document.getElementById('bathroomsFilter')?.value,
+        petFriendly: document.getElementById('petFriendlyFilter')?.checked
+    };
+    
+    const searchName = prompt('Enter a name for this saved search:');
+    if (!searchName) return;
+    
+    let savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+    savedSearches.push({
+        id: Date.now(),
+        name: searchName,
+        criteria: searchCriteria,
+        createdAt: new Date().toISOString()
+    });
+    
+    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
+    alert('Search saved successfully!');
+}
+
+// Property Comparison Feature
+function addToComparison(listingId) {
+    let comparison = JSON.parse(localStorage.getItem('comparison') || '[]');
+    
+    if (comparison.length >= 3) {
+        alert('You can only compare up to 3 properties at once');
+        return;
+    }
+    
+    if (comparison.includes(listingId)) {
+        alert('Property already added to comparison');
+        return;
+    }
+    
+    comparison.push(listingId);
+    localStorage.setItem('comparison', JSON.stringify(comparison));
+    
+    updateComparisonCounter();
+    alert('Property added to comparison');
+}
+
+function updateComparisonCounter() {
+    const comparison = JSON.parse(localStorage.getItem('comparison') || '[]');
+    const counter = document.getElementById('comparisonCounter');
+    if (counter) {
+        counter.textContent = comparison.length;
+        counter.parentElement.style.display = comparison.length > 0 ? 'block' : 'none';
+    }
+}
+
+function showComparison() {
+    const comparison = JSON.parse(localStorage.getItem('comparison') || '[]');
+    const properties = comparison.map(id => allListings.find(l => l._id === id)).filter(Boolean);
+    
+    if (properties.length === 0) {
+        alert('No properties to compare');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">📊 Property Comparison</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <div class="grid grid-cols-${properties.length} gap-4">
+                    ${properties.map(property => `
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <img src="${property.images[0] || '/placeholder.jpg'}" alt="${property.title}" class="w-full h-32 object-cover rounded mb-4">
+                            <h3 class="font-bold text-lg mb-2">${property.title}</h3>
+                            <div class="space-y-2 text-sm">
+                                <div><strong>Price:</strong> $${property.price}/mo</div>
+                                <div><strong>Location:</strong> ${property.address}</div>
+                                <div><strong>Bedrooms:</strong> ${property.bedrooms || 'N/A'}</div>
+                                <div><strong>Bathrooms:</strong> ${property.bathrooms || 'N/A'}</div>
+                                <div><strong>Sq Ft:</strong> ${property.sqft || 'N/A'}</div>
+                                <div><strong>Pet Friendly:</strong> ${property.petFriendly ? 'Yes' : 'No'}</div>
+                                <div><strong>Rating:</strong> ⭐ ${property.rating || '4.5'}</div>
+                            </div>
+                            <button onclick="removeFromComparison('${property._id}')" class="mt-4 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                Remove
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <button onclick="clearComparison()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function removeFromComparison(listingId) {
+    let comparison = JSON.parse(localStorage.getItem('comparison') || '[]');
+    comparison = comparison.filter(id => id !== listingId);
+    localStorage.setItem('comparison', JSON.stringify(comparison));
+    
+    // Close and reopen comparison modal
+    document.querySelector('.fixed').remove();
+    if (comparison.length > 0) {
+        showComparison();
+    }
+    updateComparisonCounter();
+}
+
+function clearComparison() {
+    localStorage.setItem('comparison', JSON.stringify([]));
+    document.querySelector('.fixed').remove();
+    updateComparisonCounter();
+}
+
+// Add Profile Picture Option
 
 function viewAccountSettings() {
     // Close dropdown

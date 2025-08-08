@@ -703,6 +703,267 @@ app.post('/api/profile-picture', requireAuth, upload.single('profilePicture'), (
   }
 });
 
+// Advanced Features Endpoints
+
+// Reviews and Ratings
+app.post('/api/reviews', requireAuth, (req, res) => {
+  try {
+    const { listingId, rating, comment } = req.body;
+    
+    if (!data.reviews) data.reviews = [];
+    
+    const newReview = {
+      _id: data.nextReviewId || 1,
+      listingId: parseInt(listingId),
+      userId: req.user._id,
+      username: req.user.username,
+      rating: parseInt(rating),
+      comment,
+      createdAt: new Date().toISOString()
+    };
+    
+    data.reviews.push(newReview);
+    data.nextReviewId = (data.nextReviewId || 1) + 1;
+    
+    // Update listing average rating
+    const listingReviews = data.reviews.filter(r => r.listingId === parseInt(listingId));
+    const avgRating = listingReviews.reduce((sum, r) => sum + r.rating, 0) / listingReviews.length;
+    
+    const listing = listings.find(l => l._id === parseInt(listingId));
+    if (listing) {
+      listing.rating = Math.round(avgRating * 10) / 10;
+      listing.reviewCount = listingReviews.length;
+    }
+    
+    saveData({
+      ...data,
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, review: newReview });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/reviews/:listingId', (req, res) => {
+  try {
+    const listingId = parseInt(req.params.listingId);
+    const reviews = (data.reviews || []).filter(r => r.listingId === listingId);
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Price Alerts
+app.post('/api/price-alerts', requireAuth, (req, res) => {
+  try {
+    const { listingId, targetPrice, email } = req.body;
+    
+    if (!data.priceAlerts) data.priceAlerts = [];
+    
+    const newAlert = {
+      _id: data.nextAlertId || 1,
+      listingId: parseInt(listingId),
+      userId: req.user._id,
+      targetPrice: parseFloat(targetPrice),
+      email,
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+    
+    data.priceAlerts.push(newAlert);
+    data.nextAlertId = (data.nextAlertId || 1) + 1;
+    
+    saveData({
+      ...data,
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, alert: newAlert });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Viewing Appointments
+app.post('/api/viewings', requireAuth, (req, res) => {
+  try {
+    const { listingId, date, time, phone, notes } = req.body;
+    
+    if (!data.viewings) data.viewings = [];
+    
+    const newViewing = {
+      _id: data.nextViewingId || 1,
+      listingId: parseInt(listingId),
+      userId: req.user._id,
+      username: req.user.username,
+      date,
+      time,
+      phone,
+      notes,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    data.viewings.push(newViewing);
+    data.nextViewingId = (data.nextViewingId || 1) + 1;
+    
+    saveData({
+      ...data,
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, viewing: newViewing });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Application Tracking
+app.post('/api/applications', requireAuth, (req, res) => {
+  try {
+    const { listingId, applicationData } = req.body;
+    
+    if (!data.applications) data.applications = [];
+    
+    const newApplication = {
+      _id: data.nextApplicationId || 1,
+      listingId: parseInt(listingId),
+      userId: req.user._id,
+      applicantName: req.user.username,
+      applicationData,
+      status: 'submitted',
+      submittedAt: new Date().toISOString()
+    };
+    
+    data.applications.push(newApplication);
+    data.nextApplicationId = (data.nextApplicationId || 1) + 1;
+    
+    saveData({
+      ...data,
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true, application: newApplication });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Search Analytics
+app.post('/api/search-analytics', (req, res) => {
+  try {
+    const { searchQuery, filters, resultsCount } = req.body;
+    
+    if (!data.searchAnalytics) data.searchAnalytics = [];
+    
+    const searchRecord = {
+      _id: data.nextSearchId || 1,
+      userId: req.user?._id || null,
+      searchQuery,
+      filters,
+      resultsCount,
+      timestamp: new Date().toISOString()
+    };
+    
+    data.searchAnalytics.push(searchRecord);
+    data.nextSearchId = (data.nextSearchId || 1) + 1;
+    
+    // Keep only last 1000 search records to prevent file from growing too large
+    if (data.searchAnalytics.length > 1000) {
+      data.searchAnalytics = data.searchAnalytics.slice(-1000);
+    }
+    
+    saveData({
+      ...data,
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Popular searches endpoint
+app.get('/api/popular-searches', (req, res) => {
+  try {
+    const analytics = data.searchAnalytics || [];
+    const recentSearches = analytics.filter(s => 
+      new Date(s.timestamp) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+    );
+    
+    // Aggregate popular search terms
+    const searchTerms = {};
+    recentSearches.forEach(search => {
+      if (search.searchQuery) {
+        searchTerms[search.searchQuery] = (searchTerms[search.searchQuery] || 0) + 1;
+      }
+    });
+    
+    const popularSearches = Object.entries(searchTerms)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([term, count]) => ({ term, count }));
+    
+    res.json(popularSearches);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
