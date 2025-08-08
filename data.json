@@ -3,22 +3,6 @@
   "purchases": [],
   "users": [
     {
-      "_id": 2,
-      "username": "sam",
-      "email": "sammydessup@gmail.com",
-      "password": "!!SAMMAH9009mar",
-      "role": "user",
-      "createdAt": "2025-07-15T19:00:51.086Z"
-    },
-    {
-      "_id": 3,
-      "username": "des",
-      "email": "desyiz@yahoo.com",
-      "password": "90092024",
-      "role": "user",
-      "createdAt": "2025-07-15T19:26:50.440Z"
-    },
-    {
       "_id": 1,
       "username": "admin",
       "password": "admin123",
@@ -28,9 +12,10 @@
     }
   ],
   "chats": [],
+  "bookings": [],
   "sessions": [
     [
-      "17526181033590jdaoaf2w9yp",
+      "1754611960711300zqmgttbh",
       {
         "_id": 1,
         "username": "admin",
@@ -44,5 +29,6 @@
   "nextId": 4,
   "nextPurchaseId": 1,
   "nextUserId": 4,
-  "nextChatId": 1
+  "nextChatId": 1,
+  "nextBookingId": 1
 }
