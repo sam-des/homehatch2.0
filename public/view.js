@@ -298,24 +298,24 @@ function renderListings() {
 
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <button onclick="viewDetails('${listing._id}')" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg text-sm">
-                        👁️ Details
+                        👁️ ${t('details')}
                     </button>
                     <button onclick="startVirtualTour('${listing._id}')" class="bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-indigo-600 hover:to-blue-700 transition-all duration-300 shadow-lg text-sm">
-                        🥽 Virtual Tour
+                        🥽 ${t('virtualTour')}
                     </button>
                     <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm">
-                        💬 Chat
+                        💬 ${t('chat')}
                     </button>
                     <button onclick="addToFavorites('${listing._id}')" class="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm" id="fav-${listing._id}">
-                        ${isInFavorites(listing._id) ? '❤️ Saved' : '🤍 Save'}
+                        ${isInFavorites(listing._id) ? '❤️ ' + t('saved') : '🤍 ' + t('save')}
                     </button>
                     <button onclick="scheduleViewing('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 shadow-lg text-sm">
-                        📅 Schedule
+                        📅 ${t('schedule')}
                     </button>
                     <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg text-sm">
-                        💰 Apply
+                        💰 ${t('apply')}
                     </button>
-                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 Contact</button>` : ''}
+                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 ${t('contact')}</button>` : ''}
                     ${canDeleteListing(listing) ? `<button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
                         🗑️
                     </button>` : ''}
@@ -1122,6 +1122,114 @@ function t(key) {
         'changeProfilePicture': {
             'en': 'Change Profile Picture',
             'fr': 'Changer la Photo de Profil'
+        },
+        'searchFilters': {
+            'en': 'Search Filters',
+            'fr': 'Filtres de Recherche'
+        },
+        'searchByTitle': {
+            'en': 'Search by title...',
+            'fr': 'Rechercher par titre...'
+        },
+        'searchByLocation': {
+            'en': 'Search by location...',
+            'fr': 'Rechercher par lieu...'
+        },
+        'allCountries': {
+            'en': 'All Countries',
+            'fr': 'Tous les Pays'
+        },
+        'minPrice': {
+            'en': 'Min Price',
+            'fr': 'Prix Min'
+        },
+        'maxPrice': {
+            'en': 'Max Price',
+            'fr': 'Prix Max'
+        },
+        'amenities': {
+            'en': 'Amenities',
+            'fr': 'Équipements'
+        },
+        'anyAmenities': {
+            'en': 'Any Amenities',
+            'fr': 'Tous Équipements'
+        },
+        'sortBy': {
+            'en': 'Sort By',
+            'fr': 'Trier Par'
+        },
+        'newestFirst': {
+            'en': 'Newest First',
+            'fr': 'Plus Récent'
+        },
+        'oldestFirst': {
+            'en': 'Oldest First',
+            'fr': 'Plus Ancien'
+        },
+        'priceLowHigh': {
+            'en': 'Price: Low to High',
+            'fr': 'Prix: Bas à Élevé'
+        },
+        'priceHighLow': {
+            'en': 'Price: High to Low',
+            'fr': 'Prix: Élevé à Bas'
+        },
+        'titleAZ': {
+            'en': 'Title A-Z',
+            'fr': 'Titre A-Z'
+        },
+        'applyFilters': {
+            'en': 'Apply Filters',
+            'fr': 'Appliquer les Filtres'
+        },
+        'clearAll': {
+            'en': 'Clear All',
+            'fr': 'Effacer Tout'
+        },
+        'details': {
+            'en': 'Details',
+            'fr': 'Détails'
+        },
+        'virtualTour': {
+            'en': 'Virtual Tour',
+            'fr': 'Visite Virtuelle'
+        },
+        'chat': {
+            'en': 'Chat',
+            'fr': 'Discuter'
+        },
+        'save': {
+            'en': 'Save',
+            'fr': 'Sauvegarder'
+        },
+        'saved': {
+            'en': 'Saved',
+            'fr': 'Sauvegardé'
+        },
+        'schedule': {
+            'en': 'Schedule',
+            'fr': 'Planifier'
+        },
+        'apply': {
+            'en': 'Apply',
+            'fr': 'Postuler'
+        },
+        'contact': {
+            'en': 'Contact',
+            'fr': 'Contacter'
+        },
+        'findPerfectRental': {
+            'en': 'Find your perfect rental home',
+            'fr': 'Trouvez votre maison de location parfaite'
+        },
+        'listProperty': {
+            'en': 'List Property',
+            'fr': 'Lister une Propriété'
+        },
+        'browseRentals': {
+            'en': 'Browse Rentals',
+            'fr': 'Parcourir les Locations'
         }
     };
     currentLanguage = localStorage.getItem('language') || 'en';
@@ -1130,9 +1238,98 @@ function t(key) {
 
 // Function to change language
 function changeLanguage(lang) {
+    currentLanguage = lang;
     localStorage.setItem('language', lang);
+    updateAllUIText();
     renderListings();
     updateHeader();
+}
+
+function updateAllUIText() {
+    // Update header text
+    const headerTitle = document.querySelector('header h1');
+    if (headerTitle) {
+        headerTitle.innerHTML = '🏠 HomeHatch';
+    }
+    
+    const headerSubtitle = document.querySelector('header p');
+    if (headerSubtitle) {
+        headerSubtitle.textContent = t('findPerfectRental');
+    }
+    
+    // Update navigation buttons
+    const listPropertyBtn = document.querySelector('a[href="/"]');
+    if (listPropertyBtn) {
+        listPropertyBtn.textContent = t('listProperty');
+    }
+    
+    const browseRentalsBtn = document.querySelector('a[href="/view.html"]');
+    if (browseRentalsBtn) {
+        browseRentalsBtn.textContent = t('browseRentals');
+    }
+    
+    // Update search section
+    const searchTitle = document.querySelector('.glass-effect h2');
+    if (searchTitle) {
+        searchTitle.innerHTML = '🔍 ' + t('searchFilters');
+    }
+    
+    // Update form placeholders
+    const searchTitleInput = document.getElementById('searchTitle');
+    if (searchTitleInput) {
+        searchTitleInput.placeholder = t('searchByTitle');
+    }
+    
+    const searchLocationInput = document.getElementById('searchLocation');
+    if (searchLocationInput) {
+        searchLocationInput.placeholder = t('searchByLocation');
+    }
+    
+    // Update select options and labels
+    const countryFilter = document.getElementById('countryFilter');
+    if (countryFilter && countryFilter.options[0]) {
+        countryFilter.options[0].textContent = t('allCountries');
+    }
+    
+    const amenityFilter = document.getElementById('amenityFilter');
+    if (amenityFilter && amenityFilter.options[0]) {
+        amenityFilter.options[0].textContent = t('anyAmenities');
+    }
+    
+    const sortFilter = document.getElementById('sortFilter');
+    if (sortFilter) {
+        sortFilter.options[0].textContent = t('newestFirst');
+        sortFilter.options[1].textContent = t('oldestFirst');
+        sortFilter.options[2].textContent = t('priceLowHigh');
+        sortFilter.options[3].textContent = t('priceHighLow');
+        sortFilter.options[4].textContent = t('titleAZ');
+    }
+    
+    // Update labels
+    const labels = document.querySelectorAll('label');
+    labels.forEach(label => {
+        const text = label.textContent.trim();
+        if (text === 'Min Price' || text === 'Prix Min') {
+            label.textContent = t('minPrice');
+        } else if (text === 'Max Price' || text === 'Prix Max') {
+            label.textContent = t('maxPrice');
+        } else if (text === 'Amenities' || text === 'Équipements') {
+            label.textContent = t('amenities');
+        } else if (text === 'Sort By' || text === 'Trier Par') {
+            label.textContent = t('sortBy');
+        }
+    });
+    
+    // Update buttons
+    const searchBtn = document.getElementById('searchBtn');
+    if (searchBtn) {
+        searchBtn.innerHTML = '🔍 ' + t('applyFilters');
+    }
+    
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) {
+        clearBtn.innerHTML = '🗑️ ' + t('clearAll');
+    }
 }
 
 // Call this function on the body of the html
@@ -1175,6 +1372,9 @@ function goToHomePage() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Set up language first
+    currentLanguage = localStorage.getItem('language') || 'en';
+    
     checkAuth();
     loadListings();
     setupSearch();
@@ -1182,6 +1382,11 @@ document.addEventListener('DOMContentLoaded', function() {
     setupScrollGradient();
     setupBottomButtons();
     setupLanguageSelector();
+    
+    // Update UI text after setup
+    setTimeout(() => {
+        updateAllUIText();
+    }, 100);
 });
 
 function setupLanguageSelector() {
@@ -1190,10 +1395,7 @@ function setupLanguageSelector() {
         currentLanguage = localStorage.getItem('language') || 'en';
         languageSelector.value = currentLanguage;
         languageSelector.addEventListener('change', function(e) {
-            currentLanguage = e.target.value;
-            localStorage.setItem('language', currentLanguage);
-            renderListings();
-            updateHeader();
+            changeLanguage(e.target.value);
         });
     }
 }
