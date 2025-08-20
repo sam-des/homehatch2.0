@@ -198,13 +198,13 @@ function setupLanguageSelector() {
     if (topLanguageSelector) {
         topLanguageSelector.value = currentLanguage;
         topLanguageSelector.addEventListener('change', function(e) {
-            currentLanguage = e.target.value;
-            localStorage.setItem('language', currentLanguage);
-            
-            // Update all UI elements with new language
-            updateLanguageStrings();
-            updateAuthUI();
-            renderListings();
+            if (e.target.value !== currentLanguage) {
+                currentLanguage = e.target.value;
+                localStorage.setItem('language', currentLanguage);
+                
+                // Reload the page to ensure all content is refreshed
+                window.location.reload();
+            }
         });
     }
 }

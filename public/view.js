@@ -1230,6 +1230,30 @@ function t(key) {
         'browseRentals': {
             'en': 'Browse Rentals',
             'fr': 'Parcourir les Locations'
+        },
+        'mapView': {
+            'en': 'Map View',
+            'fr': 'Vue Carte'
+        },
+        'legend': {
+            'en': 'Legend',
+            'fr': 'Légende'
+        },
+        'availableRentals': {
+            'en': 'Available Rentals',
+            'fr': 'Locations Disponibles'
+        },
+        'propertiesOnMap': {
+            'en': 'Properties on Map',
+            'fr': 'Propriétés sur la Carte'
+        },
+        'month': {
+            'en': 'month',
+            'fr': 'mois'
+        },
+        'viewFullDetails': {
+            'en': 'View Full Details',
+            'fr': 'Voir Tous les Détails'
         }
     };
     currentLanguage = localStorage.getItem('language') || 'en';
@@ -1240,9 +1264,15 @@ function t(key) {
 function changeLanguage(lang) {
     currentLanguage = lang;
     localStorage.setItem('language', lang);
-    updateAllUIText();
-    renderListings();
-    updateHeader();
+    
+    // Update the language selector value
+    const languageSelector = document.getElementById('languageSelector');
+    if (languageSelector) {
+        languageSelector.value = lang;
+    }
+    
+    // Reload the page to ensure all content is refreshed
+    window.location.reload();
 }
 
 function updateAllUIText() {
@@ -1395,7 +1425,9 @@ function setupLanguageSelector() {
         currentLanguage = localStorage.getItem('language') || 'en';
         languageSelector.value = currentLanguage;
         languageSelector.addEventListener('change', function(e) {
-            changeLanguage(e.target.value);
+            if (e.target.value !== currentLanguage) {
+                changeLanguage(e.target.value);
+            }
         });
     }
 }
@@ -1547,33 +1579,164 @@ function toggleMapView() {
     const mapModal = document.createElement('div');
     mapModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     mapModal.innerHTML = `
-        <div class="bg-white rounded-2xl max-w-4xl w-full h-5/6">
+        <div class="bg-white rounded-2xl max-w-6xl w-full h-5/6 flex flex-col">
             <div class="p-4 border-b flex justify-between items-center">
-                <h2 class="text-xl font-bold">🗺️ Map View</h2>
+                <h2 class="text-xl font-bold">🗺️ ${t('mapView')}</h2>
                 <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
-            <div class="h-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
-                <div class="text-center">
-                    <div class="text-6xl mb-4">🗺️</div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Interactive Map</h3>
-                    <p class="text-gray-600 mb-6">View all properties on an interactive map</p>
-                    <div class="grid grid-cols-2 gap-4 max-w-md">
-                        ${filteredListings.slice(0, 4).map(listing => `
-                            <div class="bg-white p-4 rounded-lg shadow border">
-                                <h4 class="font-semibold text-sm">${listing.title}</h4>
-                                <p class="text-xs text-gray-600">${listing.address}</p>
-                                <p class="text-sm font-bold text-green-600">$${listing.price}/mo</p>
+            <div class="flex-1 flex">
+                <!-- Map Area -->
+                <div class="flex-1 bg-gradient-to-br from-green-100 to-blue-100 relative overflow-hidden">
+                    <div id="mapContainer" class="w-full h-full relative">
+                        <!-- Simulated Map with Markers -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200">
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl opacity-20">🗺️</div>
+                            
+                            <!-- Property Markers -->
+                            ${filteredListings.map((listing, index) => {
+                                const x = 20 + (index % 5) * 15; // Distribute across width
+                                const y = 20 + Math.floor(index / 5) * 20; // Stack in rows
+                                return `
+                                    <div class="absolute" style="left: ${x}%; top: ${y}%;">
+                                        <button onclick="showMapListingDetails('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-lg transform hover:scale-110 transition-all duration-200 animate-pulse">
+                                            $${Math.round(listing.price/100)}
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <!-- Map Controls -->
+                        <div class="absolute top-4 left-4 flex flex-col space-y-2">
+                            <button onclick="zoomMapIn()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold">+</button>
+                            <button onclick="zoomMapOut()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold">−</button>
+                            <button onclick="resetMapZoom()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold">⌂</button>
+                        </div>
+                        
+                        <!-- Legend -->
+                        <div class="absolute bottom-4 left-4 bg-white bg-opacity-90 p-3 rounded-lg shadow-lg">
+                            <h4 class="font-semibold text-sm mb-2">${t('legend')}</h4>
+                            <div class="flex items-center space-x-2 text-xs">
+                                <div class="w-4 h-4 bg-red-500 rounded-full"></div>
+                                <span>${t('availableRentals')}</span>
                             </div>
-                        `).join('')}
+                        </div>
                     </div>
-                    <div class="mt-6 text-sm text-gray-500">
-                        Interactive map integration coming soon!
+                </div>
+                
+                <!-- Sidebar with Listings -->
+                <div class="w-80 bg-gray-50 border-l overflow-y-auto">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-4">${t('propertiesOnMap')} (${filteredListings.length})</h3>
+                        <div class="space-y-3">
+                            ${filteredListings.map(listing => `
+                                <div id="mapListing-${listing._id}" class="bg-white p-3 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-l-4 border-transparent hover:border-blue-500" onclick="highlightMapMarker('${listing._id}')">
+                                    ${listing.images.length > 0 ? `
+                                        <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-20 object-cover rounded mb-2">
+                                    ` : ''}
+                                    <h4 class="font-semibold text-sm">${listing.title}</h4>
+                                    <p class="text-xs text-gray-600 mb-1">${listing.address}</p>
+                                    <p class="text-sm font-bold text-green-600">$${listing.price}/${t('month')}</p>
+                                    <div class="flex space-x-1 mt-2">
+                                        <button onclick="event.stopPropagation(); viewDetails('${listing._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                                            ${t('details')}
+                                        </button>
+                                        <button onclick="event.stopPropagation(); openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs">
+                                            ${t('chat')}
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     `;
     document.body.appendChild(mapModal);
+    
+    // Store current map zoom level
+    window.mapZoomLevel = 1;
+}
+
+function showMapListingDetails(listingId) {
+    const listing = filteredListings.find(l => l._id === listingId);
+    if (!listing) return;
+    
+    // Highlight the listing in sidebar
+    highlightMapMarker(listingId);
+    
+    // Show quick preview
+    const preview = document.createElement('div');
+    preview.className = 'absolute bg-white p-4 rounded-lg shadow-xl border z-10 max-w-xs';
+    preview.style.left = '50%';
+    preview.style.top = '50%';
+    preview.style.transform = 'translate(-50%, -50%)';
+    preview.innerHTML = `
+        <div class="relative">
+            <button onclick="this.closest('.absolute').remove()" class="absolute top-0 right-0 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            ${listing.images.length > 0 ? `
+                <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-24 object-cover rounded mb-2">
+            ` : ''}
+            <h4 class="font-semibold">${listing.title}</h4>
+            <p class="text-sm text-gray-600">${listing.address}</p>
+            <p class="text-lg font-bold text-green-600">$${listing.price}/${t('month')}</p>
+            <button onclick="this.closest('.absolute').remove(); viewDetails('${listing._id}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded mt-2">
+                ${t('viewFullDetails')}
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('mapContainer').appendChild(preview);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (preview.parentNode) {
+            preview.remove();
+        }
+    }, 5000);
+}
+
+function highlightMapMarker(listingId) {
+    // Remove previous highlights
+    document.querySelectorAll('[id^="mapListing-"]').forEach(el => {
+        el.classList.remove('border-blue-500', 'bg-blue-50');
+        el.classList.add('border-transparent');
+    });
+    
+    // Highlight selected listing
+    const listingElement = document.getElementById(`mapListing-${listingId}`);
+    if (listingElement) {
+        listingElement.classList.remove('border-transparent');
+        listingElement.classList.add('border-blue-500', 'bg-blue-50');
+        listingElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function zoomMapIn() {
+    window.mapZoomLevel = Math.min(window.mapZoomLevel + 0.2, 2);
+    updateMapZoom();
+}
+
+function zoomMapOut() {
+    window.mapZoomLevel = Math.max(window.mapZoomLevel - 0.2, 0.5);
+    updateMapZoom();
+}
+
+function resetMapZoom() {
+    window.mapZoomLevel = 1;
+    updateMapZoom();
+}
+
+function updateMapZoom() {
+    const mapContainer = document.getElementById('mapContainer');
+    if (mapContainer) {
+        const mapContent = mapContainer.querySelector('.absolute.inset-0');
+        if (mapContent) {
+            mapContent.style.transform = `scale(${window.mapZoomLevel})`;
+            mapContent.style.transformOrigin = 'center';
+        }
+    }
 }
 
 function saveCurrentSearch() {
