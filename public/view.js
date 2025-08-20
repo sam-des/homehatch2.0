@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSearch();
     setupPurchaseForm();
     setupScrollGradient();
+    setupBottomButtons();
+    setupLanguageSelector();
+
+    // Update UI text after setup
+    setTimeout(() => {
+        updateAllUIText();
+    }, 100);
 });
 
 // Set up axios interceptor to include session ID
@@ -274,7 +281,7 @@ function renderListings() {
                             ${generateStarRating(listing.rating || 4.5)}
                         </div>
                         <span class="text-sm text-gray-600">(${listing.reviewCount || 12} reviews)</span>
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${listing.verified ? 'Verified' : 'Pending'}</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${listing.available !== false ? '✅ Available' : '❌ Not Available'}</span>
                     </div>
                 </div>
 
@@ -315,6 +322,9 @@ function renderListings() {
                     <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg text-sm">
                         💰 ${t('apply')}
                     </button>
+                    <button onclick="openReviewModal('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 shadow-lg text-sm">
+                        ⭐ Review
+                    </button>
                     ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 ${t('contact')}</button>` : ''}
                     ${canDeleteListing(listing) ? `<button onclick="deleteListing(${listing._id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
                         🗑️
@@ -347,7 +357,7 @@ function setupSearch() {
     document.getElementById('countryFilter').addEventListener('change', performSearch);
     document.getElementById('amenityFilter').addEventListener('change', performSearch);
     document.getElementById('sortFilter').addEventListener('change', performSearch);
-    
+
     // Add advanced filters
     setupAdvancedFilters();
     setupMapView();
@@ -367,7 +377,7 @@ function setupAdvancedFilters() {
         <option value="studio">Studio</option>
         <option value="loft">Loft</option>
     `;
-    
+
     // Bedrooms filter
     const bedroomsFilter = document.createElement('select');
     bedroomsFilter.id = 'bedroomsFilter';
@@ -379,7 +389,7 @@ function setupAdvancedFilters() {
         <option value="2">2 Bedrooms</option>
         <option value="3">3+ Bedrooms</option>
     `;
-    
+
     // Bathrooms filter
     const bathroomsFilter = document.createElement('select');
     bathroomsFilter.id = 'bathroomsFilter';
@@ -390,18 +400,18 @@ function setupAdvancedFilters() {
         <option value="2">2 Bathrooms</option>
         <option value="3">3+ Bathrooms</option>
     `;
-    
+
     // Pet-friendly filter
     const petFriendlyFilter = document.createElement('input');
     petFriendlyFilter.type = 'checkbox';
     petFriendlyFilter.id = 'petFriendlyFilter';
     petFriendlyFilter.className = 'mr-2';
-    
+
     const petLabel = document.createElement('label');
     petLabel.htmlFor = 'petFriendlyFilter';
     petLabel.className = 'text-white flex items-center';
     petLabel.innerHTML = `<input type="checkbox" id="petFriendlyFilter" class="mr-2"> 🐕 Pet Friendly`;
-    
+
     // Add to search container
     const searchContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4');
     if (searchContainer) {
@@ -409,7 +419,7 @@ function setupAdvancedFilters() {
         searchContainer.appendChild(bedroomsFilter);
         searchContainer.appendChild(bathroomsFilter);
         searchContainer.appendChild(petLabel);
-        
+
         // Add event listeners
         [propertyTypeFilter, bedroomsFilter, bathroomsFilter, petFriendlyFilter].forEach(filter => {
             filter.addEventListener('change', performSearch);
@@ -424,7 +434,7 @@ function setupMapView() {
     mapToggleBtn.className = 'bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors';
     mapToggleBtn.innerHTML = '🗺️ Map View';
     mapToggleBtn.onclick = toggleMapView;
-    
+
     const searchButtons = document.querySelector('.flex.space-x-4');
     if (searchButtons) {
         searchButtons.appendChild(mapToggleBtn);
@@ -438,7 +448,7 @@ function setupSavedSearches() {
     saveSearchBtn.className = 'bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors';
     saveSearchBtn.innerHTML = '💾 Save Search';
     saveSearchBtn.onclick = saveCurrentSearch;
-    
+
     const searchButtons = document.querySelector('.flex.space-x-4');
     if (searchButtons) {
         searchButtons.appendChild(saveSearchBtn);
@@ -466,8 +476,22 @@ function performSearch() {
         const matchesMinPrice = !minPriceValue || listing.price >= minPriceValue;
         const matchesMaxPrice = !maxPriceValue || listing.price <= maxPriceValue;
 
+        // Advanced Filters
+        const propertyTypeFilter = document.getElementById('propertyTypeFilter');
+        const bedroomsFilter = document.getElementById('bedroomsFilter');
+        const bathroomsFilter = document.getElementById('bathroomsFilter');
+        const petFriendlyFilter = document.getElementById('petFriendlyFilter');
+
+        const matchesPropertyType = !propertyTypeFilter || !propertyTypeFilter.value || listing.propertyType === propertyTypeFilter.value;
+        const matchesBedrooms = !bedroomsFilter || !bedroomsFilter.value || 
+            (bedroomsFilter.value === '3' ? (listing.bedrooms || 0) >= 3 : (listing.bedrooms || 0) == parseInt(bedroomsFilter.value));
+        const matchesBathrooms = !bathroomsFilter || !bathroomsFilter.value || 
+            (bathroomsFilter.value === '3' ? (listing.bathrooms || 0) >= 3 : (listing.bathrooms || 0) == parseInt(bathroomsFilter.value));
+        const matchesPetFriendly = !petFriendlyFilter || !petFriendlyFilter.checked || listing.petFriendly;
+
         return matchesTitle && matchesLocation && matchesCountry && 
-               matchesAmenity && matchesMinPrice && matchesMaxPrice;
+               matchesAmenity && matchesMinPrice && matchesMaxPrice &&
+               matchesPropertyType && matchesBedrooms && matchesBathrooms && matchesPetFriendly;
     });
 
     // Sort listings
@@ -500,6 +524,11 @@ function clearFilters() {
     document.getElementById('minPrice').value = '';
     document.getElementById('maxPrice').value = '';
     document.getElementById('sortFilter').value = 'newest';
+    if (document.getElementById('propertyTypeFilter')) document.getElementById('propertyTypeFilter').value = '';
+    if (document.getElementById('bedroomsFilter')) document.getElementById('bedroomsFilter').value = '';
+    if (document.getElementById('bathroomsFilter')) document.getElementById('bathroomsFilter').value = '';
+    if (document.getElementById('petFriendlyFilter')) document.getElementById('petFriendlyFilter').checked = false;
+
 
     filteredListings = [...allListings];
     performSearch(); // Apply default sorting
@@ -583,9 +612,9 @@ function openImageGallery(listingId, images, startIndex = 0) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     // Store images for navigation
     window.currentGalleryImages = images;
     window.currentImageIndex = startIndex;
@@ -642,13 +671,13 @@ function nextImage() {
 function showImage(index) {
     window.currentImageIndex = index;
     document.getElementById('galleryImage').src = window.currentGalleryImages[index];
-    
+
     // Update thumbnails
     const thumbnails = document.querySelectorAll('.fixed img[onclick*="showImage"]');
     thumbnails.forEach((thumb, i) => {
         thumb.className = `w-16 h-16 object-cover rounded cursor-pointer border-2 ${i === index ? 'border-white' : 'border-transparent'}`;
     });
-    
+
     // Reset zoom when changing images
     currentImageZoom = 1;
     updateImageZoom();
@@ -1016,6 +1045,9 @@ function viewAccountSettings() {
                         <button class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors">
                             Update Email
                         </button>
+                        <button onclick="openProfilePictureModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg transition-colors">
+                            Change Profile Picture
+                        </button>
                         <button class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition-colors">
                             Delete Account
                         </button>
@@ -1264,13 +1296,13 @@ function t(key) {
 function changeLanguage(lang) {
     currentLanguage = lang;
     localStorage.setItem('language', lang);
-    
+
     // Update the language selector value
     const languageSelector = document.getElementById('languageSelector');
     if (languageSelector) {
         languageSelector.value = lang;
     }
-    
+
     // Reload the page to ensure all content is refreshed
     window.location.reload();
 }
@@ -1281,51 +1313,51 @@ function updateAllUIText() {
     if (headerTitle) {
         headerTitle.innerHTML = '🏠 HomeHatch';
     }
-    
+
     const headerSubtitle = document.querySelector('header p');
     if (headerSubtitle) {
         headerSubtitle.textContent = t('findPerfectRental');
     }
-    
+
     // Update navigation buttons
     const listPropertyBtn = document.querySelector('a[href="/"]');
     if (listPropertyBtn) {
         listPropertyBtn.textContent = t('listProperty');
     }
-    
+
     const browseRentalsBtn = document.querySelector('a[href="/view.html"]');
     if (browseRentalsBtn) {
         browseRentalsBtn.textContent = t('browseRentals');
     }
-    
+
     // Update search section
     const searchTitle = document.querySelector('.glass-effect h2');
     if (searchTitle) {
         searchTitle.innerHTML = '🔍 ' + t('searchFilters');
     }
-    
+
     // Update form placeholders
     const searchTitleInput = document.getElementById('searchTitle');
     if (searchTitleInput) {
         searchTitleInput.placeholder = t('searchByTitle');
     }
-    
+
     const searchLocationInput = document.getElementById('searchLocation');
     if (searchLocationInput) {
         searchLocationInput.placeholder = t('searchByLocation');
     }
-    
+
     // Update select options and labels
     const countryFilter = document.getElementById('countryFilter');
     if (countryFilter && countryFilter.options[0]) {
         countryFilter.options[0].textContent = t('allCountries');
     }
-    
+
     const amenityFilter = document.getElementById('amenityFilter');
     if (amenityFilter && amenityFilter.options[0]) {
         amenityFilter.options[0].textContent = t('anyAmenities');
     }
-    
+
     const sortFilter = document.getElementById('sortFilter');
     if (sortFilter) {
         sortFilter.options[0].textContent = t('newestFirst');
@@ -1334,7 +1366,7 @@ function updateAllUIText() {
         sortFilter.options[3].textContent = t('priceHighLow');
         sortFilter.options[4].textContent = t('titleAZ');
     }
-    
+
     // Update labels
     const labels = document.querySelectorAll('label');
     labels.forEach(label => {
@@ -1349,28 +1381,17 @@ function updateAllUIText() {
             label.textContent = t('sortBy');
         }
     });
-    
+
     // Update buttons
     const searchBtn = document.getElementById('searchBtn');
     if (searchBtn) {
         searchBtn.innerHTML = '🔍 ' + t('applyFilters');
     }
-    
+
     const clearBtn = document.getElementById('clearBtn');
     if (clearBtn) {
         clearBtn.innerHTML = '🗑️ ' + t('clearAll');
     }
-}
-
-// Call this function on the body of the html
-function setupLanguageSwitcher() {
-    const languageSwitcher = document.createElement('div');
-    languageSwitcher.className = 'fixed bottom-4 left-4 bg-white bg-opacity-70 rounded-full shadow-lg z-50';
-    languageSwitcher.innerHTML = `
-        <button onclick="changeLanguage('en')" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors">English</button>
-        <button onclick="changeLanguage('fr')" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors">Français</button>
-    `;
-    document.body.appendChild(languageSwitcher);
 }
 
 // Modify setupAuthenticatedApp to include Language Switcher
@@ -1401,24 +1422,6 @@ function goToHomePage() {
     document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Set up language first
-    currentLanguage = localStorage.getItem('language') || 'en';
-    
-    checkAuth();
-    loadListings();
-    setupSearch();
-    setupPurchaseForm();
-    setupScrollGradient();
-    setupBottomButtons();
-    setupLanguageSelector();
-    
-    // Update UI text after setup
-    setTimeout(() => {
-        updateAllUIText();
-    }, 100);
-});
-
 function setupLanguageSelector() {
     const languageSelector = document.getElementById('languageSelector');
     if (languageSelector) {
@@ -1438,7 +1441,7 @@ function generateStarRating(rating) {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
     let stars = '';
-    
+
     for (let i = 0; i < 5; i++) {
         if (i < fullStars) {
             stars += '<span class="text-yellow-400">★</span>';
@@ -1461,10 +1464,10 @@ function addToFavorites(listingId) {
         alert('Please login to save favorites');
         return;
     }
-    
+
     let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     const button = document.getElementById(`fav-${listingId}`);
-    
+
     if (favorites.includes(listingId)) {
         favorites = favorites.filter(id => id !== listingId);
         button.innerHTML = '🤍 Save';
@@ -1474,7 +1477,7 @@ function addToFavorites(listingId) {
         button.innerHTML = '❤️ Saved';
         alert('Added to favorites');
     }
-    
+
     localStorage.setItem('favorites', JSON.stringify(favorites));
 }
 
@@ -1525,9 +1528,9 @@ function scheduleViewing(listingId, title) {
                     <h2 class="text-xl font-bold text-gray-800">📅 Schedule Viewing</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <h3 class="font-semibold mb-4">${title}</h3>
-                
+
                 <form class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
@@ -1565,9 +1568,9 @@ function scheduleViewing(listingId, title) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     modal.querySelector('form').addEventListener('submit', function(e) {
         e.preventDefault();
         alert('Viewing scheduled successfully! The property owner will contact you to confirm.');
@@ -1591,7 +1594,7 @@ function toggleMapView() {
                         <!-- Simulated Map with Markers -->
                         <div class="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200">
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl opacity-20">🗺️</div>
-                            
+
                             <!-- Property Markers -->
                             ${filteredListings.map((listing, index) => {
                                 const x = 20 + (index % 5) * 15; // Distribute across width
@@ -1605,14 +1608,14 @@ function toggleMapView() {
                                 `;
                             }).join('')}
                         </div>
-                        
+
                         <!-- Map Controls -->
                         <div class="absolute top-4 left-4 flex flex-col space-y-2">
                             <button onclick="zoomMapIn()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold">+</button>
                             <button onclick="zoomMapOut()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold">−</button>
                             <button onclick="resetMapZoom()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold">⌂</button>
                         </div>
-                        
+
                         <!-- Legend -->
                         <div class="absolute bottom-4 left-4 bg-white bg-opacity-90 p-3 rounded-lg shadow-lg">
                             <h4 class="font-semibold text-sm mb-2">${t('legend')}</h4>
@@ -1623,7 +1626,7 @@ function toggleMapView() {
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Sidebar with Listings -->
                 <div class="w-80 bg-gray-50 border-l overflow-y-auto">
                     <div class="p-4">
@@ -1637,7 +1640,7 @@ function toggleMapView() {
                                     <h4 class="font-semibold text-sm">${listing.title}</h4>
                                     <p class="text-xs text-gray-600 mb-1">${listing.address}</p>
                                     <p class="text-sm font-bold text-green-600">$${listing.price}/${t('month')}</p>
-                                    <div class="flex space-x-1 mt-2">
+                                    <div class="flex space-x-2 mt-2">
                                         <button onclick="event.stopPropagation(); viewDetails('${listing._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
                                             ${t('details')}
                                         </button>
@@ -1654,7 +1657,7 @@ function toggleMapView() {
         </div>
     `;
     document.body.appendChild(mapModal);
-    
+
     // Store current map zoom level
     window.mapZoomLevel = 1;
 }
@@ -1662,10 +1665,10 @@ function toggleMapView() {
 function showMapListingDetails(listingId) {
     const listing = filteredListings.find(l => l._id === listingId);
     if (!listing) return;
-    
+
     // Highlight the listing in sidebar
     highlightMapMarker(listingId);
-    
+
     // Show quick preview
     const preview = document.createElement('div');
     preview.className = 'absolute bg-white p-4 rounded-lg shadow-xl border z-10 max-w-xs';
@@ -1686,9 +1689,9 @@ function showMapListingDetails(listingId) {
             </button>
         </div>
     `;
-    
+
     document.getElementById('mapContainer').appendChild(preview);
-    
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
         if (preview.parentNode) {
@@ -1703,7 +1706,7 @@ function highlightMapMarker(listingId) {
         el.classList.remove('border-blue-500', 'bg-blue-50');
         el.classList.add('border-transparent');
     });
-    
+
     // Highlight selected listing
     const listingElement = document.getElementById(`mapListing-${listingId}`);
     if (listingElement) {
@@ -1744,7 +1747,7 @@ function saveCurrentSearch() {
         alert('Please login to save searches');
         return;
     }
-    
+
     const searchCriteria = {
         title: document.getElementById('searchTitle').value,
         location: document.getElementById('searchLocation').value,
@@ -1757,10 +1760,10 @@ function saveCurrentSearch() {
         bathrooms: document.getElementById('bathroomsFilter')?.value,
         petFriendly: document.getElementById('petFriendlyFilter')?.checked
     };
-    
+
     const searchName = prompt('Enter a name for this saved search:');
     if (!searchName) return;
-    
+
     let savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
     savedSearches.push({
         id: Date.now(),
@@ -1768,7 +1771,7 @@ function saveCurrentSearch() {
         criteria: searchCriteria,
         createdAt: new Date().toISOString()
     });
-    
+
     localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
     alert('Search saved successfully!');
 }
@@ -1776,20 +1779,20 @@ function saveCurrentSearch() {
 // Property Comparison Feature
 function addToComparison(listingId) {
     let comparison = JSON.parse(localStorage.getItem('comparison') || '[]');
-    
+
     if (comparison.length >= 3) {
         alert('You can only compare up to 3 properties at once');
         return;
     }
-    
+
     if (comparison.includes(listingId)) {
         alert('Property already added to comparison');
         return;
     }
-    
+
     comparison.push(listingId);
     localStorage.setItem('comparison', JSON.stringify(comparison));
-    
+
     updateComparisonCounter();
     alert('Property added to comparison');
 }
@@ -1806,12 +1809,12 @@ function updateComparisonCounter() {
 function showComparison() {
     const comparison = JSON.parse(localStorage.getItem('comparison') || '[]');
     const properties = comparison.map(id => allListings.find(l => l._id === id)).filter(Boolean);
-    
+
     if (properties.length === 0) {
         alert('No properties to compare');
         return;
     }
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -1821,7 +1824,7 @@ function showComparison() {
                     <h2 class="text-2xl font-bold text-gray-800">📊 Property Comparison</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <div class="grid grid-cols-${properties.length} gap-4">
                     ${properties.map(property => `
                         <div class="border border-gray-200 rounded-lg p-4">
@@ -1842,7 +1845,7 @@ function showComparison() {
                         </div>
                     `).join('')}
                 </div>
-                
+
                 <div class="mt-6 text-center">
                     <button onclick="clearComparison()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
                         Clear All
@@ -1851,7 +1854,7 @@ function showComparison() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 }
 
@@ -1859,7 +1862,7 @@ function removeFromComparison(listingId) {
     let comparison = JSON.parse(localStorage.getItem('comparison') || '[]');
     comparison = comparison.filter(id => id !== listingId);
     localStorage.setItem('comparison', JSON.stringify(comparison));
-    
+
     // Close and reopen comparison modal
     document.querySelector('.fixed').remove();
     if (comparison.length > 0) {
@@ -1974,5 +1977,106 @@ async function uploadProfilePicture() {
     } catch (error) {
         console.error('Error uploading profile picture:', error);
         alert('Failed to upload profile picture. Please try again.');
+    }
+}
+
+// Review Functionality
+function openReviewModal(listingId, listingTitle) {
+    if (!currentUser) {
+        alert('Please login to leave a review');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">⭐ Review: ${listingTitle}</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+
+                <form id="reviewForm" data-listing-id="${listingId}" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                        <div class="flex space-x-1">
+                            <button type="button" data-rating="1" class="star-button text-2xl text-gray-400">☆</button>
+                            <button type="button" data-rating="2" class="star-button text-2xl text-gray-400">☆</button>
+                            <button type="button" data-rating="3" class="star-button text-2xl text-gray-400">☆</button>
+                            <button type="button" data-rating="4" class="star-button text-2xl text-gray-400">☆</button>
+                            <button type="button" data-rating="5" class="star-button text-2xl text-gray-400">☆</button>
+                        </div>
+                        <input type="hidden" id="ratingInput" name="rating" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+                        <textarea id="commentInput" name="comment" placeholder="Share your thoughts..." class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="4" required></textarea>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-semibold">Submit Review</button>
+                        <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-md font-semibold">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Add star rating functionality
+    const starButtons = modal.querySelectorAll('.star-button');
+    const ratingInput = document.getElementById('ratingInput');
+
+    starButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            ratingInput.value = rating;
+
+            starButtons.forEach(btn => {
+                const btnRating = parseInt(btn.getAttribute('data-rating'));
+                if (btnRating <= rating) {
+                    btn.classList.remove('text-gray-400');
+                    btn.classList.add('text-yellow-400');
+                } else {
+                    btn.classList.remove('text-yellow-400');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+        });
+    });
+
+    // Handle form submission
+    modal.querySelector('#reviewForm').addEventListener('submit', handleReviewSubmit);
+}
+
+async function handleReviewSubmit(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const listingId = form.dataset.listingId;
+    const rating = document.getElementById('ratingInput').value;
+    const comment = document.getElementById('commentInput').value;
+
+    if (!rating || !comment) {
+        alert('Please provide both a rating and a comment.');
+        return;
+    }
+
+    try {
+        const response = await axios.post('/api/reviews', {
+            listingId,
+            rating: parseInt(rating),
+            comment
+        });
+
+        if (response.status === 201) {
+            alert('Review submitted successfully!');
+            // Optionally refresh listings or update the specific listing's rating display
+            window.location.reload(); // Simple reload to reflect changes
+        }
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        alert('Failed to submit review. Please try again.');
     }
 }

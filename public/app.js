@@ -462,6 +462,19 @@ function setupForm() {
         }
     });
     
+    // Setup other amenity toggle
+    const otherAmenityCheck = document.getElementById('otherAmenityCheck');
+    const otherAmenityInput = document.getElementById('otherAmenityInput');
+    
+    otherAmenityCheck.addEventListener('change', function() {
+        if (this.checked) {
+            otherAmenityInput.classList.remove('hidden');
+        } else {
+            otherAmenityInput.classList.add('hidden');
+            document.getElementById('otherAmenityText').value = '';
+        }
+    });
+    
     // Setup photo limit validation
     const imagesInput = document.getElementById('images');
     imagesInput.addEventListener('change', function() {
@@ -488,15 +501,26 @@ function setupForm() {
             formData.append('images', images[i]);
         }
 
+        // Collect checked amenities
+        const selectedAmenities = [];
+        document.querySelectorAll('.amenity-checkbox:checked').forEach(checkbox => {
+            if (checkbox.value === 'Other') {
+                const otherText = document.getElementById('otherAmenityText').value.trim();
+                if (otherText) {
+                    selectedAmenities.push(otherText);
+                }
+            } else {
+                selectedAmenities.push(checkbox.value);
+            }
+        });
+
         // Add other form fields
         formData.append('title', document.getElementById('title').value);
         formData.append('address', document.getElementById('address').value);
         formData.append('country', document.getElementById('country').value);
         formData.append('price', document.getElementById('price').value);
         formData.append('description', document.getElementById('description').value);
-        formData.append('amenities', JSON.stringify(
-            document.getElementById('amenities').value.split(',').map(a => a.trim())
-        ));
+        formData.append('amenities', JSON.stringify(selectedAmenities));
         formData.append('contact', JSON.stringify({
             name: document.getElementById('contactName').value,
             email: document.getElementById('contactEmail').value,
@@ -675,48 +699,97 @@ function viewAdminPanel() {
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
-        <div class="bg-white rounded-2xl max-w-6xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
+                    <h2 class="text-2xl font-bold text-gray-800">👑 Admin Dashboard</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h3 class="font-semibold text-blue-800 mb-2">📊 Statistics</h3>
                         <p class="text-sm text-blue-600">Total Listings: ${listings.length}</p>
-                        <p class="text-sm text-blue-600">Your Listings: ${listings.filter(l => l.createdBy === currentUser._id).length}</p>
+                        <p class="text-sm text-blue-600">Active Users: ${Array.from(new Set(listings.map(l => l.createdBy))).length}</p>
+                        <p class="text-sm text-blue-600">Total Reviews: 0</p>
+                        <p class="text-sm text-blue-600">Total Bookings: 0</p>
                     </div>
                     
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h3 class="font-semibold text-green-800 mb-2">👥 User Management</h3>
-                        <button onclick="loadAllUsers()" class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-colors">
-                            View All Users
+                        <button onclick="loadAllUsers()" class="w-full text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition-colors mb-2">
+                            Manage Users
+                        </button>
+                        <button onclick="viewUserActivity()" class="w-full text-sm bg-green-400 hover:bg-green-500 text-white px-3 py-1 rounded transition-colors">
+                            User Activity
                         </button>
                     </div>
                     
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <h3 class="font-semibold text-yellow-800 mb-2">🏠 Listing Management</h3>
-                        <button onclick="moderateListings()" class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-colors">
+                        <h3 class="font-semibold text-yellow-800 mb-2">🏠 Content Management</h3>
+                        <button onclick="moderateListings()" class="w-full text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded transition-colors mb-2">
                             Moderate Listings
+                        </button>
+                        <button onclick="moderateReviews()" class="w-full text-sm bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded transition-colors">
+                            Moderate Reviews
+                        </button>
+                    </div>
+                    
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-purple-800 mb-2">💰 Financial</h3>
+                        <button onclick="viewPayments()" class="w-full text-sm bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded transition-colors mb-2">
+                            Payment Reports
+                        </button>
+                        <button onclick="viewBookings()" class="w-full text-sm bg-purple-400 hover:bg-purple-500 text-white px-3 py-1 rounded transition-colors">
+                            Booking Analytics
                         </button>
                     </div>
                 </div>
 
-                <div id="adminContent" class="mb-6">
-                    <!-- Dynamic content will load here -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">🔧 System Settings</h3>
+                        <button onclick="manageSystemSettings()" class="w-full text-sm bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded transition-colors mb-2">
+                            Platform Settings
+                        </button>
+                        <button onclick="viewSecurityLogs()" class="w-full text-sm bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded transition-colors">
+                            Security Logs
+                        </button>
+                    </div>
+                    
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-indigo-800 mb-2">📈 Analytics</h3>
+                        <button onclick="viewAnalytics()" class="w-full text-sm bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded transition-colors mb-2">
+                            Platform Analytics
+                        </button>
+                        <button onclick="generateReports()" class="w-full text-sm bg-indigo-400 hover:bg-indigo-500 text-white px-3 py-1 rounded transition-colors">
+                            Generate Reports
+                        </button>
+                    </div>
+                </div>
+
+                <div id="adminContent" class="mb-6 bg-gray-50 rounded-lg p-4 min-h-[200px]">
+                    <div class="text-center text-gray-500 py-8">
+                        <h3 class="text-lg font-semibold mb-2">Welcome to Admin Dashboard</h3>
+                        <p>Select an option above to manage your platform</p>
+                    </div>
                 </div>
                 
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-red-800 mb-2">⚠️ Admin Actions</h3>
-                    <p class="text-sm text-red-600 mb-3">Use these features carefully. They affect all users.</p>
-                    <div class="space-x-2">
-                        <button onclick="clearAllData()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors">
-                            Clear All Data
+                    <h3 class="font-semibold text-red-800 mb-2">⚠️ Critical Actions</h3>
+                    <p class="text-sm text-red-600 mb-3">These actions are irreversible and affect all platform data.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="clearAllData()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm transition-colors">
+                            🗑️ Clear All Data
                         </button>
-                        <button onclick="exportData()" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm transition-colors">
-                            Export Data
+                        <button onclick="exportData()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm transition-colors">
+                            📊 Export Data
+                        </button>
+                        <button onclick="backupDatabase()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition-colors">
+                            💾 Backup Database
+                        </button>
+                        <button onclick="maintenanceMode()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm transition-colors">
+                            🔧 Maintenance Mode
                         </button>
                     </div>
                 </div>
@@ -857,6 +930,241 @@ async function exportData() {
         document.body.removeChild(link);
     } catch (error) {
         alert('Error exporting data: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+function viewUserActivity() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 User Activity Dashboard</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-blue-800">New Registrations</h4>
+                    <p class="text-2xl font-bold text-blue-600">12</p>
+                    <p class="text-sm text-blue-500">This month</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-green-800">Active Users</h4>
+                    <p class="text-2xl font-bold text-green-600">85</p>
+                    <p class="text-sm text-green-500">Last 30 days</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-purple-800">Top Contributors</h4>
+                    <p class="text-2xl font-bold text-purple-600">3</p>
+                    <p class="text-sm text-purple-500">Users with 5+ listings</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function moderateReviews() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">⭐ Review Moderation</h3>
+            <div class="space-y-4">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-semibold">Property Review</h4>
+                            <p class="text-sm text-gray-600">Rating: ⭐⭐⭐⭐⭐</p>
+                            <p class="text-sm mt-2">"Great place to stay! Very clean and comfortable."</p>
+                            <p class="text-xs text-gray-500 mt-1">By: john_doe - 2 days ago</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">Approve</button>
+                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Remove</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center text-gray-500 py-4">
+                    <p>No pending reviews to moderate</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function viewPayments() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">💳 Payment Reports</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-green-800">Total Revenue</h4>
+                    <p class="text-2xl font-bold text-green-600">$12,450</p>
+                    <p class="text-sm text-green-500">This month</p>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-blue-800">Transactions</h4>
+                    <p class="text-2xl font-bold text-blue-600">156</p>
+                    <p class="text-sm text-blue-500">Completed</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-yellow-800">Pending</h4>
+                    <p class="text-2xl font-bold text-yellow-600">8</p>
+                    <p class="text-sm text-yellow-500">Awaiting review</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-red-800">Failed</h4>
+                    <p class="text-2xl font-bold text-red-600">12</p>
+                    <p class="text-sm text-red-500">This month</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left">Transaction ID</th>
+                            <th class="px-4 py-2 text-left">Amount</th>
+                            <th class="px-4 py-2 text-left">Status</th>
+                            <th class="px-4 py-2 text-left">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="px-4 py-2">pay_1234567</td>
+                            <td class="px-4 py-2">$850</td>
+                            <td class="px-4 py-2"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Completed</span></td>
+                            <td class="px-4 py-2">2024-01-15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function viewBookings() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">📅 Booking Analytics</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-indigo-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-indigo-800">Total Bookings</h4>
+                    <p class="text-2xl font-bold text-indigo-600">234</p>
+                    <p class="text-sm text-indigo-500">All time</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-purple-800">Occupancy Rate</h4>
+                    <p class="text-2xl font-bold text-purple-600">78%</p>
+                    <p class="text-sm text-purple-500">This month</p>
+                </div>
+                <div class="bg-teal-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-teal-800">Avg Stay</h4>
+                    <p class="text-2xl font-bold text-teal-600">4.2</p>
+                    <p class="text-sm text-teal-500">Days</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function manageSystemSettings() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">⚙️ System Settings</h3>
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Platform Configuration</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Platform Name</label>
+                            <input type="text" value="HomeHatch" class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Commission Rate (%)</label>
+                            <input type="number" value="5" class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Max Images Per Listing</label>
+                            <input type="number" value="5" class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Auto-approve Listings</label>
+                            <select class="w-full p-2 border rounded">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function viewSecurityLogs() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">🔒 Security Logs</h3>
+            <div class="space-y-2">
+                <div class="bg-green-50 border-l-4 border-green-500 p-3">
+                    <p class="text-sm"><strong>Login Success:</strong> admin@homehatch.com</p>
+                    <p class="text-xs text-gray-500">2024-01-15 14:30:22 - IP: 192.168.1.1</p>
+                </div>
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3">
+                    <p class="text-sm"><strong>Failed Login Attempt:</strong> unknown@test.com</p>
+                    <p class="text-xs text-gray-500">2024-01-15 13:25:10 - IP: 10.0.0.1</p>
+                </div>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3">
+                    <p class="text-sm"><strong>New User Registration:</strong> john_doe</p>
+                    <p class="text-xs text-gray-500">2024-01-15 12:15:45 - IP: 172.16.0.1</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function viewAnalytics() {
+    const adminContent = document.getElementById('adminContent');
+    adminContent.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 Platform Analytics</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-gradient-to-r from-blue-400 to-blue-600 text-white p-4 rounded-lg">
+                    <h4 class="font-semibold">Page Views</h4>
+                    <p class="text-2xl font-bold">12,456</p>
+                    <p class="text-sm opacity-80">+15% from last month</p>
+                </div>
+                <div class="bg-gradient-to-r from-green-400 to-green-600 text-white p-4 rounded-lg">
+                    <h4 class="font-semibold">Conversion Rate</h4>
+                    <p class="text-2xl font-bold">3.2%</p>
+                    <p class="text-sm opacity-80">+0.5% from last month</p>
+                </div>
+                <div class="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-4 rounded-lg">
+                    <h4 class="font-semibold">Avg Session</h4>
+                    <p class="text-2xl font-bold">8:32</p>
+                    <p class="text-sm opacity-80">Minutes per session</p>
+                </div>
+                <div class="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-4 rounded-lg">
+                    <h4 class="font-semibold">Bounce Rate</h4>
+                    <p class="text-2xl font-bold">24%</p>
+                    <p class="text-sm opacity-80">-2% from last month</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generateReports() {
+    alert('Generating comprehensive platform report... This will be downloaded shortly.');
+}
+
+function backupDatabase() {
+    alert('Database backup initiated. You will receive an email confirmation.');
+}
+
+function maintenanceMode() {
+    if (confirm('Are you sure you want to enable maintenance mode? This will make the site unavailable to users.')) {
+        alert('Maintenance mode enabled. Platform is now offline for regular users.');
     }
 }
 

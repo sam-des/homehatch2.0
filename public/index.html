@@ -179,7 +179,59 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Amenities</label>
-                        <input id="amenities" name="amenities" placeholder="WiFi, Parking, Gym, Pool" class="w-full p-4 form-input border border-gray-200 rounded-xl focus:outline-none" required>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="WiFi" class="amenity-checkbox">
+                                <span class="text-sm">📶 WiFi</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Parking" class="amenity-checkbox">
+                                <span class="text-sm">🚗 Parking</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Pool" class="amenity-checkbox">
+                                <span class="text-sm">🏊 Pool</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Gym" class="amenity-checkbox">
+                                <span class="text-sm">💪 Gym</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Air Conditioning" class="amenity-checkbox">
+                                <span class="text-sm">❄️ A/C</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Laundry" class="amenity-checkbox">
+                                <span class="text-sm">🧺 Laundry</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Pet Friendly" class="amenity-checkbox">
+                                <span class="text-sm">🐕 Pet Friendly</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Balcony" class="amenity-checkbox">
+                                <span class="text-sm">🌿 Balcony</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Furnished" class="amenity-checkbox">
+                                <span class="text-sm">🛋️ Furnished</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Dishwasher" class="amenity-checkbox">
+                                <span class="text-sm">🍽️ Dishwasher</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Elevator" class="amenity-checkbox">
+                                <span class="text-sm">🛗 Elevator</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="otherAmenityCheck" value="Other">
+                                <span class="text-sm">➕ Other</span>
+                            </label>
+                        </div>
+                        <div id="otherAmenityInput" class="hidden">
+                            <input type="text" id="otherAmenityText" placeholder="Specify other amenity..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
                     </div>
 
                     <div>
