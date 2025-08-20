@@ -1595,15 +1595,24 @@ function toggleMapView() {
                         <div class="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200">
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl opacity-20">🗺️</div>
 
-                            <!-- Property Markers -->
+                            <!-- Property Markers with Address Labels -->
                             ${filteredListings.map((listing, index) => {
-                                const x = 20 + (index % 5) * 15; // Distribute across width
-                                const y = 20 + Math.floor(index / 5) * 20; // Stack in rows
+                                const x = 15 + (index % 6) * 12; // Better distribution
+                                const y = 15 + Math.floor(index / 6) * 15; // Stack in rows
+                                const shortAddress = listing.address.length > 25 ? listing.address.substring(0, 25) + '...' : listing.address;
                                 return `
                                     <div class="absolute" style="left: ${x}%; top: ${y}%;">
-                                        <button onclick="showMapListingDetails('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-lg transform hover:scale-110 transition-all duration-200 animate-pulse">
-                                            $${Math.round(listing.price/100)}
-                                        </button>
+                                        <div class="relative group">
+                                            <button onclick="showMapListingDetails('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-xs font-bold shadow-lg transform hover:scale-110 transition-all duration-200">
+                                                📍
+                                            </button>
+                                            <div class="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-white rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 min-w-max z-10 pointer-events-none">
+                                                <div class="text-xs font-semibold text-gray-800">${listing.title}</div>
+                                                <div class="text-xs text-gray-600">${shortAddress}</div>
+                                                <div class="text-xs font-bold text-green-600">$${listing.price}/mo</div>
+                                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 `;
                             }).join('')}
@@ -1638,14 +1647,21 @@ function toggleMapView() {
                                         <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-20 object-cover rounded mb-2">
                                     ` : ''}
                                     <h4 class="font-semibold text-sm">${listing.title}</h4>
-                                    <p class="text-xs text-gray-600 mb-1">${listing.address}</p>
+                                    <div class="flex items-start mb-1">
+                                        <span class="text-red-500 mr-1 text-xs">📍</span>
+                                        <p class="text-xs text-gray-600 leading-tight">${listing.address}</p>
+                                    </div>
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-gray-400 mr-1 text-xs">🌍</span>
+                                        <p class="text-xs text-gray-500">${listing.country}</p>
+                                    </div>
                                     <p class="text-sm font-bold text-green-600">$${listing.price}/${t('month')}</p>
-                                    <div class="flex space-x-2 mt-2">
-                                        <button onclick="event.stopPropagation(); viewDetails('${listing._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                                    <div class="flex space-x-1 mt-2">
+                                        <button onclick="event.stopPropagation(); viewDetails('${listing._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs flex-1">
                                             ${t('details')}
                                         </button>
-                                        <button onclick="event.stopPropagation(); openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs">
-                                            ${t('chat')}
+                                        <button onclick="event.stopPropagation(); openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs flex-1">
+                                            💬
                                         </button>
                                     </div>
                                 </div>
@@ -1671,22 +1687,34 @@ function showMapListingDetails(listingId) {
 
     // Show quick preview
     const preview = document.createElement('div');
-    preview.className = 'absolute bg-white p-4 rounded-lg shadow-xl border z-10 max-w-xs';
+    preview.className = 'absolute bg-white p-4 rounded-lg shadow-xl border z-20 max-w-sm';
     preview.style.left = '50%';
     preview.style.top = '50%';
     preview.style.transform = 'translate(-50%, -50%)';
     preview.innerHTML = `
         <div class="relative">
-            <button onclick="this.closest('.absolute').remove()" class="absolute top-0 right-0 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            <button onclick="this.closest('.absolute').remove()" class="absolute top-0 right-0 text-gray-500 hover:text-gray-700 text-xl bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center">&times;</button>
             ${listing.images.length > 0 ? `
-                <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-24 object-cover rounded mb-2">
+                <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-32 object-cover rounded mb-3">
             ` : ''}
-            <h4 class="font-semibold">${listing.title}</h4>
-            <p class="text-sm text-gray-600">${listing.address}</p>
-            <p class="text-lg font-bold text-green-600">$${listing.price}/${t('month')}</p>
-            <button onclick="this.closest('.absolute').remove(); viewDetails('${listing._id}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded mt-2">
-                ${t('viewFullDetails')}
-            </button>
+            <h4 class="font-semibold text-lg mb-2">${listing.title}</h4>
+            <div class="flex items-start mb-2">
+                <span class="text-red-500 mr-2">📍</span>
+                <p class="text-sm text-gray-600 leading-relaxed">${listing.address}</p>
+            </div>
+            <div class="flex items-center mb-3">
+                <span class="mr-2">🌍</span>
+                <p class="text-sm text-gray-500">${listing.country}</p>
+            </div>
+            <p class="text-xl font-bold text-green-600 mb-3">$${listing.price}/${t('month')}</p>
+            <div class="flex space-x-2">
+                <button onclick="this.closest('.absolute').remove(); viewDetails('${listing._id}')" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-sm font-semibold">
+                    ${t('viewFullDetails')}
+                </button>
+                <button onclick="this.closest('.absolute').remove(); openChatModal('${listing._id}', '${listing.title}')" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 rounded text-sm font-semibold">
+                    💬 ${t('chat')}
+                </button>
+            </div>
         </div>
     `;
 

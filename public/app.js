@@ -374,23 +374,33 @@ function renderListings() {
                     <div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
                         $${listing.price}/mo
                     </div>
+                    <div class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-lg text-xs">
+                        📍 ${listing.address.length > 30 ? listing.address.substring(0, 30) + '...' : listing.address}
+                    </div>
                 </div>
             ` : `
-                <div class="h-48 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
+                <div class="h-48 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center relative">
                     <span class="text-white text-6xl">🏠</span>
+                    <div class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-lg text-xs">
+                        📍 ${listing.address.length > 30 ? listing.address.substring(0, 30) + '...' : listing.address}
+                    </div>
                 </div>
             `}
 
             <div class="p-6">
                 <h3 class="text-xl font-bold text-gray-800 mb-2">${listing.title}</h3>
-                <p class="text-gray-600 mb-1 flex items-center">
-                    <span class="text-sm mr-1">📍</span>
-                    ${listing.address}
-                </p>
-                <p class="text-gray-500 mb-2 flex items-center text-sm">
-                    <span class="mr-1">🌍</span>
-                    ${listing.country}
-                </p>
+                <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                    <div class="flex items-start mb-2">
+                        <span class="text-red-500 mr-2 text-lg">📍</span>
+                        <div>
+                            <p class="text-gray-700 font-medium leading-tight">${listing.address}</p>
+                            <p class="text-gray-500 text-sm flex items-center mt-1">
+                                <span class="mr-1">🌍</span>
+                                ${listing.country}
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 <p class="text-gray-700 mb-4 text-sm leading-relaxed">${listing.description}</p>
 
                 <div class="mb-4">
@@ -423,7 +433,10 @@ function renderListings() {
                     <div class="text-2xl font-bold text-green-600">
                         $${listing.price}/mo
                     </div>
-                    <div class="flex space-x-2">
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="showOnMap('${listing._id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            🗺️ Map
+                        </button>
                         ${currentUser && !isGuest ? `
                             <button onclick="openBookingModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
                                 📅 Book
@@ -1484,6 +1497,106 @@ function openBookingModal(listingId, title, price) {
 }
 
 function setupBookingForm(listingId, dailyPrice) {
+
+// Show listing on map function
+function showOnMap(listingId) {
+    const listing = listings.find(l => l._id === listingId);
+    if (!listing) return;
+    
+    const mapModal = document.createElement('div');
+    mapModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    mapModal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-4xl w-full h-5/6 flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">🗺️ Location: ${listing.title}</h2>
+                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="flex-1 flex">
+                <!-- Map Area -->
+                <div class="flex-1 bg-gradient-to-br from-green-100 to-blue-100 relative overflow-hidden">
+                    <div class="w-full h-full relative">
+                        <!-- Simulated Map Background -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200">
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl opacity-20">🗺️</div>
+                            
+                            <!-- Centered Property Marker -->
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div class="relative group">
+                                    <div class="bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center text-lg font-bold shadow-lg animate-pulse">
+                                        📍
+                                    </div>
+                                    <div class="absolute bottom-14 left-1/2 transform -translate-x-1/2 bg-white rounded-lg p-3 shadow-lg min-w-max z-10">
+                                        <div class="text-sm font-semibold text-gray-800">${listing.title}</div>
+                                        <div class="text-sm text-gray-600">${listing.address}</div>
+                                        <div class="text-sm font-bold text-green-600">$${listing.price}/mo</div>
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Property Details Sidebar -->
+                <div class="w-80 bg-gray-50 border-l overflow-y-auto">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-4">Property Details</h3>
+                        ${listing.images.length > 0 ? `
+                            <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-32 object-cover rounded mb-3">
+                        ` : ''}
+                        <div class="space-y-3">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${listing.title}</h4>
+                                <div class="flex items-start mt-2">
+                                    <span class="text-red-500 mr-2">📍</span>
+                                    <p class="text-sm text-gray-600 leading-relaxed">${listing.address}</p>
+                                </div>
+                                <div class="flex items-center mt-1">
+                                    <span class="text-gray-400 mr-2">🌍</span>
+                                    <p class="text-sm text-gray-500">${listing.country}</p>
+                                </div>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <p class="text-lg font-bold text-green-700">$${listing.price}/month</p>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-gray-700 mb-2">Description</h5>
+                                <p class="text-sm text-gray-600 leading-relaxed">${listing.description}</p>
+                            </div>
+                            ${listing.amenities.length > 0 ? `
+                                <div>
+                                    <h5 class="font-semibold text-gray-700 mb-2">Amenities</h5>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${listing.amenities.map(amenity => `
+                                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${amenity}</span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <div class="flex space-x-2 pt-4">
+                                ${currentUser && !isGuest ? `
+                                    <button onclick="openBookingModal('${listing._id}', '${listing.title}', ${listing.price})" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-sm font-semibold">
+                                        📅 Book
+                                    </button>
+                                    <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 rounded text-sm font-semibold">
+                                        💬 Chat
+                                    </button>
+                                ` : `
+                                    <button onclick="showLoginModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-sm font-semibold">
+                                        Login to Book/Chat
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(mapModal);
+}
+
     const checkInInput = document.getElementById('checkInDate');
     const checkOutInput = document.getElementById('checkOutDate');
     const totalCostSpan = document.getElementById('totalCost');
