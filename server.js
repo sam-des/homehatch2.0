@@ -208,8 +208,7 @@ app.get('/api/listings', (req, res) => {
         console.error('Error reading listings:', error);
         res.status(500).json({ error: 'Internal server error', listings: [] });
     }
-});</old_str>
-
+});
 
 // Secure Payment Processing
 app.post('/api/process-payment', requireAuth, (req, res) => {
@@ -597,7 +596,7 @@ app.get('/api/test', (req, res) => {
     listingsCount: listings.length,
     usersCount: users.length
   });
-});</old_str>
+});
 
 // Authentication endpoints
 app.post('/api/register', (req, res) => {
