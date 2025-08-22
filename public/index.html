@@ -130,9 +130,10 @@
 
             <!-- Top Right Controls - Outside the header box -->
             <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
-                <select id="topLanguageSelector" class="bg-white text-gray-800 px-3 py-2 rounded border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg font-medium">
-                            <option value="en" class="text-gray-800">English</option>
-                            <option value="fr" class="text-gray-800">Français</option>
+                <select id="topLanguageSelector" class="bg-white bg-opacity-20 border border-white border-opacity-30 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                            <option value="en" style="color: black;">English</option>
+                            <option value="fr" style="color: black;">Français</option>
+                            <option value="am" style="color: black;">አማርኛ (Amharic)</option>
                         </select>
                 <div id="topRightUserSection" class="hidden">
                     <!-- User profile dropdown will be populated here -->
@@ -158,14 +159,82 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Address</label>
-                            <input id="address" name="address" placeholder="123 Main St, City, State 12345" class="w-full p-4 form-input border border-gray-200 rounded-xl focus:outline-none" required>
+                            <label for="address" class="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
+                            <input type="text" id="address" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter property address">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Country</label>
-                            <input id="country" name="country" placeholder="e.g., United States, Canada, UK" class="w-full p-4 form-input border border-gray-200 rounded-xl focus:outline-none" required>
+                            <label for="country" class="block text-sm font-semibold text-gray-700 mb-2">Country *</label>
+                            <select id="country" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select Country</option>
+                                <option value="Ethiopia">Ethiopia</option>
+                                <option value="USA">United States</option>
+                                <option value="Canada">Canada</option>
+                                <option value="UK">United Kingdom</option>
+                                <option value="Australia">Australia</option>
+                                <option value="Germany">Germany</option>
+                                <option value="France">France</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Ethiopian Location Fields -->
+                    <div id="ethiopianLocationFields" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 hidden">
+                        <div>
+                            <label for="listingRegion" class="block text-sm font-semibold text-gray-700 mb-2">Region</label>
+                            <select id="listingRegion" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select Region</option>
+                                <option value="Addis Ababa">አዲስ አበባ (Addis Ababa)</option>
+                                <option value="Oromia">ኦሮሚያ (Oromia)</option>
+                                <option value="Amhara">አማራ (Amhara)</option>
+                                <option value="Tigray">ትግራይ (Tigray)</option>
+                                <option value="SNNPR">ደቡብ (SNNPR)</option>
+                                <option value="Somali">ሶማሌ (Somali)</option>
+                                <option value="Afar">አፋር (Afar)</option>
+                                <option value="Dire Dawa">ድሬዳዋ (Dire Dawa)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="listingCity" class="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                            <select id="listingCity" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select City</option>
+                                <option value="Addis Ababa">አዲስ አበባ</option>
+                                <option value="Bahir Dar">ባሕር ዳር</option>
+                                <option value="Mekelle">መቐለ</option>
+                                <option value="Gondar">ጎንደር</option>
+                                <option value="Hawassa">ሐዋሳ</option>
+                                <option value="Adama">አዳማ</option>
+                                <option value="Dire Dawa">ድሬዳዋ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="listingNeighborhood" class="block text-sm font-semibold text-gray-700 mb-2">Neighborhood</label>
+                            <select id="listingNeighborhood" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select Neighborhood</option>
+                                <option value="Bole">ቦሌ (Bole)</option>
+                                <option value="Kazanchis">ካዛንችስ (Kazanchis)</option>
+                                <option value="Megenagna">መገናኛ (Megenagna)</option>
+                                <option value="Piassa">ፒያሳ (Piassa)</option>
+                                <option value="Merkato">መርካቶ (Merkato)</option>
+                                <option value="CMC">ሲ.ኤም.ሲ (CMC)</option>
+                                <option value="Gerji">ገርጂ (Gerji)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="listingKebele" class="block text-sm font-semibold text-gray-700 mb-2">Kebele</label>
+                            <select id="listingKebele" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select Kebele</option>
+                                <option value="01">ቀበሌ 01</option>
+                                <option value="02">ቀበሌ 02</option>
+                                <option value="03">ቀበሌ 03</option>
+                                <option value="04">ቀበሌ 04</option>
+                                <option value="05">ቀበሌ 05</option>
+                                <option value="06">ቀበሌ 06</option>
+                                <option value="07">ቀበሌ 07</option>
+                                <option value="08">ቀበሌ 08</option>
+                            </select>
                         </div>
                     </div>
 
@@ -240,15 +309,47 @@
                         <div class="text-sm text-gray-500 mt-1">Maximum 5 images allowed</div>
                     </div>
 
-                    <div class="bg-gray-50 rounded-xl p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                            <span class="text-lg mr-2">📞</span>
-                            Contact Information
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <input id="contactName" name="contactName" placeholder="Your Name" class="p-4 form-input border border-gray-200 rounded-xl focus:outline-none" required>
-                            <input id="contactEmail" name="contactEmail" type="email" placeholder="your.email@example.com" class="p-4 form-input border border-gray-200 rounded-xl focus:outline-none" required>
-                            <input id="contactPhone" name="contactPhone" type="tel" placeholder="(555) 123-4567" class="p-4 form-input border border-gray-200 rounded-xl focus:outline-none" required>
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📞 Contact Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label for="contactName" class="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
+                                <input type="text" id="contactName" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your name">
+                            </div>
+                            <div>
+                                <label for="contactEmail" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                <input type="email" id="contactEmail" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="your@email.com">
+                            </div>
+                            <div>
+                                <label for="contactPhone" class="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                                <input type="tel" id="contactPhone" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+251 9XX XXX XXX">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">Preferred Contact Method</label>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="contactEmail" name="contactPreference" value="email" class="mr-2 rounded">
+                                    <span class="text-sm">📧 Email</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="contactPhone" name="contactPreference" value="phone" class="mr-2 rounded">
+                                    <span class="text-sm">📞 Phone Call</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="contactWhatsApp" name="contactPreference" value="whatsapp" class="mr-2 rounded">
+                                    <span class="text-sm">💬 WhatsApp</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="contactTelegram" name="contactPreference" value="telegram" class="mr-2 rounded">
+                                    <span class="text-sm">✈️ Telegram</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="contactViber" name="contactPreference" value="viber" class="mr-2 rounded">
+                                    <span class="text-sm">📱 Viber</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 

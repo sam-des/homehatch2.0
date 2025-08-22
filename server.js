@@ -109,7 +109,7 @@ if (!adminExists) {
     users,
     chats: chats,
     bookings,
-    sessions: [],
+    sessions: Array.from(sessions.entries()),
     nextId: data.nextId || 1,
     nextPurchaseId: data.nextPurchaseId || 1,
     nextUserId: data.nextUserId || 2,
@@ -153,7 +153,7 @@ const upload = multer({ storage });
 // API Routes
 app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => {
   try {
-    const { title, address, country, price, description, amenities, contact } = req.body;
+    const { title, address, country, price, description, amenities, contact, ethiopianLocation } = req.body;
     const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
 
     const newListing = {
@@ -165,8 +165,8 @@ app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => 
       description,
       amenities: JSON.parse(amenities),
       images: imagePaths,
-      coordinates: geocodeAddress(req.body.address || ''),
       contact: JSON.parse(contact),
+      ethiopianLocation: ethiopianLocation ? JSON.parse(ethiopianLocation) : null,
       createdAt: new Date(),
       createdBy: req.user._id,
     };
@@ -308,7 +308,6 @@ app.post('/api/purchases', requireAuth, (req, res) => {
       users,
       chats,
       bookings,
-      reviews,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,

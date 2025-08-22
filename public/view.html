@@ -85,10 +85,11 @@
 
             <!-- Top Right Controls - Outside the header box -->
             <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
-                <select id="languageSelector" class="bg-white text-gray-800 px-3 py-2 rounded border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg font-medium">
-                    <option value="en" class="text-gray-800">English</option>
-                    <option value="fr" class="text-gray-800">Français</option>
-                </select>
+                <select id="languageSelector" class="bg-white bg-opacity-20 border border-white border-opacity-30 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                            <option value="en" style="color: black;">English</option>
+                            <option value="fr" style="color: black;">Français</option>
+                            <option value="am" style="color: black;">አማርኛ (Amharic)</option>
+                        </select>
                 <button onclick="showComparison()" id="comparisonBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded border border-white border-opacity-30 text-sm relative" style="display: none;">
                     📊 Compare (<span id="comparisonCounter">0</span>)
                 </button>
@@ -127,6 +128,7 @@
                         <option value="Australia">Australia</option>
                         <option value="Germany">Germany</option>
                         <option value="France">France</option>
+                        <option value="Ethiopia">Ethiopia</option>
                         <option value="Other">Other</option>
                     </select>
                 </div>
@@ -547,6 +549,8 @@
                 return { lat: 48.8566, lon: 2.3522 };
             } else if (address.toLowerCase().includes("tokyo")) {
                 return { lat: 35.6895, lon: 139.6917 };
+            } else if (address.toLowerCase().includes("addis ababa")) {
+                 return { lat: 9.0247, lon: 38.7469 }; // Example coordinates for Addis Ababa
             } else {
                 // A generic fallback or null if no specific match
                 // For demo, let's use a general coordinate if address is present

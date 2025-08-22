@@ -26,6 +26,16 @@ const translations = {
         adminPanel: 'Panneau Admin',
         signOut: 'Déconnexion',
         changeProfilePicture: 'Changer la Photo de Profil'
+    },
+    am: {
+        welcome: 'እንኳን ደህና መጡ',
+        admin: 'አስተዳዳሪ',
+        myListings: 'የእኔ ዝርዝሮች',
+        changePassword: 'የይለፍ ቃል ይቀይሩ',
+        accountSettings: 'የመለያ ቅንጅቶች',
+        adminPanel: 'የአስተዳደር ፓነል',
+        signOut: 'ውጣ',
+        changeProfilePicture: 'የመገለጫ ፎቶ ይቀይሩ'
     }
 };
 
