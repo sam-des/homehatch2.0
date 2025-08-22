@@ -212,8 +212,10 @@ function setupLanguageSelector() {
                 currentLanguage = e.target.value;
                 localStorage.setItem('language', currentLanguage);
 
-                // Reload the page to ensure all content is refreshed
-                window.location.reload();
+                // Update UI immediately without page reload
+                updateAuthUI();
+                updateLanguageStrings();
+                renderListings();
             }
         });
     }

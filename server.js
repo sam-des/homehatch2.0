@@ -198,7 +198,23 @@ app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => 
 app.get('/api/listings', (req, res) => {
     try {
         const data = loadData(); // Use loadData to get the current state
-        const listingsData = data.listings || listings || [];
+        let listingsData = data.listings || listings || [];
+        
+        // Handle sorting if requested
+        const { _sort, _order } = req.query;
+        if (_sort) {
+            listingsData.sort((a, b) => {
+                if (_sort === 'newest') {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                } else if (_sort === 'oldest') {
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                } else if (_sort === 'price') {
+                    return _order === 'desc' ? b.price - a.price : a.price - b.price;
+                }
+                return 0;
+            });
+        }
+        
         const listingsWithCoords = listingsData.map(listing => ({
             ...listing,
             coordinates: listing.coordinates || geocodeAddress(listing.address || '')

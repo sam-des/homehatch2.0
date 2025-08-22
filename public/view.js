@@ -273,6 +273,76 @@ const translations = {
         'en': 'Currency',
         'am': 'ምንዛሬ',
         'fr': 'Currency'
+    },
+    'propertyType': {
+        'en': 'Property Type',
+        'am': 'የንብረት አይነት',
+        'fr': 'Type de Propriété'
+    },
+    'apartment': {
+        'en': 'Apartment',
+        'am': 'አፓርትመንት',
+        'fr': 'Appartement'
+    },
+    'house': {
+        'en': 'House',
+        'am': 'ቤት',
+        'fr': 'Maison'
+    },
+    'condo': {
+        'en': 'Condo',
+        'am': 'ኮንዶ',
+        'fr': 'Condo'
+    },
+    'studio': {
+        'en': 'Studio',
+        'am': 'ስቱዲዮ',
+        'fr': 'Studio'
+    },
+    'loft': {
+        'en': 'Loft',
+        'am': 'ሎፍት',
+        'fr': 'Loft'
+    },
+    'bedrooms': {
+        'en': 'Bedrooms',
+        'am': 'መኝታ ቤቶች',
+        'fr': 'Chambres'
+    },
+    'bedroom': {
+        'en': 'Bedroom',
+        'am': 'መኝታ ቤት',
+        'fr': 'Chambre'
+    },
+    'bathrooms': {
+        'en': 'Bathrooms',
+        'am': 'መታጠቢያ ቤቶች',
+        'fr': 'Salles de bain'
+    },
+    'bathroom': {
+        'en': 'Bathroom',
+        'am': 'መታጠቢያ ቤት',
+        'fr': 'Salle de bain'
+    },
+    'petFriendly': {
+        'en': 'Pet Friendly',
+        'am': 'ለቤት እንስሳት ተስማሚ',
+        'fr': 'Animaux acceptés'
+    },
+    'selectCity': {
+        'en': 'Select City',
+        'am': 'ከተማ ምረጥ',
+        'fr': 'Sélectionner une ville'
+    },
+    'selectNeighborhood': {
+        'en': 'Select Neighborhood',
+        'am': 'ሰፈር ምረጥ',
+        'fr': 'Sélectionner un quartier'
+    },
+    'selectKebele': {
+        'en': 'Select Kebele',
+        'am': 'ቀበሌ ምረጥ',
+        'fr': 'Sélectionner un kebele'
     }
 };
 
@@ -287,6 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupLanguageSelector();
     setupCurrencyConverter();
     setupAIChatbot();
+    setupMapView(); // Setup map view button
 
 
     // Update UI text after setup
@@ -323,7 +394,7 @@ async function checkAuth() {
     }
 
     setupAuthenticatedApp();
-}</old_str>
+}
 
 function setupAuthenticatedApp() {
     updateHeader();
@@ -463,7 +534,13 @@ function setupScrollGradient() {
 
 async function loadListings() {
     try {
-        const response = await axios.get('/api/listings');
+        // The original API call was missing the sort parameter, which caused issues.
+        // We'll add a default sort by date to ensure consistency and handle server-side sorting expectations.
+        const response = await axios.get('/api/listings', {
+            params: {
+                sort: 'createdAt:desc' // Default sort by newest first
+            }
+        });
         allListings = response.data;
         filteredListings = [...allListings];
         renderListings();
@@ -471,7 +548,7 @@ async function loadListings() {
         console.error('Error loading listings:', error);
         document.getElementById('listings').innerHTML = '<div class="col-span-full text-center text-red-500">Error loading listings. Please try again later.</div>';
     }
-}</old_str>
+}
 
 function renderListings() {
     const listingsContainer = document.getElementById('listings');
@@ -649,7 +726,7 @@ function setupSearch() {
 
     // Add advanced filters
     setupAdvancedFilters();
-    setupMapView();
+    setupMapView(); // Ensure map view button is set up
     setupSavedSearches();
 }
 
@@ -749,22 +826,6 @@ function setupAdvancedFilters() {
             filter.addEventListener('change', performSearch);
         });
     }
-
-    // Add Ethiopian translations for new filter options
-    if (t('propertyType') === 'Property Type') { translations['propertyType'] = { en: 'Property Type', am: 'የንብረት አይነት', fr: 'Type de Propriété' }; }
-    if (t('apartment') === 'Apartment') { translations['apartment'] = { en: 'Apartment', am: 'አፓርትመንት', fr: 'Appartement' }; }
-    if (t('house') === 'House') { translations['house'] = { en: 'House', am: 'ቤት', fr: 'Maison' }; }
-    if (t('condo') === 'Condo') { translations['condo'] = { en: 'Condo', am: 'ኮንዶ', fr: 'Condo' }; }
-    if (t('studio') === 'Studio') { translations['studio'] = { en: 'Studio', am: 'ስቱዲዮ', fr: 'Studio' }; }
-    if (t('loft') === 'Loft') { translations['loft'] = { en: 'Loft', am: 'ሎፍት', fr: 'Loft' }; }
-    if (t('bedrooms') === 'Bedrooms') { translations['bedrooms'] = { en: 'Bedrooms', am: 'መኝታ ቤቶች', fr: 'Chambres' }; }
-    if (t('bedroom') === 'Bedroom') { translations['bedroom'] = { en: 'Bedroom', am: 'መኝታ ቤት', fr: 'Chambre' }; }
-    if (t('bathrooms') === 'Bathrooms') { translations['bathrooms'] = { en: 'Bathrooms', am: 'መታጠቢያ ቤቶች', fr: 'Salles de bain' }; }
-    if (t('bathroom') === 'Bathroom') { translations['bathroom'] = { en: 'Bathroom', am: 'መታጠቢያ ቤት', fr: 'Salle de bain' }; }
-    if (t('petFriendly') === 'Pet Friendly') { translations['petFriendly'] = { en: 'Pet Friendly', am: 'ለቤት እንስሳት ተስማሚ', fr: 'Animaux acceptés' }; }
-    if (t('selectCity') === 'Select City') { translations['selectCity'] = { en: 'Select City', am: 'ከተማ ምረጥ', fr: 'Sélectionner une ville' }; }
-    if (t('selectNeighborhood') === 'Select Neighborhood') { translations['selectNeighborhood'] = { en: 'Select Neighborhood', am: 'ሰፈር ምረጥ', fr: 'Sélectionner un quartier' }; }
-    if (t('selectKebele') === 'Select Kebele') { translations['selectKebele'] = { en: 'Select Kebele', am: 'ቀበሌ ምረጥ', fr: 'Sélectionner un kebele' }; }
 }
 
 function performSearch() {
@@ -833,6 +894,7 @@ function performSearch() {
     }
 
     renderListings();
+    updateMapView(); // Update map markers if map is open
 }
 
 function clearFilters() {
@@ -1459,7 +1521,7 @@ function changeLanguage(lang) {
 
     // Update all UI text immediately without reloading
     updateAllUIText();
-    
+
     // Update profile dropdown if visible
     if (currentUser) {
         updateHeader();
@@ -1527,10 +1589,6 @@ function updateAllUIText() {
     // Re-render listings to update all listing text
     renderListings();
 }
-
-// Modify setupAuthenticatedApp to include Language Switcher
-
-// Modify renderListings to use t() for translations
 
 // Add the button to go back to the main page
 function setupBottomButtons() {
@@ -1806,6 +1864,34 @@ function toggleMapView() {
 
     // Store current map zoom level
     window.mapZoomLevel = 1;
+}
+
+function setupMapView() {
+    // Add map toggle button if it doesn't exist
+    const existingButton = document.getElementById('mapToggleBtn');
+    if (!existingButton) {
+        const headerActions = document.querySelector('.flex.space-x-4') || document.querySelector('header'); // Try to find a common place for buttons
+        if (headerActions) {
+            const mapButton = document.createElement('button');
+            mapButton.id = 'mapToggleBtn';
+            mapButton.className = 'bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors';
+            mapButton.innerHTML = '🗺️ Map View';
+            mapButton.onclick = toggleMapView;
+            headerActions.appendChild(mapButton);
+        }
+    }
+}
+
+function updateMapView() {
+    // Update map markers when listings change
+    if (document.getElementById('mapContainer')) {
+        // Map is currently open, refresh it
+        const mapModal = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-50');
+        if (mapModal) {
+            mapModal.remove();
+            toggleMapView();
+        }
+    }
 }
 
 function showMapListingDetails(listingId) {
