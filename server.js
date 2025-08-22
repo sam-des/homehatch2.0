@@ -21,6 +21,21 @@ if (!fs.existsSync('./uploads')) {
   fs.mkdirSync('./uploads', { recursive: true });
 }
 
+// Geocoding simulation function
+function geocodeAddress(address) {
+    let hash = 0;
+    for (let i = 0; i < address.length; i++) {
+        const char = address.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+
+    const lat = 25 + (Math.abs(hash % 1000) / 1000) * 25;
+    const lng = -125 + (Math.abs((hash >> 10) % 1000) / 1000) * 60;
+
+    return { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
+}
+
 // Load data from file or initialize empty data
 function loadData() {
   try {
@@ -150,6 +165,7 @@ app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => 
       description,
       amenities: JSON.parse(amenities),
       images: imagePaths,
+      coordinates: geocodeAddress(req.body.address || ''),
       contact: JSON.parse(contact),
       createdAt: new Date(),
       createdBy: req.user._id,
@@ -178,24 +194,32 @@ app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => 
   }
 });
 
+// Get listings with coordinates
 app.get('/api/listings', (req, res) => {
-  try {
-    res.json(listings);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    try {
+        const data = loadData(); // Use loadData to get the current state
+        const listingsWithCoords = (data.listings || []).map(listing => ({
+            ...listing,
+            coordinates: listing.coordinates || geocodeAddress(listing.address || '')
+        }));
+        res.json(listingsWithCoords);
+    } catch (error) {
+        console.error('Error reading listings:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
+
 
 // Secure Payment Processing
 app.post('/api/process-payment', requireAuth, (req, res) => {
   try {
     const { amount, cardNumber, expiryDate, cvv, cardholderName } = req.body;
-    
+
     // Validate card number (simplified)
     if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
       return res.status(400).json({ error: 'Invalid card number' });
     }
-    
+
     // Validate expiry date
     const [month, year] = expiryDate.split('/');
     const expiryMonth = parseInt(month);
@@ -203,25 +227,25 @@ app.post('/api/process-payment', requireAuth, (req, res) => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-    
+
     if (expiryYear < currentYear || (expiryYear === currentYear && expiryMonth < currentMonth)) {
       return res.status(400).json({ error: 'Card has expired' });
     }
-    
+
     // Validate CVV
     if (!cvv || cvv.length < 3 || cvv.length > 4) {
       return res.status(400).json({ error: 'Invalid CVV' });
     }
-    
+
     // Simulate payment processing (in real app, use Stripe/PayPal)
     const paymentSuccess = Math.random() > 0.1; // 90% success rate
-    
+
     if (!paymentSuccess) {
       return res.status(400).json({ error: 'Payment declined. Please check your card details.' });
     }
-    
+
     const paymentId = 'pay_' + Date.now() + Math.random().toString(36).substr(2);
-    
+
     res.json({
       success: true,
       paymentId,
@@ -229,7 +253,7 @@ app.post('/api/process-payment', requireAuth, (req, res) => {
       last4: cardNumber.slice(-4),
       message: 'Payment processed successfully'
     });
-    
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -379,18 +403,18 @@ app.put('/api/admin/users/:id/role', requireAuth, requireAdmin, (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { role } = req.body;
-    
+
     if (!['user', 'admin'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
-    
+
     const userIndex = users.findIndex(u => u._id === userId);
     if (userIndex === -1) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     users[userIndex].role = role;
-    
+
     // Save to file
     saveData({
       listings,
@@ -405,7 +429,7 @@ app.put('/api/admin/users/:id/role', requireAuth, requireAdmin, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, message: 'User role updated successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -415,25 +439,25 @@ app.put('/api/admin/users/:id/role', requireAuth, requireAdmin, (req, res) => {
 app.delete('/api/admin/users/:id', requireAuth, requireAdmin, (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    
+
     if (userId === req.user._id) {
       return res.status(400).json({ error: 'Cannot delete your own account' });
     }
-    
+
     const userIndex = users.findIndex(u => u._id === userId);
     if (userIndex === -1) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const deletedUser = users.splice(userIndex, 1)[0];
-    
+
     // Remove user's sessions
     for (let [sessionId, sessionUser] of sessions.entries()) {
       if (sessionUser._id === userId) {
         sessions.delete(sessionId);
       }
     }
-    
+
     // Save to file
     saveData({
       listings,
@@ -448,7 +472,7 @@ app.delete('/api/admin/users/:id', requireAuth, requireAdmin, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, message: 'User deleted successfully', deletedUser: { username: deletedUser.username } });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -463,13 +487,13 @@ app.post('/api/admin/clear-data', requireAuth, requireAdmin, (req, res) => {
     purchases = [];
     chats = [];
     bookings = [];
-    
+
     // Reset IDs
     nextId = 1;
     nextPurchaseId = 1;
     nextChatId = 1;
     nextBookingId = 1;
-    
+
     // Save to file
     saveData({
       listings,
@@ -484,7 +508,7 @@ app.post('/api/admin/clear-data', requireAuth, requireAdmin, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, message: 'All data cleared successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -523,11 +547,11 @@ app.post('/api/chats/:listingId/messages', requireAuth, (req, res) => {
   try {
     const listingId = parseInt(req.params.listingId);
     const { message } = req.body;
-    
+
     if (!message || message.trim().length === 0) {
       return res.status(400).json({ error: 'Message cannot be empty' });
     }
-    
+
     const newChat = {
       _id: nextChatId++,
       listingId,
@@ -536,9 +560,9 @@ app.post('/api/chats/:listingId/messages', requireAuth, (req, res) => {
       message: message.trim(),
       timestamp: new Date().toISOString()
     };
-    
+
     chats.push(newChat);
-    
+
     // Save to file
     saveData({
       listings,
@@ -553,7 +577,7 @@ app.post('/api/chats/:listingId/messages', requireAuth, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, message: 'Message sent successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -581,11 +605,11 @@ app.post('/api/register', (req, res) => {
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    
+
     if (age < 18) {
       return res.status(400).json({ error: 'You must be at least 18 years old to register' });
     }
@@ -631,7 +655,7 @@ app.post('/api/suggest-usernames', (req, res) => {
   try {
     const { firstName, lastName, email } = req.body;
     const emailPrefix = email.split('@')[0];
-    
+
     const suggestions = [
       `${firstName.toLowerCase()}${lastName.toLowerCase()}`,
       `${firstName.toLowerCase()}_${lastName.toLowerCase()}`,
@@ -642,7 +666,7 @@ app.post('/api/suggest-usernames', (req, res) => {
     ].filter((suggestion, index, arr) => arr.indexOf(suggestion) === index)
      .filter(suggestion => !users.find(u => u.username === suggestion))
      .slice(0, 5);
-    
+
     res.json({ suggestions });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -791,17 +815,17 @@ app.post('/api/profile-picture', requireAuth, upload.single('profilePicture'), (
 app.post('/api/reviews', requireAuth, (req, res) => {
   try {
     const { listingId, rating, comment } = req.body;
-    
+
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ error: 'Rating must be between 1 and 5 stars' });
     }
-    
+
     // Check if user already reviewed this listing
     const existingReview = reviews.find(r => r.listingId === parseInt(listingId) && r.userId === req.user._id);
     if (existingReview) {
       return res.status(400).json({ error: 'You have already reviewed this property' });
     }
-    
+
     const newReview = {
       _id: data.nextReviewId || 1,
       listingId: parseInt(listingId),
@@ -812,20 +836,20 @@ app.post('/api/reviews', requireAuth, (req, res) => {
       comment: comment || '',
       createdAt: new Date().toISOString()
     };
-    
+
     reviews.push(newReview);
     data.nextReviewId = (data.nextReviewId || 1) + 1;
-    
+
     // Update listing average rating
     const listingReviews = reviews.filter(r => r.listingId === parseInt(listingId));
     const avgRating = listingReviews.reduce((sum, r) => sum + r.rating, 0) / listingReviews.length;
-    
+
     const listing = listings.find(l => l._id === parseInt(listingId));
     if (listing) {
       listing.rating = Math.round(avgRating * 10) / 10;
       listing.reviewCount = listingReviews.length;
     }
-    
+
     saveData({
       listings,
       purchases,
@@ -841,7 +865,7 @@ app.post('/api/reviews', requireAuth, (req, res) => {
       nextBookingId,
       nextReviewId: data.nextReviewId
     });
-    
+
     res.json({ success: true, review: newReview });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -863,9 +887,9 @@ app.get('/api/reviews/:listingId', (req, res) => {
 app.post('/api/price-alerts', requireAuth, (req, res) => {
   try {
     const { listingId, targetPrice, email } = req.body;
-    
+
     if (!data.priceAlerts) data.priceAlerts = [];
-    
+
     const newAlert = {
       _id: data.nextAlertId || 1,
       listingId: parseInt(listingId),
@@ -875,10 +899,10 @@ app.post('/api/price-alerts', requireAuth, (req, res) => {
       active: true,
       createdAt: new Date().toISOString()
     };
-    
+
     data.priceAlerts.push(newAlert);
     data.nextAlertId = (data.nextAlertId || 1) + 1;
-    
+
     saveData({
       ...data,
       listings,
@@ -893,7 +917,7 @@ app.post('/api/price-alerts', requireAuth, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, alert: newAlert });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -905,14 +929,14 @@ app.get('/api/bookings/:listingId/availability', (req, res) => {
   try {
     const listingId = parseInt(req.params.listingId);
     const { month, year } = req.query;
-    
+
     // Get all bookings for this listing
     const listingBookings = bookings.filter(b => b.listingId === listingId && b.status === 'confirmed');
-    
+
     // Create availability calendar
     const daysInMonth = new Date(year, month, 0).getDate();
     const availability = {};
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
       const date = `${year}-${month.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       const isBooked = listingBookings.some(booking => {
@@ -921,13 +945,13 @@ app.get('/api/bookings/:listingId/availability', (req, res) => {
         const currentDate = new Date(date);
         return currentDate >= checkIn && currentDate < checkOut;
       });
-      
+
       availability[date] = {
         available: !isBooked,
         price: listings.find(l => l._id === listingId)?.price || 0
       };
     }
-    
+
     res.json({ availability });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -937,29 +961,29 @@ app.get('/api/bookings/:listingId/availability', (req, res) => {
 app.post('/api/bookings', requireAuth, (req, res) => {
   try {
     const { listingId, checkIn, checkOut, guests, totalPrice } = req.body;
-    
+
     const listing = listings.find(l => l._id === parseInt(listingId));
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
-    
+
     // Check availability
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
-    
+
     const conflictingBooking = bookings.find(booking => {
       if (booking.listingId !== parseInt(listingId) || booking.status !== 'confirmed') return false;
-      
+
       const existingCheckIn = new Date(booking.checkIn);
       const existingCheckOut = new Date(booking.checkOut);
-      
+
       return (checkInDate < existingCheckOut && checkOutDate > existingCheckIn);
     });
-    
+
     if (conflictingBooking) {
       return res.status(400).json({ error: 'Selected dates are not available' });
     }
-    
+
     const newBooking = {
       _id: nextBookingId++,
       listingId: parseInt(listingId),
@@ -972,9 +996,9 @@ app.post('/api/bookings', requireAuth, (req, res) => {
       status: 'pending',
       createdAt: new Date().toISOString()
     };
-    
+
     bookings.push(newBooking);
-    
+
     saveData({
       listings,
       purchases,
@@ -989,7 +1013,7 @@ app.post('/api/bookings', requireAuth, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, booking: newBooking });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1000,20 +1024,20 @@ app.put('/api/bookings/:id/confirm', requireAuth, (req, res) => {
   try {
     const bookingId = parseInt(req.params.id);
     const { paymentId } = req.body;
-    
+
     const booking = bookings.find(b => b._id === bookingId);
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
-    
+
     if (booking.userId !== req.user._id) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
-    
+
     booking.status = 'confirmed';
     booking.paymentId = paymentId;
     booking.confirmedAt = new Date().toISOString();
-    
+
     saveData({
       listings,
       purchases,
@@ -1028,7 +1052,7 @@ app.put('/api/bookings/:id/confirm', requireAuth, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, booking });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1039,9 +1063,9 @@ app.put('/api/bookings/:id/confirm', requireAuth, (req, res) => {
 app.post('/api/applications', requireAuth, (req, res) => {
   try {
     const { listingId, applicationData } = req.body;
-    
+
     if (!data.applications) data.applications = [];
-    
+
     const newApplication = {
       _id: data.nextApplicationId || 1,
       listingId: parseInt(listingId),
@@ -1051,10 +1075,10 @@ app.post('/api/applications', requireAuth, (req, res) => {
       status: 'submitted',
       submittedAt: new Date().toISOString()
     };
-    
+
     data.applications.push(newApplication);
     data.nextApplicationId = (data.nextApplicationId || 1) + 1;
-    
+
     saveData({
       ...data,
       listings,
@@ -1069,7 +1093,7 @@ app.post('/api/applications', requireAuth, (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true, application: newApplication });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1080,9 +1104,9 @@ app.post('/api/applications', requireAuth, (req, res) => {
 app.post('/api/search-analytics', (req, res) => {
   try {
     const { searchQuery, filters, resultsCount } = req.body;
-    
+
     if (!data.searchAnalytics) data.searchAnalytics = [];
-    
+
     const searchRecord = {
       _id: data.nextSearchId || 1,
       userId: req.user?._id || null,
@@ -1091,15 +1115,15 @@ app.post('/api/search-analytics', (req, res) => {
       resultsCount,
       timestamp: new Date().toISOString()
     };
-    
+
     data.searchAnalytics.push(searchRecord);
     data.nextSearchId = (data.nextSearchId || 1) + 1;
-    
+
     // Keep only last 1000 search records to prevent file from growing too large
     if (data.searchAnalytics.length > 1000) {
       data.searchAnalytics = data.searchAnalytics.slice(-1000);
     }
-    
+
     saveData({
       ...data,
       listings,
@@ -1114,7 +1138,7 @@ app.post('/api/search-analytics', (req, res) => {
       nextChatId,
       nextBookingId
     });
-    
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1128,7 +1152,7 @@ app.get('/api/popular-searches', (req, res) => {
     const recentSearches = analytics.filter(s => 
       new Date(s.timestamp) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
     );
-    
+
     // Aggregate popular search terms
     const searchTerms = {};
     recentSearches.forEach(search => {
@@ -1136,12 +1160,12 @@ app.get('/api/popular-searches', (req, res) => {
         searchTerms[search.searchQuery] = (searchTerms[search.searchQuery] || 0) + 1;
       }
     });
-    
+
     const popularSearches = Object.entries(searchTerms)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 10)
       .map(([term, count]) => ({ term, count }));
-    
+
     res.json(popularSearches);
   } catch (error) {
     res.status(500).json({ error: error.message });

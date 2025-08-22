@@ -1,4 +1,3 @@
-
 let listings = [];
 let currentUser = null;
 let sessionId = null;
@@ -10,7 +9,7 @@ let currentImageZoom = 1;
 const translations = {
     en: {
         welcome: 'Welcome',
-        admin: 'ADMIN', 
+        admin: 'ADMIN',
         myListings: 'My Listings',
         changePassword: 'Change Password',
         accountSettings: 'Account Settings',
@@ -21,7 +20,7 @@ const translations = {
     fr: {
         welcome: 'Bienvenue',
         admin: 'ADMIN',
-        myListings: 'Mes Annonces', 
+        myListings: 'Mes Annonces',
         changePassword: 'Changer le Mot de Passe',
         accountSettings: 'Paramètres du Compte',
         adminPanel: 'Panneau Admin',
@@ -38,10 +37,11 @@ function t(key) {
 document.addEventListener('DOMContentLoaded', function() {
     // Load saved language preference
     currentLanguage = localStorage.getItem('language') || 'en';
-    
+
     checkAuth();
     setupAuthForms();
     setupScrollGradient();
+    setupCreateListingFormMap(); // Initialize map functionality for create listing
 });
 
 // Set up axios interceptor to include session ID
@@ -108,7 +108,7 @@ function updateAuthUI() {
         listPropertyBtn.classList.remove('hidden');
         document.getElementById('headerSubtitle').textContent = 'List your rental property with ease';
         document.getElementById('guestNotice').classList.add('hidden');
-        
+
         // Update top-right user section with profile dropdown
         const topRightUserSection = document.getElementById('topRightUserSection');
         if (topRightUserSection) {
@@ -117,7 +117,7 @@ function updateAuthUI() {
                 <div class="relative">
                     <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-30">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
-                            ${currentUser.profilePicture ? 
+                            ${currentUser.profilePicture ?
                                 `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
                                 `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${currentUser.username.charAt(0).toUpperCase()}</div>`
                             }
@@ -127,12 +127,12 @@ function updateAuthUI() {
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>
                     </button>
-                    
+
                     <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden" style="z-index: 99999;">
                         <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                             <div class="flex items-center space-x-3">
                                 <div class="w-12 h-12 rounded-full overflow-hidden">
-                                    ${currentUser.profilePicture ? 
+                                    ${currentUser.profilePicture ?
                                         `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
                                         `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
                                     }
@@ -144,7 +144,7 @@ function updateAuthUI() {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="py-2">
                             <button onclick="changeProfilePicture()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                                 <span class="text-purple-500 text-lg">📷</span>
@@ -179,7 +179,7 @@ function updateAuthUI() {
                 </div>
             `;
         }
-        
+
         setupProfileDropdown();
         setupLanguageSelector();
     } else if (isGuest) {
@@ -201,7 +201,7 @@ function setupLanguageSelector() {
             if (e.target.value !== currentLanguage) {
                 currentLanguage = e.target.value;
                 localStorage.setItem('language', currentLanguage);
-                
+
                 // Reload the page to ensure all content is refreshed
                 window.location.reload();
             }
@@ -214,34 +214,34 @@ function updateLanguageStrings() {
     const headerSubtitle = document.getElementById('headerSubtitle');
     if (headerSubtitle) {
         if (currentUser) {
-            headerSubtitle.textContent = currentLanguage === 'fr' ? 
-                'Listez votre propriété locative facilement' : 
+            headerSubtitle.textContent = currentLanguage === 'fr' ?
+                'Listez votre propriété locative facilement' :
                 'List your rental property with ease';
         } else if (isGuest) {
-            headerSubtitle.textContent = currentLanguage === 'fr' ? 
-                'Parcourir les propriétés locatives (Mode Invité)' : 
+            headerSubtitle.textContent = currentLanguage === 'fr' ?
+                'Parcourir les propriétés locatives (Mode Invité)' :
                 'Browse rental properties (Guest Mode)';
         } else {
-            headerSubtitle.textContent = currentLanguage === 'fr' ? 
-                'Parcourir les propriétés locatives' : 
+            headerSubtitle.textContent = currentLanguage === 'fr' ?
+                'Parcourir les propriétés locatives' :
                 'Browse rental properties';
         }
     }
-    
+
     // Update guest notice
     const guestNotice = document.getElementById('guestNotice');
     if (guestNotice && !guestNotice.classList.contains('hidden')) {
-        guestNotice.innerHTML = currentLanguage === 'fr' ? 
+        guestNotice.innerHTML = currentLanguage === 'fr' ?
             `<p class="text-blue-800 text-center">
-                <span class="font-semibold">👋 Navigation en tant qu'invité</span> - 
-                <button onclick="showLoginModal()" class="underline hover:text-blue-600">Connexion</button> ou 
-                <button onclick="showRegisterModal()" class="underline hover:text-blue-600">Inscription</button> 
+                <span class="font-semibold">👋 Navigation en tant qu'invité</span> -
+                <button onclick="showLoginModal()" class="underline hover:text-blue-600">Connexion</button> ou
+                <button onclick="showRegisterModal()" class="underline hover:text-blue-600">Inscription</button>
                 pour voir les détails de contact et créer des annonces
             </p>` :
             `<p class="text-blue-800 text-center">
-                <span class="font-semibold">👋 Browsing as Guest</span> - 
-                <button onclick="showLoginModal()" class="underline hover:text-blue-600">Login</button> or 
-                <button onclick="showRegisterModal()" class="underline hover:text-blue-600">Register</button> 
+                <span class="font-semibold">👋 Browsing as Guest</span> -
+                <button onclick="showLoginModal()" class="underline hover:text-blue-600">Login</button> or
+                <button onclick="showRegisterModal()" class="underline hover:text-blue-600">Register</button>
                 to see contact details and create listings
             </p>`;
     }
@@ -331,10 +331,10 @@ function showListingForm() {
         showLoginModal();
         return;
     }
-    
+
     const formSection = document.getElementById('listingFormSection');
     formSection.classList.toggle('hidden');
-    
+
     if (!formSection.classList.contains('hidden')) {
         formSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -345,6 +345,7 @@ async function loadListings() {
         const response = await axios.get('/api/listings');
         listings = response.data;
         renderListings();
+        renderMapForAllListings(); // Render the main map with all listings
     } catch (error) {
         console.error('Error loading listings:', error);
         if (error.response?.status === 401) {
@@ -457,28 +458,175 @@ function renderListings() {
     `).join('');
 }
 
+// Function to initialize map for creating listings
+function setupCreateListingFormMap() {
+    const addressInput = document.getElementById('address');
+    const countryInput = document.getElementById('country');
+    const miniMapContainer = document.getElementById('miniMapContainer');
+
+    if (!addressInput || !miniMapContainer) return;
+
+    // Initialize map when address input changes
+    addressInput.addEventListener('input', async () => {
+        const address = addressInput.value.trim();
+        const country = countryInput.value.trim();
+        if (address && country) {
+            try {
+                const geoData = await getCoordinates(address, country);
+                if (geoData && geoData.lat && geoData.lon) {
+                    displayMiniMap(geoData.lat, geoData.lon, miniMapContainer);
+                    miniMapContainer.classList.remove('hidden');
+                } else {
+                    miniMapContainer.classList.add('hidden');
+                    miniMapContainer.innerHTML = ''; // Clear previous map
+                }
+            } catch (error) {
+                console.error("Error getting coordinates:", error);
+                miniMapContainer.classList.add('hidden');
+                miniMapContainer.innerHTML = '';
+            }
+        } else {
+            miniMapContainer.classList.add('hidden');
+            miniMapContainer.innerHTML = '';
+        }
+    });
+
+    // If country input exists, also trigger map update on country change
+    if (countryInput) {
+        countryInput.addEventListener('change', async () => {
+            const address = addressInput.value.trim();
+            const country = countryInput.value.trim();
+            if (address && country) {
+                try {
+                    const geoData = await getCoordinates(address, country);
+                    if (geoData && geoData.lat && geoData.lon) {
+                        displayMiniMap(geoData.lat, geoData.lon, miniMapContainer);
+                        miniMapContainer.classList.remove('hidden');
+                    } else {
+                        miniMapContainer.classList.add('hidden');
+                        miniMapContainer.innerHTML = ''; // Clear previous map
+                    }
+                } catch (error) {
+                    console.error("Error getting coordinates:", error);
+                    miniMapContainer.classList.add('hidden');
+                    miniMapContainer.innerHTML = '';
+                }
+            } else {
+                miniMapContainer.classList.add('hidden');
+                miniMapContainer.innerHTML = '';
+            }
+        });
+    }
+}
+
+// Function to fetch coordinates from an address (using a placeholder API)
+async function getCoordinates(address, country) {
+    // In a real application, you would use a Geocoding API like OpenStreetMap Nominatim, Google Maps Geocoding API, etc.
+    // For this example, we'll simulate a response.
+    // Replace this with actual API call.
+    console.log(`Fetching coordinates for: ${address}, ${country}`);
+
+    // Placeholder: Mock API call
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            // Simulate finding coordinates or not
+            if (address.includes("New York") || country.includes("USA")) {
+                resolve({ lat: 40.7128, lon: -74.0060 }); // Example coordinates for New York
+            } else if (address.includes("London") || country.includes("UK")) {
+                resolve({ lat: 51.5074, lon: -0.1278 }); // Example coordinates for London
+            } else {
+                resolve(null); // No coordinates found
+            }
+        }, 500); // Simulate network delay
+    });
+}
+
+// Function to display a mini map
+function displayMiniMap(lat, lon, container) {
+    // Clear previous map if any
+    container.innerHTML = '';
+
+    // Using Leaflet.js for a simple map display
+    // Ensure Leaflet CSS and JS are included in your HTML:
+    // <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    // <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    const map = L.map(container).setView([lat, lon], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    L.marker([lat, lon]).addTo(map)
+        .bindPopup("Property Location")
+        .openPopup();
+}
+
+// Main map display function
+function renderMapForAllListings() {
+    const mapContainer = document.getElementById('mainMap');
+    if (!mapContainer) return;
+
+    // Clear previous map if any
+    mapContainer.innerHTML = '';
+
+    // Initialize the main map
+    const map = L.map(mapContainer).setView([20, 0], 2); // Default view
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // Add markers for each listing
+    listings.forEach(listing => {
+        // Attempt to get coordinates. If not available, skip or use a default.
+        // In a real app, you'd store lat/lon with the listing or geocode on load.
+        // For this example, we'll assume addresses are geocodable.
+        getCoordinates(listing.address, listing.country)
+            .then(coords => {
+                if (coords) {
+                    L.marker([coords.lat, coords.lon]).addTo(map)
+                        .bindPopup(`
+                            <div class="p-2">
+                                <h4 class="font-bold text-gray-800">${listing.title}</h4>
+                                <p class="text-sm text-gray-600">${listing.address}</p>
+                                <p class="text-sm font-bold text-green-600">$${listing.price}/mo</p>
+                                <button onclick="showOnMap('${listing._id}')" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">View Details</button>
+                            </div>
+                        `)
+                        .openPopup();
+                } else {
+                    console.warn(`Could not geocode address for listing: ${listing.title}`);
+                }
+            })
+            .catch(error => console.error(`Error geocoding listing ${listing.title}:`, error));
+    });
+}
+
 function setupForm() {
     const form = document.getElementById('listingForm');
-    
+
     // Setup character counter for description
     const descriptionField = document.getElementById('description');
     const descriptionCount = document.getElementById('descriptionCount');
-    
+
     descriptionField.addEventListener('input', function() {
         const currentLength = this.value.length;
         descriptionCount.textContent = currentLength;
-        
+
         if (currentLength > 450) {
             descriptionCount.style.color = 'red';
         } else {
             descriptionCount.style.color = '#6b7280';
         }
     });
-    
+
     // Setup other amenity toggle
     const otherAmenityCheck = document.getElementById('otherAmenityCheck');
     const otherAmenityInput = document.getElementById('otherAmenityInput');
-    
+
     otherAmenityCheck.addEventListener('change', function() {
         if (this.checked) {
             otherAmenityInput.classList.remove('hidden');
@@ -487,7 +635,7 @@ function setupForm() {
             document.getElementById('otherAmenityText').value = '';
         }
     });
-    
+
     // Setup photo limit validation
     const imagesInput = document.getElementById('images');
     imagesInput.addEventListener('change', function() {
@@ -622,13 +770,13 @@ function setupProfileDropdown() {
     const profileBtn = document.getElementById('profileBtn');
     const profileDropdown = document.getElementById('profileDropdown');
     const profileArrow = document.getElementById('profileArrow');
-    
+
     if (!profileBtn || !profileDropdown || !profileArrow) return;
-    
+
     profileBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         const isHidden = profileDropdown.classList.contains('hidden');
-        
+
         if (isHidden) {
             profileDropdown.classList.remove('hidden');
             profileArrow.style.transform = 'rotate(180deg)';
@@ -637,7 +785,7 @@ function setupProfileDropdown() {
             profileArrow.style.transform = 'rotate(0deg)';
         }
     });
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
         if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
@@ -650,14 +798,14 @@ function setupProfileDropdown() {
 function viewMyListings() {
     // Filter listings to show only current user's listings
     const myListings = listings.filter(listing => listing.createdBy === currentUser._id);
-    
+
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     // Scroll to listings section
     document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
-    
+
     alert(`You have ${myListings.length} listings. Scroll down to see them.`);
 }
 
@@ -665,7 +813,7 @@ function viewAccountSettings() {
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -675,7 +823,7 @@ function viewAccountSettings() {
                     <h2 class="text-2xl font-bold text-gray-800">⚙️ Account Settings</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <div class="space-y-4">
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="font-semibold text-gray-800 mb-2">Account Information</h3>
@@ -684,7 +832,7 @@ function viewAccountSettings() {
                         <p><strong>Role:</strong> ${currentUser.role}</p>
                         <p><strong>Member Since:</strong> ${new Date(currentUser.createdAt).toLocaleDateString()}</p>
                     </div>
-                    
+
                     <div class="space-y-2">
                         <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
                             Change Password
@@ -700,7 +848,7 @@ function viewAccountSettings() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 }
 
@@ -708,7 +856,7 @@ function viewAdminPanel() {
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -718,7 +866,7 @@ function viewAdminPanel() {
                     <h2 class="text-2xl font-bold text-gray-800">👑 Admin Dashboard</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h3 class="font-semibold text-blue-800 mb-2">📊 Statistics</h3>
@@ -727,7 +875,7 @@ function viewAdminPanel() {
                         <p class="text-sm text-blue-600">Total Reviews: 0</p>
                         <p class="text-sm text-blue-600">Total Bookings: 0</p>
                     </div>
-                    
+
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h3 class="font-semibold text-green-800 mb-2">👥 User Management</h3>
                         <button onclick="loadAllUsers()" class="w-full text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition-colors mb-2">
@@ -737,7 +885,7 @@ function viewAdminPanel() {
                             User Activity
                         </button>
                     </div>
-                    
+
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <h3 class="font-semibold text-yellow-800 mb-2">🏠 Content Management</h3>
                         <button onclick="moderateListings()" class="w-full text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded transition-colors mb-2">
@@ -747,7 +895,7 @@ function viewAdminPanel() {
                             Moderate Reviews
                         </button>
                     </div>
-                    
+
                     <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
                         <h3 class="font-semibold text-purple-800 mb-2">💰 Financial</h3>
                         <button onclick="viewPayments()" class="w-full text-sm bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded transition-colors mb-2">
@@ -769,7 +917,7 @@ function viewAdminPanel() {
                             Security Logs
                         </button>
                     </div>
-                    
+
                     <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
                         <h3 class="font-semibold text-indigo-800 mb-2">📈 Analytics</h3>
                         <button onclick="viewAnalytics()" class="w-full text-sm bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded transition-colors mb-2">
@@ -787,7 +935,7 @@ function viewAdminPanel() {
                         <p>Select an option above to manage your platform</p>
                     </div>
                 </div>
-                
+
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <h3 class="font-semibold text-red-800 mb-2">⚠️ Critical Actions</h3>
                     <p class="text-sm text-red-600 mb-3">These actions are irreversible and affect all platform data.</p>
@@ -809,7 +957,7 @@ function viewAdminPanel() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 }
 
@@ -817,7 +965,7 @@ async function loadAllUsers() {
     try {
         const response = await axios.get('/api/admin/users');
         const users = response.data;
-        
+
         const adminContent = document.getElementById('adminContent');
         adminContent.innerHTML = `
             <div class="bg-white border border-gray-200 rounded-lg p-4">
@@ -878,7 +1026,7 @@ async function deleteUser(userId, username) {
     if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
         return;
     }
-    
+
     try {
         await axios.delete(`/api/admin/users/${userId}`);
         alert('User deleted successfully');
@@ -919,7 +1067,7 @@ async function clearAllData() {
     if (!confirm('Are you sure you want to clear ALL data? This will delete all listings, users (except admin), and purchases. This action cannot be undone.')) {
         return;
     }
-    
+
     try {
         await axios.post('/api/admin/clear-data');
         alert('All data cleared successfully');
@@ -934,7 +1082,7 @@ async function exportData() {
         const response = await axios.get('/api/admin/export-data');
         const dataStr = JSON.stringify(response.data, null, 2);
         const dataBlob = new Blob([dataStr], {type: 'application/json'});
-        
+
         const link = document.createElement('a');
         link.href = URL.createObjectURL(dataBlob);
         link.download = `homehatch-export-${new Date().toISOString().split('T')[0]}.json`;
@@ -1185,7 +1333,7 @@ function showChangePasswordModal() {
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -1195,23 +1343,23 @@ function showChangePasswordModal() {
                     <h2 class="text-2xl font-bold text-gray-800">🔐 Change Password</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <form id="changePasswordForm" class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
                         <input type="password" id="currentPassword" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter current password">
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
                         <input type="password" id="newPassword" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter new password (min 6 characters)" minlength="6">
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
                         <input type="password" id="confirmPassword" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Confirm new password" minlength="6">
                     </div>
-                    
+
                     <div class="flex space-x-3 pt-4">
                         <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors">
                             Change Password
@@ -1224,36 +1372,36 @@ function showChangePasswordModal() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     // Setup form handler
     document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
 }
 
 async function handleChangePassword(e) {
     e.preventDefault();
-    
+
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    
+
     if (newPassword !== confirmPassword) {
         alert('New passwords do not match');
         return;
     }
-    
+
     if (newPassword.length < 6) {
         alert('New password must be at least 6 characters long');
         return;
     }
-    
+
     try {
         const response = await axios.post('/api/change-password', {
             currentPassword,
             newPassword
         });
-        
+
         if (response.data.success) {
             alert('Password changed successfully!');
             document.querySelector('.fixed').remove();
@@ -1267,7 +1415,7 @@ function changeProfilePicture() {
     // Close dropdown
     document.getElementById('profileDropdown').classList.add('hidden');
     document.getElementById('profileArrow').style.transform = 'rotate(0deg)';
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -1277,22 +1425,22 @@ function changeProfilePicture() {
                     <h2 class="text-2xl font-bold text-gray-800">📷 ${t('changeProfilePicture')}</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <form id="profilePictureForm" class="space-y-4">
                     <div class="text-center mb-4">
                         <div class="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4">
-                            ${currentUser.profilePicture ? 
+                            ${currentUser.profilePicture ?
                                 `<img src="${currentUser.profilePicture}" alt="Current Profile" class="w-full h-full object-cover">` :
                                 `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
                             }
                         </div>
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Select New Profile Picture</label>
                         <input id="profilePictureInput" type="file" accept="image/*" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                     </div>
-                    
+
                     <div class="flex space-x-3 pt-4">
                         <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors">
                             Upload Picture
@@ -1305,34 +1453,34 @@ function changeProfilePicture() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     // Setup form handler
     document.getElementById('profilePictureForm').addEventListener('submit', handleProfilePictureUpload);
 }
 
 async function handleProfilePictureUpload(e) {
     e.preventDefault();
-    
+
     const fileInput = document.getElementById('profilePictureInput');
     const file = fileInput.files[0];
-    
+
     if (!file) {
         alert('Please select a file');
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('profilePicture', file);
-    
+
     try {
         const response = await axios.post('/api/profile-picture', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
-        
+
         if (response.data.success) {
             currentUser.profilePicture = response.data.profilePictureUrl;
             updateAuthUI();
@@ -1367,15 +1515,15 @@ function openImageGallery(listingId, images) {
                 </div>
             </div>
             <div class="flex justify-center mt-4 space-x-2">
-                ${images.map((img, index) => 
+                ${images.map((img, index) =>
                     `<img src="${img}" alt="Thumbnail" class="w-16 h-16 object-cover rounded cursor-pointer border-2 ${index === 0 ? 'border-white' : 'border-transparent'}" onclick="showImage(${index})">`
                 ).join('')}
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     // Store images for navigation
     window.currentGalleryImages = images;
     window.currentImageIndex = 0;
@@ -1432,7 +1580,7 @@ function nextImage() {
 function showImage(index) {
     window.currentImageIndex = index;
     document.getElementById('galleryImage').src = window.currentGalleryImages[index];
-    
+
     // Update thumbnails
     const thumbnails = document.querySelectorAll('.fixed img[onclick*="showImage"]');
     thumbnails.forEach((thumb, i) => {
@@ -1446,7 +1594,7 @@ function openBookingModal(listingId, title, price) {
         alert('Please login to make a booking');
         return;
     }
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -1456,12 +1604,12 @@ function openBookingModal(listingId, title, price) {
                     <h2 class="text-2xl font-bold text-gray-800">📅 Book Property</h2>
                     <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                 </div>
-                
+
                 <div class="mb-4">
                     <h3 class="font-semibold text-lg">${title}</h3>
                     <p class="text-green-600 font-bold">$${price}/month</p>
                 </div>
-                
+
                 <form id="bookingForm" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Check-in Date</label>
@@ -1489,146 +1637,49 @@ function openBookingModal(listingId, title, price) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     // Setup booking form
     setupBookingForm(listingId, price);
 }
 
-function setupBookingForm(listingId, dailyPrice) {
-
-// Show listing on map function
-function showOnMap(listingId) {
-    const listing = listings.find(l => l._id === listingId);
-    if (!listing) return;
-    
-    const mapModal = document.createElement('div');
-    mapModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-    mapModal.innerHTML = `
-        <div class="bg-white rounded-2xl max-w-4xl w-full h-5/6 flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h2 class="text-xl font-bold">🗺️ Location: ${listing.title}</h2>
-                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div class="flex-1 flex">
-                <!-- Map Area -->
-                <div class="flex-1 bg-gradient-to-br from-green-100 to-blue-100 relative overflow-hidden">
-                    <div class="w-full h-full relative">
-                        <!-- Simulated Map Background -->
-                        <div class="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200">
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl opacity-20">🗺️</div>
-                            
-                            <!-- Centered Property Marker -->
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                <div class="relative group">
-                                    <div class="bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center text-lg font-bold shadow-lg animate-pulse">
-                                        📍
-                                    </div>
-                                    <div class="absolute bottom-14 left-1/2 transform -translate-x-1/2 bg-white rounded-lg p-3 shadow-lg min-w-max z-10">
-                                        <div class="text-sm font-semibold text-gray-800">${listing.title}</div>
-                                        <div class="text-sm text-gray-600">${listing.address}</div>
-                                        <div class="text-sm font-bold text-green-600">$${listing.price}/mo</div>
-                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Property Details Sidebar -->
-                <div class="w-80 bg-gray-50 border-l overflow-y-auto">
-                    <div class="p-4">
-                        <h3 class="font-bold text-lg mb-4">Property Details</h3>
-                        ${listing.images.length > 0 ? `
-                            <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-32 object-cover rounded mb-3">
-                        ` : ''}
-                        <div class="space-y-3">
-                            <div>
-                                <h4 class="font-semibold text-gray-800">${listing.title}</h4>
-                                <div class="flex items-start mt-2">
-                                    <span class="text-red-500 mr-2">📍</span>
-                                    <p class="text-sm text-gray-600 leading-relaxed">${listing.address}</p>
-                                </div>
-                                <div class="flex items-center mt-1">
-                                    <span class="text-gray-400 mr-2">🌍</span>
-                                    <p class="text-sm text-gray-500">${listing.country}</p>
-                                </div>
-                            </div>
-                            <div class="bg-green-100 p-3 rounded-lg">
-                                <p class="text-lg font-bold text-green-700">$${listing.price}/month</p>
-                            </div>
-                            <div>
-                                <h5 class="font-semibold text-gray-700 mb-2">Description</h5>
-                                <p class="text-sm text-gray-600 leading-relaxed">${listing.description}</p>
-                            </div>
-                            ${listing.amenities.length > 0 ? `
-                                <div>
-                                    <h5 class="font-semibold text-gray-700 mb-2">Amenities</h5>
-                                    <div class="flex flex-wrap gap-1">
-                                        ${listing.amenities.map(amenity => `
-                                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${amenity}</span>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            ` : ''}
-                            <div class="flex space-x-2 pt-4">
-                                ${currentUser && !isGuest ? `
-                                    <button onclick="openBookingModal('${listing._id}', '${listing.title}', ${listing.price})" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-sm font-semibold">
-                                        📅 Book
-                                    </button>
-                                    <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 rounded text-sm font-semibold">
-                                        💬 Chat
-                                    </button>
-                                ` : `
-                                    <button onclick="showLoginModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-sm font-semibold">
-                                        Login to Book/Chat
-                                    </button>
-                                `}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(mapModal);
-}
+function setupBookingForm(listingId, monthlyPrice) {
 
     const checkInInput = document.getElementById('checkInDate');
     const checkOutInput = document.getElementById('checkOutDate');
     const totalCostSpan = document.getElementById('totalCost');
     const bookingForm = document.getElementById('bookingForm');
-    
+
     const calculateTotal = () => {
         const checkIn = new Date(checkInInput.value);
         const checkOut = new Date(checkOutInput.value);
-        
+
         if (checkIn && checkOut && checkOut > checkIn) {
             const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-            const total = days * (dailyPrice / 30); // Convert monthly to daily rate
+            // Assuming price is monthly, convert to daily for calculation
+            const dailyPrice = monthlyPrice / 30; // Approximate daily price
+            const total = days * dailyPrice;
             totalCostSpan.textContent = `$${total.toFixed(2)}`;
         } else {
             totalCostSpan.textContent = '$0';
         }
     };
-    
+
     checkInInput.addEventListener('change', () => {
-        checkOutInput.min = checkInInput.value;
+        checkOutInput.min = checkInInput.value; // Ensure check-out is after check-in
         calculateTotal();
     });
-    
+
     checkOutInput.addEventListener('change', calculateTotal);
-    
+
     bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const checkIn = checkInInput.value;
         const checkOut = checkOutInput.value;
         const totalPrice = parseFloat(totalCostSpan.textContent.replace('$', ''));
-        
+
         try {
             const response = await axios.post('/api/bookings', {
                 listingId,
@@ -1636,7 +1687,7 @@ function showOnMap(listingId) {
                 checkOut,
                 totalPrice
             });
-            
+
             if (response.data.success) {
                 alert('Booking confirmed successfully!');
                 document.querySelector('.fixed').remove();

@@ -441,6 +441,58 @@ function setupMapView() {
     }
 }
 
+// Enhanced map functionality with geocoding simulation
+function geocodeAddress(address) {
+    // Simulate geocoding by assigning coordinates based on address hash
+    let hash = 0;
+    for (let i = 0; i < address.length; i++) {
+        const char = address.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Generate coordinates within reasonable bounds (US-focused)
+    const lat = 25 + (Math.abs(hash % 1000) / 1000) * 25; // 25-50 latitude
+    const lng = -125 + (Math.abs((hash >> 10) % 1000) / 1000) * 60; // -125 to -65 longitude
+    
+    return { lat: lat.toFixed(6), lng: lng.toFixed(6) };
+}
+
+function createMiniMap(address, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || !address) return;
+    
+    const coords = geocodeAddress(address);
+    
+    container.innerHTML = `
+        <div class="bg-gradient-to-br from-green-100 to-blue-100 rounded-lg p-4 border-2 border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-sm text-gray-700">📍 Location Preview</h4>
+                <span class="text-xs text-gray-500">${coords.lat}, ${coords.lng}</span>
+            </div>
+            <div class="relative h-32 bg-gradient-to-br from-green-200 to-blue-200 rounded-lg overflow-hidden">
+                <div class="absolute inset-0 opacity-20">
+                    <div class="absolute top-2 left-2 w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <div class="absolute top-6 right-4 w-1 h-8 bg-gray-300"></div>
+                    <div class="absolute bottom-4 left-6 w-8 h-1 bg-gray-300"></div>
+                    <div class="absolute bottom-2 right-2 w-3 h-3 bg-gray-400"></div>
+                </div>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div class="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg animate-pulse">
+                        📍
+                    </div>
+                </div>
+                <div class="absolute bottom-2 left-2 bg-white bg-opacity-90 px-2 py-1 rounded text-xs font-medium">
+                    ${address.length > 30 ? address.substring(0, 30) + '...' : address}
+                </div>
+            </div>
+            <div class="mt-2 text-xs text-gray-600 text-center">
+                Interactive map preview • Click marker for details
+            </div>
+        </div>
+    `;
+}
+
 function setupSavedSearches() {
     // Add save search button
     const saveSearchBtn = document.createElement('button');
