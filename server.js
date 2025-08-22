@@ -198,16 +198,17 @@ app.post('/api/listings', requireAuth, upload.array('images', 5), (req, res) => 
 app.get('/api/listings', (req, res) => {
     try {
         const data = loadData(); // Use loadData to get the current state
-        const listingsWithCoords = (data.listings || []).map(listing => ({
+        const listingsData = data.listings || listings || [];
+        const listingsWithCoords = listingsData.map(listing => ({
             ...listing,
             coordinates: listing.coordinates || geocodeAddress(listing.address || '')
         }));
         res.json(listingsWithCoords);
     } catch (error) {
         console.error('Error reading listings:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error', listings: [] });
     }
-});
+});</old_str>
 
 
 // Secure Payment Processing
@@ -587,6 +588,16 @@ app.post('/api/chats/:listingId/messages', requireAuth, (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
+
+// Test endpoint for debugging
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'API is working',
+    listingsCount: listings.length,
+    usersCount: users.length
+  });
+});</old_str>
 
 // Authentication endpoints
 app.post('/api/register', (req, res) => {

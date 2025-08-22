@@ -314,6 +314,8 @@ async function checkAuth() {
             localStorage.removeItem('sessionId');
             sessionId = null;
             currentUser = null;
+            window.location.href = '/login.html';
+            return;
         }
     } else {
         window.location.href = '/login.html';
@@ -321,7 +323,7 @@ async function checkAuth() {
     }
 
     setupAuthenticatedApp();
-}
+}</old_str>
 
 function setupAuthenticatedApp() {
     updateHeader();
@@ -469,7 +471,7 @@ async function loadListings() {
         console.error('Error loading listings:', error);
         document.getElementById('listings').innerHTML = '<div class="col-span-full text-center text-red-500">Error loading listings. Please try again later.</div>';
     }
-}
+}</old_str>
 
 function renderListings() {
     const listingsContainer = document.getElementById('listings');
