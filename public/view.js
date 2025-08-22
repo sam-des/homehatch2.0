@@ -19,6 +19,56 @@ const translations = {
         'am': 'እንኳን ደህና መጡ',
         'fr': 'Bienvenue'
     },
+    'searchFiltersTitle': {
+        'en': 'Search Filters',
+        'am': 'የፍለጋ ማጣሪያዎች',
+        'fr': 'Filtres de Recherche'
+    },
+    'applyFilters': {
+        'en': 'Apply Filters',
+        'am': 'ማጣሪያዎችን ተግብር',
+        'fr': 'Appliquer les Filtres'
+    },
+    'contactInformation': {
+        'en': 'Contact Information',
+        'am': 'የመገናኛ መረጃ',
+        'fr': 'Informations de Contact'
+    },
+    'address': {
+        'en': 'Address',
+        'am': 'አድራሻ',
+        'fr': 'Adresse'
+    },
+    'country': {
+        'en': 'Country',
+        'am': 'አገር',
+        'fr': 'Pays'
+    },
+    'city': {
+        'en': 'City',
+        'am': 'ከተማ',
+        'fr': 'Ville'
+    },
+    'neighborhood': {
+        'en': 'Neighborhood',
+        'am': 'ሰፈር',
+        'fr': 'Quartier'
+    },
+    'kebele': {
+        'en': 'Kebele',
+        'am': 'ቀበሌ',
+        'fr': 'Kebele'
+    },
+    'price': {
+        'en': 'Price',
+        'am': 'ዋጋ',
+        'fr': 'Prix'
+    },
+    'description': {
+        'en': 'Description',
+        'am': 'መግለጫ',
+        'fr': 'Description'
+    },
     'admin': {
         'en': 'ADMIN',
         'am': 'አስተዳዳሪ',
@@ -1405,8 +1455,13 @@ function changeLanguage(lang) {
         languageSelector.value = lang;
     }
 
-    // Reload the page to ensure all content is refreshed
-    window.location.reload();
+    // Update all UI text immediately without reloading
+    updateAllUIText();
+    
+    // Update profile dropdown if visible
+    if (currentUser) {
+        updateHeader();
+    }
 }
 
 function updateAllUIText() {
@@ -1414,25 +1469,61 @@ function updateAllUIText() {
     const headerSubtitle = document.getElementById('headerSubtitle');
     if (headerSubtitle) {
         if (currentUser) {
-            headerSubtitle.textContent = currentLanguage === 'am' ?
-                'የኪራይ ንብረትዎን በቀላሉ ይዘርዝሩ' :
-                currentLanguage === 'fr' ?
-                'Listez votre propriété locative facilement' :
-                'List your rental property with ease';
-        } else if (isGuest) { // Assuming isGuest is defined elsewhere or needs to be set
-            headerSubtitle.textContent = currentLanguage === 'am' ?
-                'የኪራይ ንብረቶችን ያስሱ (የእንግዳ ሁነታ)' :
-                currentLanguage === 'fr' ?
-                'Parcourir les propriétés locatives (Mode Invité)' :
-                'Browse rental properties (Guest Mode)';
+            headerSubtitle.textContent = t('findPerfectRental');
         } else {
-            headerSubtitle.textContent = currentLanguage === 'am' ?
-                'የኪራይ ንብረቶችን ያስሱ' :
-                currentLanguage === 'fr' ?
-                'Parcourir les propriétés locatives' :
-                'Browse rental properties';
+            headerSubtitle.textContent = t('findPerfectRental');
         }
     }
+
+    // Update all static text elements
+    const elements = document.querySelectorAll('[data-translate]');
+    elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[key] && translations[key][currentLanguage]) {
+            element.textContent = translations[key][currentLanguage];
+        }
+    });
+
+    // Update form placeholders
+    const searchTitle = document.getElementById('searchTitle');
+    if (searchTitle) searchTitle.placeholder = t('searchByTitle');
+
+    const searchLocation = document.getElementById('searchLocation');
+    if (searchLocation) searchLocation.placeholder = t('searchByLocation');
+
+    // Update dropdown options
+    const countryFilter = document.getElementById('countryFilter');
+    if (countryFilter && countryFilter.children[0]) {
+        countryFilter.children[0].textContent = t('allCountries');
+    }
+
+    const amenityFilter = document.getElementById('amenityFilter');
+    if (amenityFilter && amenityFilter.children[0]) {
+        amenityFilter.children[0].textContent = t('anyAmenities');
+    }
+
+    const sortFilter = document.getElementById('sortFilter');
+    if (sortFilter) {
+        const options = sortFilter.children;
+        if (options[0]) options[0].textContent = t('newestFirst');
+        if (options[1]) options[1].textContent = t('oldestFirst');
+        if (options[2]) options[2].textContent = t('priceLowHigh');
+        if (options[3]) options[3].textContent = t('priceHighLow');
+        if (options[4]) options[4].textContent = t('titleAZ');
+    }
+
+    // Update buttons
+    const searchBtn = document.getElementById('searchBtn');
+    if (searchBtn) searchBtn.innerHTML = `🔍 ${t('applyFilters')}`;
+
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) clearBtn.innerHTML = `🗑️ ${t('clearAll')}`;
+
+    const mapToggleBtn = document.getElementById('mapToggleBtn');
+    if (mapToggleBtn) mapToggleBtn.innerHTML = `🗺️ ${t('mapView')}`;
+
+    // Re-render listings to update all listing text
+    renderListings();
 }
 
 // Modify setupAuthenticatedApp to include Language Switcher
