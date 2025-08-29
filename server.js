@@ -1,10 +1,11 @@
+
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -626,17 +627,19 @@ app.post('/api/register', (req, res) => {
     }
 
     // Validate age (must be 18+)
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (dateOfBirth) {
+      const birthDate = new Date(dateOfBirth);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
 
-    if (age < 18) {
-      return res.status(400).json({ error: 'You must be at least 18 years old to register' });
+      if (age < 18) {
+        return res.status(400).json({ error: 'You must be at least 18 years old to register' });
+      }
     }
 
     // Create new user
@@ -836,153 +839,7 @@ app.post('/api/profile-picture', requireAuth, upload.single('profilePicture'), (
   }
 });
 
-// Reviews and Ratings
-app.post('/api/reviews', requireAuth, (req, res) => {
-  try {
-    const { listingId, rating, comment } = req.body;
-
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5 stars' });
-    }
-
-    // Check if user already reviewed this listing
-    const existingReview = reviews.find(r => r.listingId === parseInt(listingId) && r.userId === req.user._id);
-    if (existingReview) {
-      return res.status(400).json({ error: 'You have already reviewed this property' });
-    }
-
-    const newReview = {
-      _id: data.nextReviewId || 1,
-      listingId: parseInt(listingId),
-      userId: req.user._id,
-      username: req.user.username,
-      firstName: req.user.firstName || req.user.username,
-      rating: parseInt(rating),
-      comment: comment || '',
-      createdAt: new Date().toISOString()
-    };
-
-    reviews.push(newReview);
-    data.nextReviewId = (data.nextReviewId || 1) + 1;
-
-    // Update listing average rating
-    const listingReviews = reviews.filter(r => r.listingId === parseInt(listingId));
-    const avgRating = listingReviews.reduce((sum, r) => sum + r.rating, 0) / listingReviews.length;
-
-    const listing = listings.find(l => l._id === parseInt(listingId));
-    if (listing) {
-      listing.rating = Math.round(avgRating * 10) / 10;
-      listing.reviewCount = listingReviews.length;
-    }
-
-    saveData({
-      listings,
-      purchases,
-      users,
-      chats,
-      bookings,
-      reviews,
-      sessions: Array.from(sessions.entries()),
-      nextId,
-      nextPurchaseId,
-      nextUserId,
-      nextChatId,
-      nextBookingId,
-      nextReviewId: data.nextReviewId
-    });
-
-    res.json({ success: true, review: newReview });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/reviews/:listingId', (req, res) => {
-  try {
-    const listingId = parseInt(req.params.listingId);
-    const listingReviews = reviews.filter(r => r.listingId === listingId)
-                                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    res.json(listingReviews);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Price Alerts
-app.post('/api/price-alerts', requireAuth, (req, res) => {
-  try {
-    const { listingId, targetPrice, email } = req.body;
-
-    if (!data.priceAlerts) data.priceAlerts = [];
-
-    const newAlert = {
-      _id: data.nextAlertId || 1,
-      listingId: parseInt(listingId),
-      userId: req.user._id,
-      targetPrice: parseFloat(targetPrice),
-      email,
-      active: true,
-      createdAt: new Date().toISOString()
-    };
-
-    data.priceAlerts.push(newAlert);
-    data.nextAlertId = (data.nextAlertId || 1) + 1;
-
-    saveData({
-      ...data,
-      listings,
-      purchases,
-      users,
-      chats,
-      bookings,
-      sessions: Array.from(sessions.entries()),
-      nextId,
-      nextPurchaseId,
-      nextUserId,
-      nextChatId,
-      nextBookingId
-    });
-
-    res.json({ success: true, alert: newAlert });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Booking availability system
-app.get('/api/bookings/:listingId/availability', (req, res) => {
-  try {
-    const listingId = parseInt(req.params.listingId);
-    const { month, year } = req.query;
-
-    // Get all bookings for this listing
-    const listingBookings = bookings.filter(b => b.listingId === listingId && b.status === 'confirmed');
-
-    // Create availability calendar
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const availability = {};
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = `${year}-${month.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const isBooked = listingBookings.some(booking => {
-        const checkIn = new Date(booking.checkIn);
-        const checkOut = new Date(booking.checkOut);
-        const currentDate = new Date(date);
-        return currentDate >= checkIn && currentDate < checkOut;
-      });
-
-      availability[date] = {
-        available: !isBooked,
-        price: listings.find(l => l._id === listingId)?.price || 0
-      };
-    }
-
-    res.json({ availability });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
+// Booking endpoints
 app.post('/api/bookings', requireAuth, (req, res) => {
   try {
     const { listingId, checkIn, checkOut, guests, totalPrice } = req.body;
@@ -1018,7 +875,7 @@ app.post('/api/bookings', requireAuth, (req, res) => {
       checkOut,
       guests: guests || 1,
       totalPrice,
-      status: 'pending',
+      status: 'confirmed',
       createdAt: new Date().toISOString()
     };
 
@@ -1045,159 +902,10 @@ app.post('/api/bookings', requireAuth, (req, res) => {
   }
 });
 
-app.put('/api/bookings/:id/confirm', requireAuth, (req, res) => {
-  try {
-    const bookingId = parseInt(req.params.id);
-    const { paymentId } = req.body;
-
-    const booking = bookings.find(b => b._id === bookingId);
-    if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    if (booking.userId !== req.user._id) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    booking.status = 'confirmed';
-    booking.paymentId = paymentId;
-    booking.confirmedAt = new Date().toISOString();
-
-    saveData({
-      listings,
-      purchases,
-      users,
-      chats,
-      bookings,
-      reviews,
-      sessions: Array.from(sessions.entries()),
-      nextId,
-      nextPurchaseId,
-      nextUserId,
-      nextChatId,
-      nextBookingId
-    });
-
-    res.json({ success: true, booking });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Application Tracking
-app.post('/api/applications', requireAuth, (req, res) => {
-  try {
-    const { listingId, applicationData } = req.body;
-
-    if (!data.applications) data.applications = [];
-
-    const newApplication = {
-      _id: data.nextApplicationId || 1,
-      listingId: parseInt(listingId),
-      userId: req.user._id,
-      applicantName: req.user.username,
-      applicationData,
-      status: 'submitted',
-      submittedAt: new Date().toISOString()
-    };
-
-    data.applications.push(newApplication);
-    data.nextApplicationId = (data.nextApplicationId || 1) + 1;
-
-    saveData({
-      ...data,
-      listings,
-      purchases,
-      users,
-      chats,
-      bookings,
-      sessions: Array.from(sessions.entries()),
-      nextId,
-      nextPurchaseId,
-      nextUserId,
-      nextChatId,
-      nextBookingId
-    });
-
-    res.json({ success: true, application: newApplication });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Search Analytics
-app.post('/api/search-analytics', (req, res) => {
-  try {
-    const { searchQuery, filters, resultsCount } = req.body;
-
-    if (!data.searchAnalytics) data.searchAnalytics = [];
-
-    const searchRecord = {
-      _id: data.nextSearchId || 1,
-      userId: req.user?._id || null,
-      searchQuery,
-      filters,
-      resultsCount,
-      timestamp: new Date().toISOString()
-    };
-
-    data.searchAnalytics.push(searchRecord);
-    data.nextSearchId = (data.nextSearchId || 1) + 1;
-
-    // Keep only last 1000 search records to prevent file from growing too large
-    if (data.searchAnalytics.length > 1000) {
-      data.searchAnalytics = data.searchAnalytics.slice(-1000);
-    }
-
-    saveData({
-      ...data,
-      listings,
-      purchases,
-      users,
-      chats,
-      bookings,
-      sessions: Array.from(sessions.entries()),
-      nextId,
-      nextPurchaseId,
-      nextUserId,
-      nextChatId,
-      nextBookingId
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Popular searches endpoint
-app.get('/api/popular-searches', (req, res) => {
-  try {
-    const analytics = data.searchAnalytics || [];
-    const recentSearches = analytics.filter(s => 
-      new Date(s.timestamp) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-    );
-
-    // Aggregate popular search terms
-    const searchTerms = {};
-    recentSearches.forEach(search => {
-      if (search.searchQuery) {
-        searchTerms[search.searchQuery] = (searchTerms[search.searchQuery] || 0) + 1;
-      }
-    });
-
-    const popularSearches = Object.entries(searchTerms)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 10)
-      .map(([term, count]) => ({ term, count }));
-
-    res.json(popularSearches);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Start server
+// Start server - bind to 0.0.0.0 for Replit
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`HomeHatch server running on port ${PORT}`);
+  console.log(`Frontend: http://localhost:${PORT}`);
+  console.log(`Browse Properties: http://localhost:${PORT}/view.html`);
+  console.log(`Admin credentials: admin/admin123`);
 });

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HomeHatch - Browse Rentals</title>
+    <title>HomeHatch - Browse Properties</title>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -25,16 +25,14 @@
             transition: all 0.3s ease;
         }
         .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .animate-fade-in {
             animation: fadeIn 0.6s ease-in-out;
@@ -43,529 +41,104 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        #map {
-            height: 500px; /* Default height for the main map */
-            width: 100%;
-            margin-top: 20px;
-            border-radius: 12px;
-        }
-        .mini-map {
-            height: 150px; /* Height for the mini map */
-            width: 100%;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="py-8">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="glass-effect rounded-2xl p-8 animate-fade-in">
-                    <div class="flex flex-col md:flex-row justify-between items-center">
-                        <div class="text-center md:text-left mb-4 md:mb-0">
-                            <h1 class="text-4xl font-bold text-white mb-2">🏠 HomeHatch</h1>
-                            <p class="text-white text-opacity-80">Find your perfect rental home</p>
-                        </div>
-                        <div class="flex space-x-4">
-                            <a href="/create.html" class="glass-effect text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:bg-opacity-20 transition-all duration-300">List Property</a>
-                            <a href="/" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg">Browse Rentals</a>
-                        </div>
-                    </div>
+    <!-- Header -->
+    <div class="glass-effect p-6 mb-8 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold text-white mb-1">🏠 HomeHatch</h1>
+                    <p class="text-white text-opacity-80">Discover your perfect rental home</p>
                 </div>
-            </div>
 
-            <!-- Fixed Top Left for Login when not authenticated -->
-            <div id="fixedAuthButtons" class="fixed top-4 left-4 z-40 flex space-x-2 hidden">
-                <button onclick="window.location.href='/login.html'" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg">
-                    Login
-                </button>
-            </div>
-
-            <!-- Top Right Controls - Outside the header box -->
-            <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
-                <select id="languageSelector" class="bg-white bg-opacity-20 border border-white border-opacity-30 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
-                            <option value="en" style="color: black;">English</option>
-                            <option value="fr" style="color: black;">Français</option>
-                            <option value="am" style="color: black;">አማርኛ (Amharic)</option>
-                        </select>
-                <button onclick="showComparison()" id="comparisonBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded border border-white border-opacity-30 text-sm relative" style="display: none;">
-                    📊 Compare (<span id="comparisonCounter">0</span>)
-                </button>
-                <div id="topRightProfileSection" class="hidden">
-                    <!-- User profile info will be populated here -->
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-6 pb-8">
-            <!-- Search Filters -->
-            <div class="glass-effect rounded-2xl p-6 mb-8 animate-fade-in">
-                <h2 class="text-xl font-bold text-white mb-4" data-translate="searchFiltersTitle">🔍 Search Filters</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                    <input
-                        id="searchTitle"
-                        type="text"
-                        placeholder="Search by title..."
-                        class="px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                    <input
-                        id="searchLocation"
-                        type="text"
-                        placeholder="Search by location..."
-                        class="px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                    <select
-                        id="countryFilter"
-                        class="px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="">All Countries</option>
-                        <option value="USA">United States</option>
-                        <option value="Canada">Canada</option>
-                        <option value="UK">United Kingdom</option>
-                        <option value="Australia">Australia</option>
-                        <option value="Germany">Germany</option>
-                        <option value="France">France</option>
-                        <option value="Ethiopia">Ethiopia</option>
-                        <option value="Other">Other</option>
+                <div class="flex items-center space-x-4">
+                    <!-- Language Selector -->
+                    <select id="languageSelector" class="bg-white bg-opacity-20 border border-white border-opacity-30 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                        <option value="en" style="color: black;">English</option>
+                        <option value="fr" style="color: black;">Français</option>
+                        <option value="am" style="color: black;">አማርኛ</option>
                     </select>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1" data-translate="minPrice">Min Price</label>
-                        <input
-                            id="minPrice"
-                            type="number"
-                            placeholder="$0"
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
+
+                    <!-- Currency Selector -->
+                    <select id="currencySelector" class="bg-white bg-opacity-20 border border-white border-opacity-30 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                        <option value="USD" style="color: black;">USD ($)</option>
+                        <option value="ETB" style="color: black;">ETB (ብር)</option>
+                        <option value="EUR" style="color: black;">EUR (€)</option>
+                    </select>
+
+                    <!-- Auth Section -->
+                    <div id="loginSection" class="flex space-x-2">
+                        <button onclick="showLoginModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                            Login
+                        </button>
+                        <a href="/index.html" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                            List Property
+                        </a>
                     </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1" data-translate="maxPrice">Max Price</label>
-                        <input
-                            id="maxPrice"
-                            type="number"
-                            placeholder="No limit"
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1" data-translate="amenities">Amenities</label>
-                        <select
-                            id="amenityFilter"
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Any Amenities</option>
-                            <option value="wifi">WiFi</option>
-                            <option value="parking">Parking</option>
-                            <option value="pool">Pool</option>
-                            <option value="gym">Gym</option>
-                            <option value="laundry">Laundry</option>
-                            <option value="air conditioning">Air Conditioning</option>
-                            <option value="balcony">Balcony</option>
-                            <option value="garden">Garden</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1" data-translate="sortBy">Sort By</label>
-                        <select
-                            id="sortFilter"
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="price-low">Price: Low to High</option>
-                            <option value="price-high">Price: High to Low</option>
-                            <option value="title">Title A-Z</option>
-                        </select>
+
+                    <div id="userSection" class="hidden">
+                        <!-- User info will be populated here -->
                     </div>
                 </div>
-                <div class="flex space-x-3">
-                    <button id="searchBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center">
-                        🔍 Apply Filters
-                    </button>
-                    <button id="clearBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center">
-                        🗑️ Clear All
-                    </button>
-                    <button id="mapToggleBtn" onclick="toggleMapView()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
-                        🗺️ Map View
-                    </button>
-                </div>
-            </div>
-
-            <div id="listingsContainer">
-                <div id="listings" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Listings will be populated here -->
-                </div>
-                <div id="mapView" class="hidden">
-                    <div id="map"></div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Purchase Modal -->
-    <div id="purchaseModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">Complete Purchase</h2>
-                    <button onclick="closePurchaseModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-                </div>
-
-                <form id="purchaseForm" class="space-y-4">
-                    <div class="mb-4">
-                        <h3 id="purchasePropertyTitle" class="text-lg font-semibold text-gray-700 mb-2"></h3>
-                        <p id="purchasePropertyPrice" class="text-2xl font-bold text-green-600"></p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                            <input id="buyerFirstName" type="text" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                            <input id="buyerLastName" type="text" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                        <input id="buyerAge" type="number" min="18" max="120" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input id="buyerEmail" type="email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <input id="buyerPhone" type="tel" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                        <textarea id="buyerAddress" oninput="updateMiniMap(this.value)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 resize-none"></textarea>
-                        <div id="miniMap" class="mini-map"></div>
-                    </div>
-
-                    <div class="border-t pt-4">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Payment Information</h4>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Card Type</label>
-                            <select id="cardType" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">Select Card Type</option>
-                                <option value="visa">Visa</option>
-                                <option value="mastercard">Mastercard</option>
-                                <option value="amex">American Express</option>
-                                <option value="discover">Discover</option>
-                            </select>
-                        </div>
-
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                            <input id="cardNumber" type="text" placeholder="1234 5678 9012 3456" maxlength="19" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 mt-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                                <input id="expiryDate" type="text" placeholder="MM/YY" maxlength="5" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                                <input id="cvv" type="text" placeholder="123" maxlength="4" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                            <input id="cardholderName" type="text" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                    </div>
-
-                    <div class="flex space-x-3 pt-6">
-                        <button type="button" onclick="closePurchaseModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors">Cancel</button>
-                        <button type="submit" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300">💳 Complete Purchase</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 
-    <script>
-        let map;
-        let markers = [];
-        let isMapView = false;
+    <div class="max-w-7xl mx-auto px-6 pb-8">
+        <!-- Search and Filter Section -->
+        <div class="bg-white rounded-2xl p-6 mb-8 shadow-lg animate-fade-in">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="flex-1">
+                    <input id="searchInput" type="text" placeholder="Search properties..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchListings();
-            initializeMainMap();
+                <div class="flex gap-2">
+                    <select id="sortSelect" class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                    </select>
 
-            document.getElementById('searchBtn').addEventListener('click', fetchListings);
-            document.getElementById('clearBtn').addEventListener('click', clearFiltersAndFetch);
+                    <button id="filterButton" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                        Filter
+                    </button>
 
-            // Placeholder for address to map functionality for listing creation
-            // This will be handled in create.html or a similar dedicated page.
-            // For now, we'll ensure the mini-map div exists.
-            const addressInput = document.getElementById('buyerAddress'); // Assuming this is where address is entered during purchase
-            if (addressInput) {
-                addressInput.addEventListener('input', (e) => updateMiniMap(e.target.value));
-                // Initial map render if there's a pre-filled address (e.g., when editing)
-                updateMiniMap(addressInput.value);
-            }
-        });
+                    <button onclick="toggleView()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors">
+                        📋
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        function fetchListings() {
-            const title = document.getElementById('searchTitle').value;
-            const location = document.getElementById('searchLocation').value;
-            const country = document.getElementById('countryFilter').value;
-            const minPrice = document.getElementById('minPrice').value;
-            const maxPrice = document.getElementById('maxPrice').value;
-            const amenity = document.getElementById('amenityFilter').value;
-            const sortBy = document.getElementById('sortFilter').value;
+        <!-- Listings Grid -->
+        <div class="bg-white rounded-2xl p-8 shadow-lg animate-fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Available Properties</h2>
+                <div class="text-gray-600">
+                    <span id="resultsCount">0</span> properties found
+                </div>
+            </div>
 
-            const params = {
-                title_like: title,
-                location_like: location,
-                country: country,
-                price_gte: minPrice || undefined,
-                price_lte: maxPrice || undefined,
-                amenities_like: amenity,
-                _sort: sortBy.split('-')[0],
-                _order: sortBy.split('-').length > 1 ? sortBy.split('-')[1] : undefined
-            };
+            <div id="listings" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Listings will be populated here -->
+                <div class="col-span-full text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading properties...</p>
+                </div>
+            </div>
+        </div>
 
-            // Remove undefined parameters
-            Object.keys(params).forEach(key => {
-                if (params[key] === undefined || params[key] === '') {
-                    delete params[key];
-                }
-            });
+        <!-- Back to Top Button -->
+        <div class="fixed bottom-6 right-6">
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl">
+                ↑
+            </button>
+        </div>
+    </div>
 
-            axios.get('http://localhost:3000/listings', { params })
-                .then(response => {
-                    displayListings(response.data);
-                    updateMapMarkers(response.data);
-                })
-                .catch(error => {
-                    console.error('Error fetching listings:', error);
-                    document.getElementById('listings').innerHTML = '<p class="text-red-500">Error loading listings. Please try again later.</p>';
-                });
-        }
-
-        function displayListings(listings) {
-            const listingsDiv = document.getElementById('listings');
-            listingsDiv.innerHTML = ''; // Clear existing listings
-
-            if (listings.length === 0) {
-                listingsDiv.innerHTML = '<p class="text-white">No listings found matching your criteria.</p>';
-                return;
-            }
-
-            listings.forEach(listing => {
-                const card = document.createElement('div');
-                card.className = 'glass-effect rounded-2xl p-6 card-hover transform transition-transform duration-300';
-                card.innerHTML = `
-                    <img src="${listing.imageUrl || 'https://via.placeholder.com/300x200.png?text=No+Image'}" alt="${listing.title}" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-xl font-bold text-white mb-2">${listing.title}</h3>
-                    <p class="text-gray-300 mb-2">${listing.location}, ${listing.country}</p>
-                    <p class="text-white font-semibold mb-3">$${listing.price} / month</p>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        ${(listing.amenities || []).slice(0, 3).map(amenity => `<span class="bg-blue-200 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">${amenity}</span>`).join('')}
-                    </div>
-                    <button onclick="openPurchaseModal(${JSON.stringify(listing)})" class="btn-primary w-full text-white px-4 py-2 rounded-lg font-semibold shadow-lg">View Details & Purchase</button>
-                `;
-                listingsDiv.appendChild(card);
-            });
-        }
-
-        function initializeMainMap() {
-            map = L.map('map').setView([51.505, -0.09], 13); // Default view
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-        }
-
-        function updateMapMarkers(listings) {
-            // Clear previous markers
-            markers.forEach(marker => map.removeLayer(marker));
-            markers = [];
-
-            if (!listings || listings.length === 0) return;
-
-            listings.forEach(listing => {
-                if (listing.latitude && listing.longitude) {
-                    const marker = L.marker([listing.latitude, listing.longitude]).addTo(map)
-                        .bindPopup(`
-                            <b>${listing.title}</b><br>
-                            ${listing.location}<br>
-                            $${listing.price}/month
-                        `);
-                    markers.push(marker);
-                }
-            });
-
-            // Adjust map view to fit all markers if available
-            if (markers.length > 0) {
-                map.fitBounds(L.featureGroup(markers).getBounds());
-            }
-        }
-
-        function toggleMapView() {
-            isMapView = !isMapView;
-            const listingsDiv = document.getElementById('listings');
-            const mapViewDiv = document.getElementById('mapView');
-            const mapToggleBtn = document.getElementById('mapToggleBtn');
-
-            if (isMapView) {
-                listingsDiv.classList.add('hidden');
-                mapViewDiv.classList.remove('hidden');
-                mapToggleBtn.innerHTML = '📄 List View';
-                // Ensure map is resized and view is updated if it was previously hidden
-                if (map) {
-                    map.invalidateSize();
-                    if (markers.length > 0) {
-                        map.fitBounds(L.featureGroup(markers).getBounds());
-                    }
-                }
-            } else {
-                listingsDiv.classList.remove('hidden');
-                mapViewDiv.classList.add('hidden');
-                mapToggleBtn.innerHTML = '🗺️ Map View';
-            }
-        }
-
-        function clearFiltersAndFetch() {
-            document.getElementById('searchTitle').value = '';
-            document.getElementById('searchLocation').value = '';
-            document.getElementById('countryFilter').value = '';
-            document.getElementById('minPrice').value = '';
-            document.getElementById('maxPrice').value = '';
-            document.getElementById('amenityFilter').value = '';
-            document.getElementById('sortFilter').value = 'newest';
-            fetchListings();
-        }
-
-        function openPurchaseModal(listing) {
-            document.getElementById('purchasePropertyTitle').innerText = listing.title;
-            document.getElementById('purchasePropertyPrice').innerText = `$${listing.price} / month`;
-            document.getElementById('purchaseModal').classList.remove('hidden');
-            // Potentially pre-fill address if the listing has it, though typically this is for buyer info
-        }
-
-        function closePurchaseModal() {
-            document.getElementById('purchaseModal').classList.add('hidden');
-        }
-
-        // Function to update the mini-map in the purchase modal
-        let miniMapInstance = null;
-        function updateMiniMap(address) {
-            const miniMapContainer = document.getElementById('miniMap');
-            if (!miniMapContainer) return;
-
-            if (!address) {
-                if (miniMapInstance) {
-                    miniMapContainer.innerHTML = ''; // Clear map if no address
-                    miniMapInstance = null;
-                }
-                return;
-            }
-
-            // Use a geocoding service to get coordinates from address
-            // For simplicity, we'll use a placeholder or a basic direct lookup if available.
-            // A real implementation would use a service like Nominatim, Mapbox Geocoding, etc.
-            // Example: Using Nominatim (requires API key for production, or be mindful of usage limits)
-            // For this example, let's assume we have a function `getCoordinatesFromAddress`
-            // that returns {lat: ..., lon: ...} or null.
-
-            // Placeholder for geocoding: In a real scenario, you'd fetch this.
-            // For demonstration, we'll use a dummy coordinate if the address is not empty.
-            // Replace this with actual geocoding logic.
-            const coordinates = getCoordinatesFromAddress(address); // This function needs to be implemented
-
-            if (coordinates && coordinates.lat && coordinates.lon) {
-                if (!miniMapInstance) {
-                    miniMapInstance = L.map('miniMap').setView([coordinates.lat, coordinates.lon], 16);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        maxZoom: 19,
-                        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    }).addTo(miniMapInstance);
-                } else {
-                    miniMapInstance.setView([coordinates.lat, coordinates.lon], 16);
-                }
-
-                // Clear existing markers on mini-map
-                miniMapInstance.eachLayer(layer => {
-                    if (layer instanceof L.Marker) {
-                        miniMapInstance.removeLayer(layer);
-                    }
-                });
-
-                L.marker([coordinates.lat, coordinates.lon]).addTo(miniMapInstance)
-                    .bindPopup(address)
-                    .openPopup();
-            } else {
-                if (miniMapInstance) {
-                    miniMapContainer.innerHTML = '<p class="text-red-500 text-sm">Could not locate address on map.</p>';
-                    miniMapInstance = null; // Reset if coordinates are invalid
-                }
-            }
-        }
-
-        // Dummy geocoding function (replace with a real service)
-        function getCoordinatesFromAddress(address) {
-            // In a real application, you would use a geocoding API here.
-            // Example using Nominatim (ensure compliance with their usage policy):
-            // const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
-            // fetch(url)
-            //     .then(response => response.json())
-            //     .then(data => {
-            //         if (data && data.length > 0) {
-            //             return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-            //         } else {
-            //             return null;
-            //         }
-            //     })
-            //     .catch(error => {
-            //         console.error('Geocoding error:', error);
-            //         return null;
-            //     });
-
-            // For this example, return a fixed coordinate if address is not empty.
-            // This is NOT real geocoding.
-            if (address.toLowerCase().includes("new york")) {
-                return { lat: 40.7128, lon: -74.0060 };
-            } else if (address.toLowerCase().includes("london")) {
-                return { lat: 51.5074, lon: -0.1278 };
-            } else if (address.toLowerCase().includes("paris")) {
-                return { lat: 48.8566, lon: 2.3522 };
-            } else if (address.toLowerCase().includes("tokyo")) {
-                return { lat: 35.6895, lon: 139.6917 };
-            } else if (address.toLowerCase().includes("addis ababa")) {
-                 return { lat: 9.0247, lon: 38.7469 }; // Example coordinates for Addis Ababa
-            } else {
-                // A generic fallback or null if no specific match
-                // For demo, let's use a general coordinate if address is present
-                return { lat: 48.8566, lon: 2.3522 }; // Default to Paris if no specific match
-            }
-        }
-
-        // Function to handle form submission for purchase
-        document.getElementById('purchaseForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            // In a real app, you would collect data, send to backend, etc.
-            alert('Purchase submitted! (This is a demo)');
-            closePurchaseModal();
-        });
-
-    </script>
+    <script src="view.js"></script>
 </body>
 </html>

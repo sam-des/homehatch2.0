@@ -347,6 +347,10 @@ const translations = {
 };
 
 
+function t(key) {
+    return translations[key] && translations[key][currentLanguage] ? translations[key][currentLanguage] : key;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
     loadListings();
@@ -357,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupLanguageSelector();
     setupCurrencyConverter();
     setupAIChatbot();
-    setupMapView(); // Setup map view button
+    setupMapView();
 
 
     // Update UI text after setup
@@ -385,25 +389,16 @@ async function checkAuth() {
             localStorage.removeItem('sessionId');
             sessionId = null;
             currentUser = null;
-            window.location.href = '/login.html';
-            return;
         }
-    } else {
-        window.location.href = '/login.html';
-        return;
     }
 
-    setupAuthenticatedApp();
-}
+    // If not logged in and not on login page, redirect to login
+    if (!currentUser && !window.location.pathname.includes('/login.html')) {
+       // window.location.href = '/login.html'; // Temporarily commented out to allow viewing listings without login
+    }
 
-function setupAuthenticatedApp() {
-    updateHeader();
-    //loadListings(); // Load listings is already called in document load
-    //setupSearch(); // Setup search is already called in document load
-    //setupPurchaseForm(); // Setup purchase form is already called in document load
-    //setupScrollGradient(); // Setup scroll gradient is already called in document load
+    updateHeader(); // Update header regardless of login status
 }
-
 
 function updateHeader() {
     const nav = document.querySelector('nav');
@@ -487,6 +482,16 @@ function updateHeader() {
 
         // Add event listeners for profile dropdown
         setupProfileDropdown();
+    } else {
+        // Handle logged out state or show login/register buttons
+        const loginRegisterSection = document.getElementById('loginRegisterSection'); // Assuming you have a place for these buttons
+        if (loginRegisterSection) {
+            loginRegisterSection.classList.remove('hidden');
+            loginRegisterSection.innerHTML = `
+                <a href="/login.html" class="text-white hover:text-gray-300 px-4 py-2 rounded-lg font-semibold transition-colors">${t('login')}</a>
+                <a href="/register.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">${t('register')}</a>
+            `;
+        }
     }
 }
 
@@ -762,7 +767,7 @@ function setupAdvancedFilters() {
     bathroomsFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     bathroomsFilter.innerHTML = `
         <option value="">${t('bathrooms')}</option>
-        <option value="1">1 ${t('bathroom')}</option>
+        <option value="1">${t('bathroom')}</option>
         <option value="2">2 ${t('bathrooms')}</option>
         <option value="3">3+ ${t('bathrooms')}</option>
     `;
@@ -1223,7 +1228,7 @@ function openChatModal(listingId, listingTitle) {
     `;
 
     document.body.appendChild(modal);
-    loadChatMessages();
+    loadChatMessages(listingId);
 
     // Auto-refresh messages every 3 seconds
     chatRefreshInterval = setInterval(loadChatMessages, 3000);
@@ -1253,7 +1258,7 @@ function closeChatModal() {
     currentChatListingId = null;
 }
 
-async function loadChatMessages() {
+async function loadChatMessages(listingId) {
     if (!currentChatListingId) return;
 
     try {
@@ -1294,7 +1299,7 @@ async function sendChatMessage() {
     try {
         await axios.post(`/api/chats/${currentChatListingId}/messages`, { message });
         input.value = '';
-        loadChatMessages(); // Refresh messages immediately
+        loadChatMessages(currentChatListingId); // Refresh messages immediately
     } catch (error) {
         console.error('Error sending message:', error);
         alert('Failed to send message. Please try again.');
@@ -2313,13 +2318,13 @@ function setupCurrencyConverter() {
 
 function formatPrice(price) {
     const convertedPrice = price * (exchangeRates[currentCurrency] / exchangeRates.USD);
-    const symbol = currentCurrency === 'ETB' ? 'ብር' : '$';
+    const symbol = currentCurrency === 'ETB' ? 'ብር' : '$'; // Simplified symbol logic
 
     if (currentCurrency === 'USD') {
         return `${symbol}${convertedPrice.toFixed(0)}`;
     } else {
         const usdPrice = price; // Original price in USD
-        return `ብር${convertedPrice.toFixed(0)} (~$${usdPrice})`;
+        return `${symbol}${convertedPrice.toFixed(0)} (~$${usdPrice})`;
     }
 }
 
@@ -2464,7 +2469,7 @@ function getAIResponse(message) {
             return 'Pour lister une propriété, cliquez sur "Lister une Propriété". Remplissez les détails, l\'adresse, le prix et ajoutez des photos. Plus d\'informations attirent plus de locataires.';
         } else if (lowerMessage.includes('payment') || lowerMessage.includes('paiement')) {
             return 'Notre processus de paiement est sécurisé. Nous acceptons les cartes de crédit, débit et virements bancaires. Toutes les transactions sont cryptées.';
-        } else if (lowerMessage.includes('account') || lowerMessage.includes('compte')) {
+        } else if (lowerMessage.includes('account') || lowerMessage.includes('register')) {
             return 'Pour créer un compte, cliquez sur "S\'inscrire". Vous avez besoin d\'une adresse email, nom d\'utilisateur et mot de passe. Vous devez avoir 18 ans ou plus.';
         } else {
             return 'HomeHatch est une plateforme de location éthiopienne. Vous pouvez chercher, lister et louer des propriétés. Demandez-moi si vous avez besoin d\'aide!';
