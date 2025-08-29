@@ -18,7 +18,7 @@
             position: relative;
             overflow-x: hidden;
         }
-        
+
         /* Consistent Button Styles */
         .btn-primary {
             background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
@@ -32,12 +32,12 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
         }
-        
+
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -49,12 +49,12 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
         }
-        
+
         .btn-success {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
@@ -65,12 +65,12 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .btn-success:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
         }
-        
+
         .btn-danger {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
@@ -81,12 +81,12 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .btn-danger:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
         }
-        
+
         body::before {
             content: '';
             position: fixed;
@@ -100,47 +100,47 @@
                 radial-gradient(circle at 40% 60%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
             z-index: -1;
         }
-        
+
         .glass-effect {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        
+
         .card-hover {
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
         }
-        
+
         .card-hover:hover {
             transform: translateY(-8px) scale(1.02);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
             border-color: rgba(59, 130, 246, 0.3);
             background: rgba(255, 255, 255, 0.1);
         }
-        
+
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-        
+
         .animate-fade-in {
             animation: fadeInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        
+
         .property-image {
             transition: all 0.3s ease;
         }
-        
+
         .property-card:hover .property-image {
             transform: scale(1.1);
         }
-        
+
         @keyframes fadeInUp {
             from { 
                 opacity: 0; 
@@ -151,29 +151,104 @@
                 transform: translateY(0) scale(1); 
             }
         }
-        
+
         .search-bar {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
+
         .search-bar:focus {
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(59, 130, 246, 0.5);
         }
-        
+
         .floating {
             animation: floating 6s ease-in-out infinite;
         }
-        
+
         @keyframes floating {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
-        
+
         .neon-glow {
             text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Map Styles */
+        #mapContainer {
+            width: 100%;
+            height: 500px; /* Adjust as needed */
+            margin-top: 32px; /* Space below the search bar */
+            border-radius: 1.5rem; /* Rounded corners */
+            overflow: hidden; /* Ensure map stays within bounds */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none; /* Hidden by default, shown by toggle */
+        }
+        
+        .login-modal, .signup-modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            border-radius: 1.5rem;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        .modal-input {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 0.75rem;
+            margin-bottom: 20px;
+            width: calc(100% - 24px); /* Adjust for padding */
+        }
+        
+        .modal-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .modal-switch-btn {
+            background: none;
+            border: none;
+            color: #8b5cf6; /* Purple */
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -249,12 +324,16 @@
                     <button onclick="toggleView()" class="btn-secondary">
                         📋 List View
                     </button>
+
+                    <button onclick="toggleMapView()" id="mapToggleBtn" class="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105">
+                        🌍 Map View
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Listings Grid -->
-        <div class="glass-effect rounded-3xl p-8 shadow-2xl animate-fade-in">
+        <div id="listingsContainer" class="glass-effect rounded-3xl p-8 shadow-2xl animate-fade-in">
             <div class="flex justify-between items-center mb-8">
                 <div>
                     <h2 class="text-3xl font-bold text-white neon-glow">Available Properties</h2>
@@ -275,6 +354,9 @@
                     <p class="text-white text-opacity-80 text-lg font-light">Loading amazing properties...</p>
                 </div>
             </div>
+            
+            <!-- Map Container -->
+            <div id="mapContainer"></div>
         </div>
 
         <!-- Back to Top Button -->
@@ -282,6 +364,31 @@
             <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl">
                 ↑
             </button>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="login-modal">
+        <div class="modal-content glass-effect">
+            <button class="modal-close-btn" onclick="hideLoginModal()">&times;</button>
+            <h2 class="text-3xl font-bold text-white mb-6 neon-glow">Login to HomeHatch</h2>
+            <input type="email" id="loginEmail" placeholder="Email Address" class="modal-input" required>
+            <input type="password" id="loginPassword" placeholder="Password" class="modal-input" required>
+            <button onclick="loginUser()" class="btn-primary w-full">Login</button>
+            <p class="text-white text-opacity-70 mt-4">Don't have an account? <button class="modal-switch-btn" onclick="showSignupModal()">Sign Up</button></p>
+        </div>
+    </div>
+
+    <!-- Sign Up Modal -->
+    <div id="signupModal" class="signup-modal">
+        <div class="modal-content glass-effect">
+            <button class="modal-close-btn" onclick="hideSignupModal()">&times;</button>
+            <h2 class="text-3xl font-bold text-white mb-6 neon-glow">Sign Up for HomeHatch</h2>
+            <input type="text" id="signupName" placeholder="Full Name" class="modal-input" required>
+            <input type="email" id="signupEmail" placeholder="Email Address" class="modal-input" required>
+            <input type="password" id="signupPassword" placeholder="Password" class="modal-input" required>
+            <button onclick="registerUser()" class="btn-primary w-full">Sign Up</button>
+            <p class="text-white text-opacity-70 mt-4">Already have an account? <button class="modal-switch-btn" onclick="showLoginModal()">Login</button></p>
         </div>
     </div>
 

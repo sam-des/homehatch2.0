@@ -45,6 +45,14 @@ function setupSavedSearches() {
     console.log('Setting up saved searches...');
 }
 
+// Function to safely add event listeners
+function safeAddEventListener(elementId, event, handler) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.addEventListener(event, handler);
+    }
+}
+
 function setupEthiopianLocationFilters() {
     const countrySelect = document.getElementById('country');
     const ethiopianFields = document.getElementById('ethiopianLocationFields');
@@ -284,15 +292,9 @@ function updateLanguageStrings() {
 }
 
 function setupAuthForms() {
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-    if (registerForm) {
-        registerForm.addEventListener('submit', handleRegister);
-    }
+    // Use safe event listener addition
+    safeAddEventListener('loginForm', 'submit', handleLogin);
+    safeAddEventListener('registerForm', 'submit', handleRegister);
 }
 
 async function handleLogin(e) {
@@ -366,6 +368,11 @@ function showRegisterModal() {
 function hideRegisterModal() {
     document.getElementById('registerModal').classList.add('hidden');
     document.getElementById('registerForm').reset();
+}
+
+function switchToRegister() {
+    hideLoginModal();
+    showRegisterModal();
 }
 
 function showListingForm() {
@@ -507,28 +514,30 @@ function setupCreateListingFormMap() {
     const countryInput = document.getElementById('country');
     const miniMapContainer = document.getElementById('miniMapContainer');
 
-    if (!addressInput || !miniMapContainer) return;
+    if (!addressInput) return;
 
     // Initialize map when address input changes
     addressInput.addEventListener('input', async () => {
         const address = addressInput.value.trim();
-        const country = countryInput.value.trim();
-        if (address && country) {
+        const country = countryInput ? countryInput.value.trim() : '';
+        if (address && country && miniMapContainer) {
             try {
                 const geoData = await getCoordinates(address, country);
                 if (geoData && geoData.lat && geoData.lon) {
-                    displayMiniMap(geoData.lat, geoData.lon, miniMapContainer);
+                    displayInteractiveMap(geoData.lat, geoData.lon, miniMapContainer);
                     miniMapContainer.classList.remove('hidden');
                 } else {
                     miniMapContainer.classList.add('hidden');
-                    miniMapContainer.innerHTML = ''; // Clear previous map
+                    miniMapContainer.innerHTML = '';
                 }
             } catch (error) {
                 console.error("Error getting coordinates:", error);
-                miniMapContainer.classList.add('hidden');
-                miniMapContainer.innerHTML = '';
+                if (miniMapContainer) {
+                    miniMapContainer.classList.add('hidden');
+                    miniMapContainer.innerHTML = '';
+                }
             }
-        } else {
+        } else if (miniMapContainer) {
             miniMapContainer.classList.add('hidden');
             miniMapContainer.innerHTML = '';
         }
@@ -539,27 +548,82 @@ function setupCreateListingFormMap() {
         countryInput.addEventListener('change', async () => {
             const address = addressInput.value.trim();
             const country = countryInput.value.trim();
-            if (address && country) {
+            if (address && country && miniMapContainer) {
                 try {
                     const geoData = await getCoordinates(address, country);
                     if (geoData && geoData.lat && geoData.lon) {
-                        displayMiniMap(geoData.lat, geoData.lon, miniMapContainer);
+                        displayInteractiveMap(geoData.lat, geoData.lon, miniMapContainer);
                         miniMapContainer.classList.remove('hidden');
                     } else {
                         miniMapContainer.classList.add('hidden');
-                        miniMapContainer.innerHTML = ''; // Clear previous map
+                        miniMapContainer.innerHTML = '';
                     }
                 } catch (error) {
                     console.error("Error getting coordinates:", error);
                     miniMapContainer.classList.add('hidden');
                     miniMapContainer.innerHTML = '';
                 }
-            } else {
+            } else if (miniMapContainer) {
                 miniMapContainer.classList.add('hidden');
                 miniMapContainer.innerHTML = '';
             }
         });
     }
+}
+
+// Enhanced interactive map display function
+function displayInteractiveMap(lat, lon, container) {
+    container.innerHTML = `
+        <div class="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="text-4xl mb-2">📍</div>
+                    <p class="text-sm font-semibold text-gray-700">Property Location</p>
+                    <p class="text-xs text-gray-600">Lat: ${lat.toFixed(4)}, Lng: ${lon.toFixed(4)}</p>
+                    <div class="mt-3 flex gap-2 justify-center">
+                        <button onclick="openFullMap(${lat}, ${lon})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                            🗺️ Full Map
+                        </button>
+                        <button onclick="showStreetView(${lat}, ${lon})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                            👁️ Street View
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Function to open full map view
+function openFullMap(lat, lon) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-4xl w-full h-96">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-bold">🗺️ Property Location</h3>
+                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            </div>
+            <div class="h-80 bg-gradient-to-br from-blue-200 to-green-200 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🏠</div>
+                    <h4 class="text-xl font-bold text-gray-800">Interactive Map</h4>
+                    <p class="text-gray-600 mb-4">Location: ${lat.toFixed(6)}, ${lon.toFixed(6)}</p>
+                    <div class="flex gap-3 justify-center">
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">📍 Center Map</button>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">🛰️ Satellite</button>
+                        <button class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg">🚶 Directions</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Function to show street view
+function showStreetView(lat, lon) {
+    alert(`Street View feature coming soon!\nLocation: ${lat}, ${lon}`);
 }
 
 // Function to fetch coordinates from an address (using a placeholder API)
