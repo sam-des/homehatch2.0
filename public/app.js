@@ -397,13 +397,31 @@ function showListingForm() {
 async function loadListings() {
     try {
         const response = await axios.get('/api/listings');
-        listings = response.data;
+        listings = response.data || [];
         renderListings();
-        renderMapForAllListings(); // Render the main map with all listings
+        if (typeof renderMapForAllListings === 'function') {
+            renderMapForAllListings();
+        }
     } catch (error) {
         console.error('Error loading listings:', error);
+        listings = [];
+        
         if (error.response?.status === 401) {
             logout();
+            return;
+        }
+        
+        // Show error message
+        const listingsContainer = document.getElementById('listings');
+        if (listingsContainer) {
+            listingsContainer.innerHTML = `
+                <div class="text-center p-8">
+                    <div class="text-red-500 mb-4">Error loading listings</div>
+                    <button onclick="loadListings()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        Try Again
+                    </button>
+                </div>
+            `;
         }
     }
 }

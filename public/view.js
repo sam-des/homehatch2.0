@@ -7,6 +7,11 @@ let currentLanguage = 'en';
 let currentCurrency = 'USD';
 let exchangeRates = { USD: 1, ETB: 57.00 }; // Example rates, should be fetched dynamically
 
+// Declare missing variables at the top
+let searchTitle, searchLocation, minPrice, maxPrice, countryFilter, amenityFilter, sortFilter;
+let propertyTypeFilter, bedroomsFilter, bathroomsFilter, petFriendlyFilter;
+let cityFilter, neighborhoodFilter, kebeleFilter, searchBtn, clearBtn;
+
 // Add Amharic language support
 const translations = {
     'perMonth': {
@@ -711,9 +716,23 @@ function debounce(func, wait) {
 // --- Existing functions modified or kept as is ---
 
 function setupSearch() {
+    // Get all filter elements
+    searchTitle = document.getElementById('searchTitle');
+    searchLocation = document.getElementById('searchLocation');
+    minPrice = document.getElementById('minPrice');
+    maxPrice = document.getElementById('maxPrice');
+    countryFilter = document.getElementById('countryFilter');
+    amenityFilter = document.getElementById('amenityFilter');
+    sortFilter = document.getElementById('sortFilter');
+    searchBtn = document.getElementById('searchBtn');
+    clearBtn = document.getElementById('clearBtn');
+
     const searchInput = document.getElementById('searchInput');
-    const sortSelect = document.getElementById('sortSelect');
+    const sortSelect = document.getElementById('sortFilter');
     const filterButton = document.getElementById('filterButton');
+    const languageSelector = document.getElementById('languageSelector');
+    const currencySelector = document.getElementById('currencySelector');
+
 
     // Add event listeners with null checks
     if (searchInput) {
@@ -758,7 +777,7 @@ function setupSearch() {
 
 function setupAdvancedFilters() {
     // Property type filter
-    const propertyTypeFilter = document.createElement('select');
+    propertyTypeFilter = document.createElement('select');
     propertyTypeFilter.id = 'propertyTypeFilter';
     propertyTypeFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     propertyTypeFilter.innerHTML = `
@@ -771,7 +790,7 @@ function setupAdvancedFilters() {
     `;
 
     // Bedrooms filter
-    const bedroomsFilter = document.createElement('select');
+    bedroomsFilter = document.createElement('select');
     bedroomsFilter.id = 'bedroomsFilter';
     bedroomsFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     bedroomsFilter.innerHTML = `
@@ -783,7 +802,7 @@ function setupAdvancedFilters() {
     `;
 
     // Bathrooms filter
-    const bathroomsFilter = document.createElement('select');
+    bathroomsFilter = document.createElement('select');
     bathroomsFilter.id = 'bathroomsFilter';
     bathroomsFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     bathroomsFilter.innerHTML = `
@@ -806,7 +825,7 @@ function setupAdvancedFilters() {
 
 
     // Add location filters for Ethiopia
-    const cityFilter = document.createElement('select');
+    cityFilter = document.createElement('select');
     cityFilter.id = 'cityFilter';
     cityFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     cityFilter.innerHTML = `
@@ -818,7 +837,7 @@ function setupAdvancedFilters() {
         <option value="Hawassa">Hawassa</option>
     `;
 
-    const neighborhoodFilter = document.createElement('select');
+    neighborhoodFilter = document.createElement('select');
     neighborhoodFilter.id = 'neighborhoodFilter';
     neighborhoodFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     neighborhoodFilter.innerHTML = `
@@ -830,7 +849,7 @@ function setupAdvancedFilters() {
         <option value="Kirkos">Kirkos</option>
     `;
 
-    const kebeleFilter = document.createElement('select');
+    kebeleFilter = document.createElement('select');
     kebeleFilter.id = 'kebeleFilter';
     kebeleFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     kebeleFilter.innerHTML = `

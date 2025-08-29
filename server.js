@@ -8,10 +8,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  index: ['index.html'],
+  extensions: ['html', 'htm']
+}));
 
 // File-based storage for listings and purchases
 const fs = require('fs');
@@ -397,6 +404,35 @@ app.get('/', (req, res) => {
 
 app.get('/view', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'view.html'));
+});
+
+app.get('/view.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'view.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Catch-all route for SPA - must be before admin endpoints
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  
+  // Try to serve static file first
+  const filePath = path.join(__dirname, 'public', req.path);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    return res.sendFile(filePath);
+  }
+  
+  // Default to index.html for unknown routes
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Admin endpoints
