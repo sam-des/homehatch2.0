@@ -3465,7 +3465,7 @@ async function viewMyBookings() {
                                     <div class="flex justify-between items-start mb-3">
                                         <div>
                                             <h3 class="font-semibold text-lg">${booking.listing.title}</h3>
-                                            <p class="text-gray-600 text-sm">${booking.listing.address}</p>
+                                            <p class="text-gray-600">${booking.listing.address}</p>
                                             <p class="text-xs text-gray-500">Booking #${booking.bookingNumber}</p>
                                         </div>
                                         <div class="text-right">
