@@ -39,6 +39,27 @@ const translations = {
     }
 };
 
+// Add missing function
+function setupSavedSearches() {
+    // Placeholder function for saved searches
+    console.log('Setting up saved searches...');
+}
+
+function setupEthiopianLocationFilters() {
+    const countrySelect = document.getElementById('country');
+    const ethiopianFields = document.getElementById('ethiopianLocationFields');
+    
+    if (countrySelect && ethiopianFields) {
+        countrySelect.addEventListener('change', function() {
+            if (this.value === 'Ethiopia') {
+                ethiopianFields.classList.remove('hidden');
+            } else {
+                ethiopianFields.classList.add('hidden');
+            }
+        });
+    }
+}
+
 function t(key) {
     return translations[currentLanguage][key] || translations.en[key] || key;
 }
@@ -52,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupAuthForms();
     setupScrollGradient();
     setupCreateListingFormMap(); // Initialize map functionality for create listing
+    setupEthiopianLocationFilters(); // Setup Ethiopian location dropdowns
 });
 
 // Set up axios interceptor to include session ID
@@ -215,7 +237,9 @@ function setupLanguageSelector() {
                 // Update UI immediately without page reload
                 updateAuthUI();
                 updateLanguageStrings();
-                renderListings();
+                if (typeof renderListings === 'function') {
+                    renderListings();
+                }
             }
         });
     }
@@ -260,8 +284,15 @@ function updateLanguageStrings() {
 }
 
 function setupAuthForms() {
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
-    document.getElementById('registerForm').addEventListener('submit', handleRegister);
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+    }
 }
 
 async function handleLogin(e) {
