@@ -10,84 +10,210 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             min-height: 100vh;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
         }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
         .glass-effect {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
+        
         .card-hover {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
         .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            border-color: rgba(59, 130, 246, 0.3);
         }
+        
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
         }
+        
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             transition: all 0.3s ease;
+            border: none;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
         }
+        
         .form-input {
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
         }
+        
         .form-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(255, 255, 255, 0.1);
         }
+        
         .animate-fade-in {
-            animation: fadeIn 0.6s ease-in-out;
+            animation: fadeInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        .animate-slide-in {
+            animation: slideIn 0.6s ease-out;
+        }
+        
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .neon-glow {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .feature-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+            transform: translateY(-5px);
         }
     </style>
 </head>
 <body>
     <!-- Welcome/Login Screen -->
-    <div id="welcomeScreen" class="min-h-screen flex items-center justify-center px-6">
-        <div class="max-w-md w-full">
-            <div class="glass-effect rounded-2xl p-8 shadow-2xl animate-fade-in text-center">
-                <div class="mb-8">
-                    <h1 class="text-4xl font-bold text-white mb-2">🏠 HomeHatch</h1>
-                    <p class="text-white text-opacity-90 text-lg">Find your perfect rental home</p>
+    <div id="welcomeScreen" class="min-h-screen flex items-center justify-center px-6 relative">
+        <!-- Floating Elements -->
+        <div class="absolute top-20 left-10 w-20 h-20 bg-blue-500 bg-opacity-20 rounded-full blur-xl floating"></div>
+        <div class="absolute bottom-20 right-10 w-32 h-32 bg-purple-500 bg-opacity-20 rounded-full blur-xl floating" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-pink-500 bg-opacity-20 rounded-full blur-xl floating" style="animation-delay: 4s;"></div>
+        
+        <div class="max-w-lg w-full">
+            <div class="glass-effect rounded-3xl p-10 shadow-2xl animate-fade-in text-center relative overflow-hidden">
+                <!-- Decorative gradient overlay -->
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                
+                <div class="mb-10">
+                    <div class="text-6xl mb-4 floating">🏠</div>
+                    <h1 class="text-5xl font-bold text-white mb-3 neon-glow">HomeHatch</h1>
+                    <p class="text-white text-opacity-90 text-xl font-light">Find your perfect rental home</p>
+                    <div class="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
                 </div>
 
-                <div class="space-y-4">
-                    <button onclick="showLoginModal()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg">
-                        Sign In
+                <div class="space-y-5">
+                    <button onclick="showLoginModal()" class="w-full btn-primary text-white py-5 rounded-2xl font-semibold text-lg shadow-lg relative overflow-hidden group">
+                        <span class="relative z-10">✨ Sign In</span>
                     </button>
 
-                    <button onclick="showRegisterModal()" class="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg">
-                        Create Account
+                    <button onclick="showRegisterModal()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-5 rounded-2xl font-semibold text-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg transform hover:scale-105">
+                        🚀 Create Account
                     </button>
 
-                    <div class="relative my-6">
+                    <div class="relative my-8">
                         <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-white border-opacity-30"></div>
+                            <div class="w-full border-t border-white border-opacity-20"></div>
                         </div>
                         <div class="relative flex justify-center text-sm">
-                            <span class="px-2 bg-transparent text-white text-opacity-75">or</span>
+                            <span class="px-4 bg-transparent text-white text-opacity-75 glass-effect rounded-full py-1">or</span>
                         </div>
                     </div>
 
-                    <button onclick="browseAsGuest()" class="w-full glass-effect text-white py-4 rounded-xl font-semibold text-lg hover:bg-white hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-30">
-                        Browse as Guest
+                    <button onclick="browseAsGuest()" class="w-full glass-effect text-white py-5 rounded-2xl font-semibold text-lg hover:bg-white hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-30 group">
+                        <span class="group-hover:scale-110 transition-transform duration-300 inline-block">👀 Browse as Guest</span>
                     </button>
                 </div>
 
-
+                <!-- Feature highlights -->
+                <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+                    <div class="feature-card rounded-xl p-3">
+                        <div class="text-2xl mb-1">🔍</div>
+                        <div class="text-xs text-white text-opacity-80">Search</div>
+                    </div>
+                    <div class="feature-card rounded-xl p-3">
+                        <div class="text-2xl mb-1">💬</div>
+                        <div class="text-xs text-white text-opacity-80">Chat</div>
+                    </div>
+                    <div class="feature-card rounded-xl p-3">
+                        <div class="text-2xl mb-1">⚡</div>
+                        <div class="text-xs text-white text-opacity-80">Fast</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

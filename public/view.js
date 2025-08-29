@@ -343,12 +343,22 @@ const translations = {
         'en': 'Select Kebele',
         'am': 'ቀበሌ ምረጥ',
         'fr': 'Sélectionner un kebele'
+    },
+    'login': {
+        'en': 'Login',
+        'am': 'ግባ',
+        'fr': 'Connexion'
+    },
+    'register': {
+        'en': 'Register',
+        'am': 'ይመዝገቡ',
+        'fr': 'S\'inscrire'
     }
 };
 
 
 function t(key) {
-    return translations[key] && translations[key][currentLanguage] ? translations[key][currentLanguage] : key;
+    return translations[key] && translations[key][currentLanguage] ? translations[key][currentLanguage] : translations[key] && translations[key]['en'] ? translations[key]['en'] : key;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -557,179 +567,193 @@ async function loadListings() {
 
 function renderListings() {
     const listingsContainer = document.getElementById('listings');
+    if (!listingsContainer) return; // Exit if container not found
 
     if (filteredListings.length === 0) {
         listingsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500">No rentals found matching your criteria.</div>';
         return;
     }
 
-    listingsContainer.innerHTML = filteredListings.map(listing => `
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover animate-fade-in">
-            ${listing.images.length > 0 ? `
-                <div class="relative h-56 bg-gradient-to-r from-blue-400 to-purple-500">
-                    <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black from-opacity-50 to-transparent"></div>
-                    <div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">+${listing.images.length - 1} photos</div>
-                    <div class="absolute bottom-4 left-4 text-white">
-                        <div class="text-3xl font-bold" data-price="${listing.price}">${formatPrice(listing.price)}</div>
-                        <div class="text-sm opacity-80">${t('perMonth')}</div>
+    listingsContainer.innerHTML = filteredListings.map(listing => createPropertyCard(listing)).join('');
+}
+
+// --- Updated and New Functions ---
+
+// Fix addEventListener errors and improve property card styling
+function setupEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortFilter'); // Corrected ID
+    const filterButton = document.getElementById('filterButton');
+    const languageSelector = document.getElementById('languageSelector');
+    const currencySelector = document.getElementById('currencySelector');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(performSearch, 300));
+    }
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', performSearch);
+    }
+
+    // This button is likely for the advanced filters modal, not a general filter button
+    // if (filterButton) {
+    //     filterButton.addEventListener('click', showAdvancedFilters);
+    // }
+
+    if (languageSelector) {
+        languageSelector.addEventListener('change', function(e) {
+            changeLanguage(e.target.value);
+        });
+    }
+
+    if (currencySelector) {
+        currencySelector.addEventListener('change', function(e) {
+            currentCurrency = e.target.value;
+            localStorage.setItem('currency', currentCurrency);
+            updatePriceDisplays();
+        });
+    }
+}
+
+// Enhanced property card creation with modern styling
+function createPropertyCard(listing) {
+    const imageUrl = listing.images && listing.images.length > 0 ? listing.images[0] : '/placeholder.jpg';
+    const price = formatPrice(listing.price);
+    const location = formatLocation(listing);
+
+    return `
+        <div class="property-card rounded-3xl overflow-hidden shadow-xl bg-white">
+            <div class="relative overflow-hidden rounded-t-3xl">
+                <img src="${imageUrl}" alt="${listing.title}" class="property-image w-full h-56 object-cover">
+                <div class="absolute top-4 right-4">
+                    <div class="glass-effect px-3 py-1 rounded-full">
+                        <span class="text-white font-bold text-lg">${price}</span>
                     </div>
                 </div>
-            ` : `
-                <div class="h-56 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center relative">
-                    <span class="text-white text-8xl opacity-50">🏠</span>
-                    <div class="absolute bottom-4 left-4 text-white">
-                        <div class="text-3xl font-bold" data-price="${listing.price}">${formatPrice(listing.price)}</div>
-                        <div class="text-sm opacity-80">${t('perMonth')}</div>
+                <div class="absolute top-4 left-4">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1 rounded-full">
+                        <span class="text-white text-sm font-semibold">🏠 Rental</span>
                     </div>
                 </div>
-            `}
+            </div>
 
             <div class="p-6">
                 <div class="mb-4">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">${listing.title}</h3>
-                    <p class="text-gray-600 flex items-center">
-                        <span class="text-lg mr-2">📍</span>
-                        ${listing.address}
+                    <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-1">${listing.title}</h3>
+                    <p class="text-gray-600 text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                        </svg>
+                        ${location}
                     </p>
-                    <p class="text-gray-500 flex items-center text-sm mt-1">
-                        <span class="text-sm mr-2">🌍</span>
-                        ${listing.country}
-                    </p>
-                    ${listing.city ? `<p class="text-gray-500 flex items-center text-sm mt-1">
-                        <span class="text-sm mr-2">🏙️</span>
-                        ${listing.city}
-                    </p>` : ''}
-                    ${listing.neighborhood ? `<p class="text-gray-500 flex items-center text-sm mt-1">
-                        <span class="text-sm mr-2">🏘️</span>
-                        ${listing.neighborhood}
-                    </p>` : ''}
-                    ${listing.kebele ? `<p class="text-gray-500 flex items-center text-sm mt-1">
-                        <span class="text-sm mr-2">🏠</span>
-                        ${listing.kebele}
-                    </p>` : ''}
                 </div>
 
-                <p class="text-gray-700 mb-6 leading-relaxed">${listing.description}</p>
+                <p class="text-gray-700 text-sm mb-4 line-clamp-2">${listing.description}</p>
 
-                <div class="mb-6">
-                    <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
-                        <span class="text-lg mr-2">✨</span>
-                        Amenities
-                    </h4>
-                    <div class="flex flex-wrap gap-2">
-                        ${listing.amenities.map(amenity => `
-                            <span class="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">${amenity.trim()}</span>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl p-4 mb-6">
-                    <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
-                        <span class="text-lg mr-2">👤</span>
-                        Contact Information
-                    </h4>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center">
-                            <span class="font-medium text-gray-700 w-16">Name:</span>
-                            <span class="text-gray-600">${listing.contact?.name || 'Not provided'}</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="font-medium text-gray-700 w-16">Email:</span>
-                            ${listing.contact?.email ? `<a href="mailto:${listing.contact.email}" class="text-blue-600 hover:text-blue-800 transition-colors">${listing.contact.email}</a>` : '<span class="text-gray-600">Not provided</span>'}
-                        </div>
-                        <div class="flex items-center">
-                            <span class="font-medium text-gray-700 w-16">Phone:</span>
-                            ${listing.contact?.phone ? `<a href="tel:${listing.contact.phone}" class="text-blue-600 hover:text-blue-800 transition-colors">${listing.contact.phone}</a>` : '<span class="text-gray-600">Not provided</span>'}
+                ${listing.amenities && listing.amenities.length > 0 ? `
+                    <div class="mb-4">
+                        <div class="flex flex-wrap gap-1">
+                            ${listing.amenities.slice(0, 3).map(amenity => `
+                                <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-xs">${getAmenityIcon(amenity)} ${amenity}</span>
+                            `).join('')}
+                            ${listing.amenities.length > 3 ? `<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-xs">+${listing.amenities.length - 3}</span>` : ''}
                         </div>
                     </div>
-                </div>
+                ` : ''}
 
-                <!-- Rating and Reviews -->
-                <div class="mb-4">
-                    <div class="flex items-center space-x-2 mb-2">
-                        <div class="flex">
-                            ${generateStarRating(listing.rating || 4.5)}
-                        </div>
-                        <span class="text-sm text-gray-600">(${listing.reviewCount || 12} reviews)</span>
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${listing.available !== false ? '✅ Available' : '❌ Not Available'}</span>
-                    </div>
-                </div>
-
-                <!-- Quick Features -->
-                <div class="mb-4">
-                    <div class="flex items-center space-x-4 text-sm text-gray-600">
-                        <span class="flex items-center">🛏️ ${listing.bedrooms || 2} bed</span>
-                        <span class="flex items-center">🚿 ${listing.bathrooms || 1} bath</span>
-                        <span class="flex items-center">📐 ${listing.sqft || 850} sqft</span>
-                        ${listing.petFriendly ? '<span class="flex items-center text-green-600">🐕 Pet OK</span>' : ''}
-                    </div>
-                </div>
-
-                <!-- Availability Status -->
-                <div class="mb-4">
-                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${listing.available !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                        ${listing.available !== false ? '✅ Available Now' : '❌ Not Available'}
-                    </span>
-                    ${listing.moveInDate ? `<span class="text-xs text-gray-500 ml-2">Move-in: ${new Date(listing.moveInDate).toLocaleDateString()}</span>` : ''}
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                    <button onclick="viewDetails('${listing._id}')" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg text-sm">
-                        👁️ ${t('details')}
+                <div class="flex gap-2">
+                    <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105">
+                        View Details
                     </button>
-                    <button onclick="startVirtualTour('${listing._id}')" class="bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-indigo-600 hover:to-blue-700 transition-all duration-300 shadow-lg text-sm">
-                        🥽 ${t('virtualTour')}
+                    <button onclick="addToFavorites('${listing._id}')" class="glass-effect hover:bg-gray-100 text-gray-700 px-4 py-3 rounded-xl transition-all duration-300 border border-gray-200" id="fav-${listing._id}">
+                        ${isInFavorites(listing._id) ? '❤️ Saved' : '🤍 Save'}
                     </button>
-                    <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm">
-                        💬 ${t('chat')}
-                    </button>
-                    <button onclick="addToFavorites('${listing._id}')" class="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg text-sm" id="fav-${listing._id}">
-                        ${isInFavorites(listing._id) ? '❤️ ' + t('saved') : '🤍 ' + t('save')}
-                    </button>
-                    <button onclick="scheduleViewing('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 shadow-lg text-sm">
-                        📅 ${t('schedule')}
-                    </button>
-                    <button onclick="openPurchaseModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 shadow-lg text-sm">
-                        💰 ${t('apply')}
-                    </button>
-                    <button onclick="openReviewModal('${listing._id}', '${listing.title}')" class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 shadow-lg text-sm">
-                        ⭐ Review
-                    </button>
-                    ${listing.contact?.email ? `<button onclick="contactSeller('${listing.contact.email}', '${listing.title}')" class="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg text-sm">📧 ${t('contact')}</button>` : ''}
-                    ${canDeleteListing(listing) ? `<button onclick="deleteListing('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-semibold transition-colors shadow-lg text-sm">
-                        🗑️
-                    </button>` : ''}
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
 }
 
+// Helper function to get amenity icons
+function getAmenityIcon(amenity) {
+    const icons = {
+        'WiFi': '📶',
+        'Parking': '🚗',
+        'Pool': '🏊',
+        'Gym': '💪',
+        'Air Conditioning': '❄️',
+        'Laundry': '🧺',
+        'Pet Friendly': '🐕',
+        'Balcony': '🌿',
+        'Furnished': '🛋️',
+        'Dishwasher': '🍽️',
+        'Elevator': '🛗'
+    };
+    return icons[amenity] || '✨';
+}
+
+// Helper function to format location string
+function formatLocation(listing) {
+    let parts = [listing.address, listing.city, listing.country];
+    return parts.filter(Boolean).join(', ');
+}
+
+// Debounce function for search input
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// --- Existing functions modified or kept as is ---
+
 function setupSearch() {
-    const searchBtn = document.getElementById('searchBtn');
-    const clearBtn = document.getElementById('clearBtn');
     const searchTitle = document.getElementById('searchTitle');
     const searchLocation = document.getElementById('searchLocation');
-    const maxPrice = document.getElementById('maxPrice');
+    const countryFilter = document.getElementById('countryFilter');
+    const amenityFilter = document.getElementById('amenityFilter');
+    const sortFilter = document.getElementById('sortFilter');
     const minPrice = document.getElementById('minPrice');
+    const maxPrice = document.getElementById('maxPrice');
+    const propertyTypeFilter = document.getElementById('propertyTypeFilter');
+    const bedroomsFilter = document.getElementById('bedroomsFilter');
+    const bathroomsFilter = document.getElementById('bathroomsFilter');
+    const petFriendlyFilter = document.getElementById('petFriendlyFilter');
+    const cityFilter = document.getElementById('cityFilter');
+    const neighborhoodFilter = document.getElementById('neighborhoodFilter');
+    const kebeleFilter = document.getElementById('kebeleFilter');
 
-    searchBtn.addEventListener('click', performSearch);
-    clearBtn.addEventListener('click', clearFilters);
+
+    const searchBtn = document.getElementById('searchBtn'); // Assuming this is the main search button
+    const clearBtn = document.getElementById('clearBtn');
+
+    if (searchBtn) searchBtn.addEventListener('click', performSearch);
+    if (clearBtn) clearBtn.addEventListener('click', clearFilters);
 
     // Add Enter key listeners for text inputs
-    [searchTitle, searchLocation, maxPrice, minPrice].forEach(input => {
-        input.addEventListener('keypress', function(e) {
+    [searchTitle, searchLocation, minPrice, maxPrice].forEach(input => {
+        if (input) input.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') performSearch();
         });
     });
 
     // Add change listeners for dropdowns to auto-search
-    document.getElementById('countryFilter').addEventListener('change', performSearch);
-    document.getElementById('amenityFilter').addEventListener('change', performSearch);
-    document.getElementById('sortFilter').addEventListener('change', performSearch);
+    [countryFilter, amenityFilter, sortFilter, propertyTypeFilter, bedroomsFilter, bathroomsFilter, cityFilter, neighborhoodFilter, kebeleFilter].forEach(filter => {
+        if (filter) filter.addEventListener('change', performSearch);
+    });
 
-    // Add advanced filters
+    // Add change listener for pet friendly checkbox
+    if (petFriendlyFilter) {
+        petFriendlyFilter.addEventListener('change', performSearch);
+    }
+
+    // Add advanced filters setup
     setupAdvancedFilters();
     setupMapView(); // Ensure map view button is set up
     setupSavedSearches();
@@ -775,8 +799,14 @@ function setupAdvancedFilters() {
     // Pet-friendly filter
     const petFriendlyLabel = document.createElement('label');
     petFriendlyLabel.htmlFor = 'petFriendlyFilter';
-    petFriendlyLabel.className = 'text-white flex items-center';
-    petFriendlyLabel.innerHTML = `<input type="checkbox" id="petFriendlyFilter" class="mr-2"> 🐕 ${t('petFriendly')}`;
+    petFriendlyLabel.className = 'text-gray-700 flex items-center'; // Changed text color for better visibility
+    petFriendlyFilter = document.createElement('input'); // Define petFriendlyFilter here
+    petFriendlyFilter.type = 'checkbox';
+    petFriendlyFilter.id = 'petFriendlyFilter';
+    petFriendlyFilter.className = 'mr-2 h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded';
+    petFriendlyLabel.appendChild(petFriendlyFilter);
+    petFriendlyLabel.innerHTML += ` 🐕 ${t('petFriendly')}`;
+
 
     // Add location filters for Ethiopia
     const cityFilter = document.createElement('select');
@@ -825,11 +855,6 @@ function setupAdvancedFilters() {
         searchContainer.appendChild(cityFilter);
         searchContainer.appendChild(neighborhoodFilter);
         searchContainer.appendChild(kebeleFilter);
-
-        // Add event listeners
-        [propertyTypeFilter, bedroomsFilter, bathroomsFilter, petFriendlyFilter, cityFilter, neighborhoodFilter, kebeleFilter].forEach(filter => {
-            filter.addEventListener('change', performSearch);
-        });
     }
 }
 
@@ -850,11 +875,12 @@ function performSearch() {
         const matchesTitle = !titleQuery || listing.title.toLowerCase().includes(titleQuery);
         const matchesLocation = !locationQuery ||
             listing.address.toLowerCase().includes(locationQuery) ||
-            listing.country.toLowerCase().includes(locationQuery);
-        const matchesCountry = !countryFilter || listing.country.toLowerCase().includes(countryFilter.toLowerCase());
-        const matchesCity = !cityFilter || listing.city.toLowerCase().includes(cityFilter.toLowerCase());
-        const matchesNeighborhood = !neighborhoodFilter || listing.neighborhood.toLowerCase().includes(neighborhoodFilter.toLowerCase());
-        const matchesKebele = !kebeleFilter || listing.kebele.toLowerCase().includes(kebeleFilter.toLowerCase());
+            (listing.city && listing.city.toLowerCase().includes(locationQuery)) ||
+            (listing.neighborhood && listing.neighborhood.toLowerCase().includes(locationQuery));
+        const matchesCountry = !countryFilter || listing.country.toLowerCase() === countryFilter.toLowerCase();
+        const matchesCity = !cityFilter || (listing.city && listing.city.toLowerCase() === cityFilter.toLowerCase());
+        const matchesNeighborhood = !neighborhoodFilter || (listing.neighborhood && listing.neighborhood.toLowerCase() === neighborhoodFilter.toLowerCase());
+        const matchesKebele = !kebeleFilter || (listing.kebele && listing.kebele.toLowerCase() === kebeleFilter.toLowerCase());
         const matchesAmenity = !amenityFilter ||
             listing.amenities.some(amenity => amenity.toLowerCase().includes(amenityFilter));
         const matchesMinPrice = isNaN(minPriceValue) || listing.price >= minPriceValue;
@@ -1509,9 +1535,9 @@ function viewAdminPanel() {
 }
 
 // Function to include translation
-function t(key) {
-    return translations[key] && translations[key][currentLanguage] ? translations[key][currentLanguage] : translations[key]['en'];
-}
+// function t(key) {
+//     return translations[key] && translations[key][currentLanguage] ? translations[key][currentLanguage] : translations[key] && translations[key]['en'] ? translations[key]['en'] : key;
+// }
 
 // Function to change language
 function changeLanguage(lang) {
@@ -1604,7 +1630,8 @@ function setupBottomButtons() {
             Return to Home Page
         </button>
     `;
-    document.body.appendChild(bottomButtonsContainer);
+    // This might conflict with other fixed elements, consider placement carefully
+    // document.body.appendChild(bottomButtonsContainer);
 }
 
 function goToHomePage() {
@@ -1663,11 +1690,11 @@ function addToFavorites(listingId) {
 
     if (favorites.includes(listingId)) {
         favorites = favorites.filter(id => id !== listingId);
-        button.innerHTML = '🤍 Save';
+        if(button) button.innerHTML = '🤍 Save';
         alert('Removed from favorites');
     } else {
         favorites.push(listingId);
-        button.innerHTML = '❤️ Saved';
+        if(button) button.innerHTML = '❤️ Saved';
         alert('Added to favorites');
     }
 
@@ -2278,7 +2305,7 @@ async function handleReviewSubmit(e) {
 
         if (response.status === 201) {
             alert('Review submitted successfully!');
-            // Optionally refresh listings or update the specific listing's rating display
+            // Optionally refresh the page or update the specific listing's rating display
             window.location.reload(); // Simple reload to reflect changes
         }
     } catch (error) {
