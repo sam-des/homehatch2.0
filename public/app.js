@@ -194,6 +194,10 @@ function updateAuthUI() {
                                 <span class="text-green-500 text-lg">📝</span>
                                 <span class="text-gray-700">${t('myListings')}</span>
                             </button>
+                            <button onclick="viewMyBookings()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
+                                <span class="text-blue-500 text-lg">📅</span>
+                                <span class="text-gray-700">My Bookings</span>
+                            </button>
                             <button onclick="showChangePasswordModal()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3">
                                 <span class="text-blue-500 text-lg">🔐</span>
                                 <span class="text-gray-700">${t('changePassword')}</span>
@@ -495,7 +499,11 @@ function renderListings() {
                             <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
                                 💬 Chat
                             </button>
-                        ` : ''}
+                        ` : `
+                            <button onclick="showLoginModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                📅 Book Now
+                            </button>
+                        `}
                         ${canDeleteListing(listing) ? `
                             <button onclick="deleteListing('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors">
                                 🗑️

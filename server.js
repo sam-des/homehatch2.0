@@ -839,20 +839,186 @@ app.post('/api/profile-picture', requireAuth, upload.single('profilePicture'), (
   }
 });
 
-// Booking endpoints
+// Payment and Booking System
+
+// Get available dates for a listing
+app.get('/api/listings/:id/availability', (req, res) => {
+  try {
+    const listingId = parseInt(req.params.id);
+    const listing = listings.find(l => l._id === listingId);
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    // Get all confirmed bookings for this listing
+    const confirmedBookings = bookings.filter(b => 
+      b.listingId === listingId && b.status === 'confirmed'
+    );
+
+    const unavailableDates = [];
+    confirmedBookings.forEach(booking => {
+      const checkIn = new Date(booking.checkIn);
+      const checkOut = new Date(booking.checkOut);
+      
+      for (let d = new Date(checkIn); d < checkOut; d.setDate(d.getDate() + 1)) {
+        unavailableDates.push(d.toISOString().split('T')[0]);
+      }
+    });
+
+    res.json({ 
+      unavailableDates,
+      minStay: listing.minStay || 1,
+      maxStay: listing.maxStay || 30,
+      basePrice: listing.price
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Calculate booking price
+app.post('/api/calculate-price', (req, res) => {
+  try {
+    const { listingId, checkIn, checkOut, guests } = req.body;
+    
+    const listing = listings.find(l => l._id === parseInt(listingId));
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    
+    if (nights <= 0) {
+      return res.status(400).json({ error: 'Invalid date range' });
+    }
+
+    const basePrice = listing.price;
+    const subtotal = basePrice * nights;
+    const serviceFee = Math.round(subtotal * 0.15); // 15% service fee
+    const cleaningFee = 50; // Fixed cleaning fee
+    const taxes = Math.round((subtotal + serviceFee) * 0.08); // 8% taxes
+    const total = subtotal + serviceFee + cleaningFee + taxes;
+
+    res.json({
+      nights,
+      basePrice,
+      subtotal,
+      serviceFee,
+      cleaningFee,
+      taxes,
+      total,
+      breakdown: {
+        basePrice: `$${basePrice} x ${nights} nights`,
+        serviceFee: 'Service fee (15%)',
+        cleaningFee: 'Cleaning fee',
+        taxes: 'Taxes (8%)'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create payment intent (simulated Stripe)
+app.post('/api/create-payment-intent', requireAuth, (req, res) => {
+  try {
+    const { amount, currency = 'usd' } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    // Simulate Stripe payment intent creation
+    const paymentIntent = {
+      id: `pi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      amount: Math.round(amount * 100), // Convert to cents
+      currency,
+      status: 'requires_payment_method',
+      client_secret: `pi_${Date.now()}_secret_${Math.random().toString(36).substr(2, 9)}`,
+      created: Math.floor(Date.now() / 1000)
+    };
+
+    res.json(paymentIntent);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Confirm payment (simulated)
+app.post('/api/confirm-payment', requireAuth, (req, res) => {
+  try {
+    const { paymentIntentId, paymentMethod } = req.body;
+
+    // Simulate payment processing
+    const success = Math.random() > 0.1; // 90% success rate
+
+    if (!success) {
+      return res.status(400).json({ 
+        error: 'Payment failed',
+        code: 'card_declined'
+      });
+    }
+
+    const confirmedPayment = {
+      id: paymentIntentId,
+      status: 'succeeded',
+      amount_received: req.body.amount,
+      charges: {
+        data: [{
+          id: `ch_${Date.now()}`,
+          payment_method_details: {
+            card: {
+              brand: paymentMethod.card?.brand || 'visa',
+              last4: paymentMethod.card?.last4 || '4242'
+            }
+          }
+        }]
+      }
+    };
+
+    res.json(confirmedPayment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create booking with payment
 app.post('/api/bookings', requireAuth, (req, res) => {
   try {
-    const { listingId, checkIn, checkOut, guests, totalPrice } = req.body;
+    const { 
+      listingId, 
+      checkIn, 
+      checkOut, 
+      guests, 
+      totalPrice,
+      paymentIntentId,
+      guestInfo,
+      specialRequests 
+    } = req.body;
 
     const listing = listings.find(l => l._id === parseInt(listingId));
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    // Check availability
+    // Validate dates
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    if (checkInDate < today) {
+      return res.status(400).json({ error: 'Check-in date cannot be in the past' });
+    }
+
+    if (checkOutDate <= checkInDate) {
+      return res.status(400).json({ error: 'Check-out date must be after check-in date' });
+    }
+
+    // Check availability
     const conflictingBooking = bookings.find(booking => {
       if (booking.listingId !== parseInt(listingId) || booking.status !== 'confirmed') return false;
 
@@ -866,17 +1032,54 @@ app.post('/api/bookings', requireAuth, (req, res) => {
       return res.status(400).json({ error: 'Selected dates are not available' });
     }
 
+    // Validate guest count
+    const maxGuests = listing.maxGuests || 4;
+    if (guests > maxGuests) {
+      return res.status(400).json({ error: `Maximum ${maxGuests} guests allowed` });
+    }
+
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    const bookingNumber = `BK${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+
     const newBooking = {
       _id: nextBookingId++,
+      bookingNumber,
       listingId: parseInt(listingId),
       userId: req.user._id,
-      listingTitle: listing.title,
+      listing: {
+        id: listing._id,
+        title: listing.title,
+        address: listing.address,
+        images: listing.images,
+        hostName: listing.contact?.name || 'Host'
+      },
+      guest: {
+        id: req.user._id,
+        name: guestInfo?.name || req.user.username,
+        email: guestInfo?.email || req.user.email,
+        phone: guestInfo?.phone || ''
+      },
       checkIn,
       checkOut,
-      guests: guests || 1,
-      totalPrice,
+      nights,
+      guests: parseInt(guests),
+      pricing: {
+        basePrice: listing.price,
+        subtotal: listing.price * nights,
+        serviceFee: Math.round(listing.price * nights * 0.15),
+        cleaningFee: 50,
+        taxes: Math.round((listing.price * nights + Math.round(listing.price * nights * 0.15)) * 0.08),
+        total: totalPrice
+      },
+      payment: {
+        paymentIntentId,
+        status: 'completed',
+        method: 'card'
+      },
+      specialRequests: specialRequests || '',
       status: 'confirmed',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      confirmationSent: true
     };
 
     bookings.push(newBooking);
@@ -887,7 +1090,6 @@ app.post('/api/bookings', requireAuth, (req, res) => {
       users,
       chats,
       bookings,
-      reviews,
       sessions: Array.from(sessions.entries()),
       nextId,
       nextPurchaseId,
@@ -896,7 +1098,194 @@ app.post('/api/bookings', requireAuth, (req, res) => {
       nextBookingId
     });
 
-    res.json({ success: true, booking: newBooking });
+    res.json({ 
+      success: true, 
+      booking: newBooking,
+      message: 'Booking confirmed successfully!'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's bookings
+app.get('/api/my-bookings', requireAuth, (req, res) => {
+  try {
+    const userBookings = bookings.filter(b => b.userId === req.user._id)
+                                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(userBookings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get booking details
+app.get('/api/bookings/:id', requireAuth, (req, res) => {
+  try {
+    const bookingId = parseInt(req.params.id);
+    const booking = bookings.find(b => b._id === bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Check if user owns the booking or is the property owner or admin
+    const listing = listings.find(l => l._id === booking.listingId);
+    if (booking.userId !== req.user._id && 
+        listing?.createdBy !== req.user._id && 
+        req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cancel booking
+app.post('/api/bookings/:id/cancel', requireAuth, (req, res) => {
+  try {
+    const bookingId = parseInt(req.params.id);
+    const { reason } = req.body;
+    
+    const bookingIndex = bookings.findIndex(b => b._id === bookingId);
+    if (bookingIndex === -1) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = bookings[bookingIndex];
+
+    // Check if user can cancel
+    if (booking.userId !== req.user._id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'You can only cancel your own bookings' });
+    }
+
+    // Check cancellation policy
+    const checkInDate = new Date(booking.checkIn);
+    const now = new Date();
+    const hoursUntilCheckIn = (checkInDate - now) / (1000 * 60 * 60);
+
+    let refundAmount = 0;
+    let cancellationFee = 0;
+
+    if (hoursUntilCheckIn >= 48) {
+      refundAmount = booking.pricing.total * 0.9; // 90% refund
+      cancellationFee = booking.pricing.total * 0.1;
+    } else if (hoursUntilCheckIn >= 24) {
+      refundAmount = booking.pricing.total * 0.5; // 50% refund
+      cancellationFee = booking.pricing.total * 0.5;
+    } else {
+      refundAmount = 0; // No refund
+      cancellationFee = booking.pricing.total;
+    }
+
+    // Update booking
+    bookings[bookingIndex] = {
+      ...booking,
+      status: 'cancelled',
+      cancellation: {
+        cancelledAt: new Date().toISOString(),
+        reason: reason || 'No reason provided',
+        refundAmount,
+        cancellationFee,
+        processedBy: req.user._id
+      }
+    };
+
+    saveData({
+      listings,
+      purchases,
+      users,
+      chats,
+      bookings,
+      sessions: Array.from(sessions.entries()),
+      nextId,
+      nextPurchaseId,
+      nextUserId,
+      nextChatId,
+      nextBookingId
+    });
+
+    res.json({ 
+      success: true, 
+      booking: bookings[bookingIndex],
+      refundAmount,
+      message: 'Booking cancelled successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Host's bookings management
+app.get('/api/host/bookings', requireAuth, (req, res) => {
+  try {
+    // Get all listings owned by the user
+    const hostListings = listings.filter(l => l.createdBy === req.user._id);
+    const hostListingIds = hostListings.map(l => l._id);
+
+    // Get all bookings for host's properties
+    const hostBookings = bookings.filter(b => hostListingIds.includes(b.listingId))
+                               .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(hostBookings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Payment methods management
+app.get('/api/payment-methods', requireAuth, (req, res) => {
+  try {
+    // Simulate saved payment methods
+    const paymentMethods = [
+      {
+        id: 'pm_1',
+        type: 'card',
+        card: {
+          brand: 'visa',
+          last4: '4242',
+          exp_month: 12,
+          exp_year: 2025
+        },
+        billing_details: {
+          name: req.user.username
+        }
+      }
+    ];
+
+    res.json({ data: paymentMethods });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add payment method
+app.post('/api/payment-methods', requireAuth, (req, res) => {
+  try {
+    const { cardNumber, expMonth, expYear, cvc, name } = req.body;
+
+    // Validate card
+    if (!cardNumber || cardNumber.length < 13) {
+      return res.status(400).json({ error: 'Invalid card number' });
+    }
+
+    const paymentMethod = {
+      id: `pm_${Date.now()}`,
+      type: 'card',
+      card: {
+        brand: cardNumber.startsWith('4') ? 'visa' : 'mastercard',
+        last4: cardNumber.slice(-4),
+        exp_month: parseInt(expMonth),
+        exp_year: parseInt(expYear)
+      },
+      billing_details: {
+        name: name || req.user.username
+      }
+    };
+
+    res.json(paymentMethod);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

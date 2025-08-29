@@ -928,14 +928,14 @@ function performSearch() {
 function performSearch() {
     const searchInput = document.getElementById('searchInput');
     const sortSelect = document.getElementById('sortSelect');
-    
+
     let searchQuery = '';
     let sortBy = 'newest';
-    
+
     if (searchInput) {
         searchQuery = searchInput.value.toLowerCase();
     }
-    
+
     if (sortSelect) {
         sortBy = sortSelect.value;
     }
@@ -943,7 +943,7 @@ function performSearch() {
     // Filter listings based on search query
     filteredListings = allListings.filter(listing => {
         if (!searchQuery) return true;
-        
+
         return listing.title.toLowerCase().includes(searchQuery) ||
                listing.description.toLowerCase().includes(searchQuery) ||
                listing.address.toLowerCase().includes(searchQuery) ||
@@ -985,7 +985,7 @@ function showAdvancedFilters() {
 function clearFilters() {
     const searchInput = document.getElementById('searchInput');
     const sortSelect = document.getElementById('sortSelect');
-    
+
     if (searchInput) searchInput.value = '';
     if (sortSelect) sortSelect.value = 'newest';
 
@@ -1859,7 +1859,7 @@ function toggleMapView() {
                     </div>
                     <button onclick="this.closest('.fixed').remove()" class="text-red-400 hover:text-red-300 text-3xl font-bold bg-black bg-opacity-30 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-50 transition-all duration-300">×</button>
                 </div>
-                
+
                 <!-- Map Controls Header -->
                 <div class="flex items-center justify-between mt-4">
                     <div class="flex space-x-2">
@@ -1879,7 +1879,7 @@ function toggleMapView() {
                             🏄 Oceania
                         </button>
                     </div>
-                    
+
                     <div class="flex items-center space-x-3">
                         <div class="flex items-center space-x-2 bg-black bg-opacity-30 px-3 py-2 rounded-lg">
                             <span class="text-white text-sm">View:</span>
@@ -1895,7 +1895,7 @@ function toggleMapView() {
                 <!-- Enhanced Map Area -->
                 <div class="flex-1 relative overflow-hidden" id="worldMapContainer">
                     <div id="mapContainer" class="w-full h-full relative bg-gradient-to-br from-blue-900 via-blue-800 to-green-900">
-                        
+
                         <!-- Animated World Map Background -->
                         <div class="absolute inset-0" id="worldMapBackground">
                             ${generateWorldMapSVG()}
@@ -2041,19 +2041,19 @@ function generateWorldMapSVG() {
             <!-- Continent shapes -->
             <!-- Africa -->
             <path d="M 450 150 Q 480 140 510 160 L 520 200 Q 530 250 520 300 L 480 350 Q 450 360 420 340 L 410 300 Q 400 250 420 200 Z" fill="#4ade80" opacity="0.3" class="continent-shape" data-continent="africa"/>
-            
+
             <!-- Europe -->
             <path d="M 400 100 Q 450 90 500 110 L 510 130 Q 480 140 450 135 L 420 125 Q 400 115 400 100 Z" fill="#60a5fa" opacity="0.3" class="continent-shape" data-continent="europe"/>
-            
+
             <!-- Asia -->
             <path d="M 500 110 Q 600 100 700 130 L 750 180 Q 780 220 760 260 L 720 280 Q 650 290 580 270 L 520 240 Q 500 200 510 160 Z" fill="#f472b6" opacity="0.3" class="continent-shape" data-continent="asia"/>
-            
+
             <!-- North America -->
             <path d="M 150 120 Q 200 100 280 130 L 320 180 Q 300 220 260 240 L 200 250 Q 150 240 120 200 L 130 160 Q 140 140 150 120 Z" fill="#fbbf24" opacity="0.3" class="continent-shape" data-continent="americas"/>
-            
+
             <!-- South America -->
             <path d="M 200 250 Q 240 240 270 270 L 280 320 Q 270 380 240 420 L 200 440 Q 160 430 140 390 L 150 340 Q 170 290 200 250 Z" fill="#34d399" opacity="0.3" class="continent-shape" data-continent="americas"/>
-            
+
             <!-- Australia/Oceania -->
             <path d="M 650 350 Q 700 340 750 360 L 780 380 Q 770 400 740 410 L 690 415 Q 650 405 630 380 L 640 365 Q 645 355 650 350 Z" fill="#a78bfa" opacity="0.3" class="continent-shape" data-continent="oceania"/>
         </svg>
@@ -2086,7 +2086,7 @@ function generateWorldwideMarkers() {
 
     let markersHTML = '';
     const listingsByCountry = {};
-    
+
     // Group listings by country
     filteredListings.forEach(listing => {
         const country = listing.country || 'Unknown';
@@ -2101,7 +2101,7 @@ function generateWorldwideMarkers() {
         const coords = countryCoordinates[country] || { x: Math.random() * 80 + 10, y: Math.random() * 60 + 20 };
         const listings = listingsByCountry[country];
         const avgPrice = Math.round(listings.reduce((sum, l) => sum + l.price, 0) / listings.length);
-        
+
         markersHTML += `
             <div class="absolute marker-container" style="left: ${coords.x}%; top: ${coords.y}%;" data-country="${country}">
                 <div class="relative group">
@@ -2109,7 +2109,7 @@ function generateWorldwideMarkers() {
                     <button onclick="showCountryProperties('${country}')" class="marker-btn relative bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-2xl transform hover:scale-125 transition-all duration-300 border-2 border-white z-10">
                         ${listings.length}
                     </button>
-                    
+
                     <div class="marker-tooltip absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 min-w-max z-20 pointer-events-none border border-gray-600">
                         <div class="text-sm font-bold mb-1">🏳️ ${country}</div>
                         <div class="text-xs text-gray-300">${listings.length} ${listings.length === 1 ? 'Property' : 'Properties'}</div>
@@ -2140,14 +2140,14 @@ function generateEnhancedPropertyCards() {
                     ` : ''}
                 </div>
             ` : ''}
-            
+
             <h4 class="font-bold text-sm text-white mb-2 line-clamp-1">${listing.title}</h4>
-            
+
             <div class="flex items-center mb-2">
                 <span class="text-red-400 mr-2 text-sm">📍</span>
                 <p class="text-xs text-gray-300 leading-tight line-clamp-1">${listing.address}</p>
             </div>
-            
+
             <div class="flex items-center mb-3">
                 <span class="text-blue-400 mr-2 text-sm">🌍</span>
                 <p class="text-xs text-gray-400">${listing.country}</p>
@@ -2161,7 +2161,7 @@ function generateEnhancedPropertyCards() {
                     ${listing.amenities.length > 2 ? `<span class="bg-gray-600 text-white px-2 py-1 rounded-full text-xs">+${listing.amenities.length - 2}</span>` : ''}
                 </div>
             ` : ''}
-            
+
             <div class="flex justify-between items-center">
                 <div class="text-lg font-bold text-green-400">${formatPrice(listing.price)}</div>
                 <div class="flex space-x-1">
@@ -2192,7 +2192,7 @@ function getAveragePrice() {
 function focusRegion(region) {
     const mapContainer = document.getElementById('mapContainer');
     const continentShapes = document.querySelectorAll('.continent-shape');
-    
+
     // Reset all continent opacities
     continentShapes.forEach(shape => {
         shape.style.opacity = region === 'world' ? '0.3' : '0.1';
@@ -2215,10 +2215,10 @@ function focusRegion(region) {
 
     if (region !== 'world') {
         const regionCountryList = regionCountries[region] || [];
-        const regionListings = allListings.filter(listing => 
+        const regionListings = allListings.filter(listing =>
             regionCountryList.includes(listing.country)
         );
-        
+
         // Update markers visibility
         const markers = document.querySelectorAll('.marker-container');
         markers.forEach(marker => {
@@ -2245,9 +2245,9 @@ function focusRegion(region) {
 function toggleSatelliteView() {
     const background = document.getElementById('worldMapBackground');
     const toggleBtn = document.getElementById('satelliteToggle');
-    
+
     window.satelliteView = !window.satelliteView;
-    
+
     if (window.satelliteView) {
         background.style.background = 'linear-gradient(45deg, #1a1a2e, #16213e, #0f3460)';
         background.style.backgroundImage = 'radial-gradient(circle at 25% 25%, #ffffff08 2px, transparent 2px), radial-gradient(circle at 75% 75%, #ffffff05 1px, transparent 1px)';
@@ -2263,7 +2263,7 @@ function toggleSatelliteView() {
 
 function showCountryProperties(country) {
     const countryListings = filteredListings.filter(listing => listing.country === country);
-    
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
@@ -2309,28 +2309,28 @@ function applyMapFilters() {
     const countryFilter = document.getElementById('mapCountryFilter')?.value;
     const typeFilter = document.getElementById('mapTypeFilter')?.value;
     const amenityFilter = document.getElementById('mapAmenityFilter')?.value;
-    
+
     let filtered = allListings;
-    
+
     if (priceFilter) {
         const [min, max] = priceFilter.includes('+') ? [parseInt(priceFilter.replace('+', '')), Infinity] : priceFilter.split('-').map(Number);
         filtered = filtered.filter(listing => listing.price >= min && (max === undefined || listing.price <= max));
     }
-    
+
     if (countryFilter) {
         filtered = filtered.filter(listing => listing.country === countryFilter);
     }
-    
+
     if (typeFilter) {
         filtered = filtered.filter(listing => listing.propertyType === typeFilter);
     }
-    
+
     if (amenityFilter) {
         filtered = filtered.filter(listing => listing.amenities && listing.amenities.includes(amenityFilter));
     }
-    
+
     filteredListings = filtered;
-    
+
     // Update markers and list
     document.getElementById('propertyMarkers').innerHTML = generateWorldwideMarkers();
     document.getElementById('mapPropertiesList').innerHTML = generateEnhancedPropertyCards();
@@ -2339,14 +2339,14 @@ function applyMapFilters() {
 function toggleFullscreen() {
     const mapContainer = document.getElementById('worldMapContainer');
     if (!document.fullscreenElement) {
-        mapContainer.requestFullscreen?.() || 
-        mapContainer.mozRequestFullScreen?.() || 
-        mapContainer.webkitRequestFullscreen?.() || 
+        mapContainer.requestFullscreen?.() ||
+        mapContainer.mozRequestFullScreen?.() ||
+        mapContainer.webkitRequestFullscreen?.() ||
         mapContainer.msRequestFullscreen?.();
     } else {
-        document.exitFullscreen?.() || 
-        document.mozCancelFullScreen?.() || 
-        document.webkitExitFullscreen?.() || 
+        document.exitFullscreen?.() ||
+        document.mozCancelFullScreen?.() ||
+        document.webkitExitFullscreen?.() ||
         document.msExitFullscreen?.();
     }
 }
@@ -2971,4 +2971,711 @@ function showLoginModal() {
 
 function showRegisterModal() {
     window.location.href = '/login.html';
+}
+
+// Booking and Payment Functions
+let currentBookingData = null;
+let paymentIntent = null;
+
+function openBookingModal(listingId, title, price) {
+    if (!currentUser) {
+        alert('Please login to make a booking');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-2xl w-full my-8 max-h-screen overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">📅 Book Your Stay</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Property Info -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">${title}</h3>
+                    <p class="text-blue-600 font-semibold">Starting at ${formatPrice(price)} per night</p>
+                </div>
+
+                <!-- Booking Form -->
+                <form id="bookingForm" class="space-y-6">
+                    <!-- Dates and Guests -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
+                            <input type="date" id="checkInDate" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" min="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
+                            <input type="date" id="checkOutDate" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Number of Guests</label>
+                        <select id="guestCount" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="1">1 Guest</option>
+                            <option value="2">2 Guests</option>
+                            <option value="3">3 Guests</option>
+                            <option value="4">4 Guests</option>
+                            <option value="5">5 Guests</option>
+                            <option value="6">6+ Guests</option>
+                        </select>
+                    </div>
+
+                    <!-- Guest Information -->
+                    <div class="border-t pt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Guest Information</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                <input type="text" id="guestName" value="${currentUser.username}" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" id="guestEmail" value="${currentUser.email}" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                            <input type="tel" id="guestPhone" placeholder="+1 (555) 123-4567" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Special Requests -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Special Requests (Optional)</label>
+                        <textarea id="specialRequests" placeholder="Any special requests or messages for the host..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                    </div>
+
+                    <!-- Price Breakdown -->
+                    <div id="priceBreakdown" class="hidden bg-gray-50 p-4 rounded-lg border">
+                        <h4 class="font-semibold text-gray-800 mb-3">Price Breakdown</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span id="basePriceText">$0 x 0 nights</span>
+                                <span id="basePriceAmount">$0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Service fee</span>
+                                <span id="serviceFeeAmount">$0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Cleaning fee</span>
+                                <span id="cleaningFeeAmount">$50</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Taxes</span>
+                                <span id="taxesAmount">$0</span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="flex justify-between font-bold text-lg">
+                                <span>Total</span>
+                                <span id="totalAmount">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="calculatePrice()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors" id="calculateBtn">
+                            Calculate Price
+                        </button>
+                        <button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold transition-colors hidden" id="proceedBtn">
+                            Proceed to Payment
+                        </button>
+                        <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Setup booking form
+    setupAdvancedBookingForm(listingId, price);
+}
+
+function setupAdvancedBookingForm(listingId, nightlyPrice) {
+    currentBookingData = { listingId, nightlyPrice };
+
+    const checkInInput = document.getElementById('checkInDate');
+    const checkOutInput = document.getElementById('checkOutDate');
+    const bookingForm = document.getElementById('bookingForm');
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    checkInInput.min = today;
+
+    checkInInput.addEventListener('change', () => {
+        if (checkInInput.value) {
+            const nextDay = new Date(checkInInput.value);
+            nextDay.setDate(nextDay.getDate() + 1);
+            checkOutInput.min = nextDay.toISOString().split('T')[0];
+
+            // Clear checkout if it's before the new minimum
+            if (checkOutInput.value && checkOutInput.value <= checkInInput.value) {
+                checkOutInput.value = '';
+            }
+        }
+    });
+
+    bookingForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        proceedToPayment();
+    });
+}
+
+async function calculatePrice() {
+    const checkIn = document.getElementById('checkInDate').value;
+    const checkOut = document.getElementById('checkOutDate').value;
+    const guests = document.getElementById('guestCount').value;
+
+    if (!checkIn || !checkOut) {
+        alert('Please select both check-in and check-out dates');
+        return;
+    }
+
+    if (new Date(checkOut) <= new Date(checkIn)) {
+        alert('Check-out date must be after check-in date');
+        return;
+    }
+
+    try {
+        const response = await axios.post('/api/calculate-price', {
+            listingId: currentBookingData.listingId,
+            checkIn,
+            checkOut,
+            guests: parseInt(guests)
+        });
+
+        const pricing = response.data;
+
+        // Update price breakdown
+        document.getElementById('basePriceText').textContent = pricing.breakdown.basePrice;
+        document.getElementById('basePriceAmount').textContent = `$${pricing.subtotal}`;
+        document.getElementById('serviceFeeAmount').textContent = `$${pricing.serviceFee}`;
+        document.getElementById('cleaningFeeAmount').textContent = `$${pricing.cleaningFee}`;
+        document.getElementById('taxesAmount').textContent = `$${pricing.taxes}`;
+        document.getElementById('totalAmount').textContent = `$${pricing.total}`;
+
+        // Show breakdown and enable proceed button
+        document.getElementById('priceBreakdown').classList.remove('hidden');
+        document.getElementById('calculateBtn').classList.add('hidden');
+        document.getElementById('proceedBtn').classList.remove('hidden');
+
+        // Store pricing data
+        currentBookingData.pricing = pricing;
+
+    } catch (error) {
+        alert('Error calculating price: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+async function proceedToPayment() {
+    if (!currentBookingData.pricing) {
+        alert('Please calculate price first');
+        return;
+    }
+
+    const guestInfo = {
+        name: document.getElementById('guestName').value,
+        email: document.getElementById('guestEmail').value,
+        phone: document.getElementById('guestPhone').value
+    };
+
+    if (!guestInfo.name || !guestInfo.email) {
+        alert('Please fill in guest name and email');
+        return;
+    }
+
+    // Close booking modal and open payment modal
+    document.querySelector('.fixed').remove();
+    openPaymentModal();
+}
+
+function openPaymentModal() {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full my-8 max-h-screen overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">💳 Complete Payment</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Booking Summary -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold text-gray-800 mb-2">Booking Summary</h3>
+                    <div class="text-sm space-y-1">
+                        <p><strong>Check-in:</strong> ${new Date(document.getElementById('checkInDate').value).toLocaleDateString()}</p>
+                        <p><strong>Check-out:</strong> ${new Date(document.getElementById('checkOutDate').value).toLocaleDateString()}</p>
+                        <p><strong>Guests:</strong> ${document.getElementById('guestCount').value}</p>
+                        <p><strong>Nights:</strong> ${currentBookingData.pricing.nights}</p>
+                        <p class="text-lg font-bold text-green-600 pt-2">Total: $${currentBookingData.pricing.total}</p>
+                    </div>
+                </div>
+
+                <!-- Payment Form -->
+                <form id="paymentForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                            <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">CVC</label>
+                            <input type="text" id="cvcCode" placeholder="123" maxlength="4" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cardholder Name</label>
+                        <input type="text" id="cardholderName" placeholder="John Doe" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <span class="text-yellow-600 mr-2">🔒</span>
+                            <p class="text-sm text-yellow-800">Your payment information is encrypted and secure</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" id="termsAgreement" required class="mr-2">
+                        <label for="termsAgreement" class="text-sm text-gray-600">
+                            I agree to the <a href="#" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" class="text-blue-600 hover:underline">Cancellation Policy</a>
+                        </label>
+                    </div>
+
+                    <div class="flex space-x-3 pt-4">
+                        <button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-bold transition-colors" id="payButton">
+                            Pay $${currentBookingData.pricing.total}
+                        </button>
+                        <button type="button" onclick="this.closest('.fixed').remove(); openBookingModal(${currentBookingData.listingId}, '${document.querySelector('h3').textContent}', ${currentBookingData.nightlyPrice})" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors">
+                            Back
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    setupPaymentForm();
+}
+
+function setupPaymentForm() {
+    const cardNumberInput = document.getElementById('cardNumber');
+    const expiryInput = document.getElementById('expiryDate');
+    const cvcInput = document.getElementById('cvcCode');
+    const paymentForm = document.getElementById('paymentForm');
+
+    // Format card number input
+    cardNumberInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        let formattedInputValue = value.match(/.{1,4}/g)?.join(' ') || value;
+        e.target.value = formattedInputValue;
+    });
+
+    // Format expiry date input
+    expiryInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 2) {
+            value = value.substring(0,2) + '/' + value.substring(2,4);
+        }
+        e.target.value = value;
+    });
+
+    // CVC input restriction
+    cvcInput.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    });
+
+    paymentForm.addEventListener('submit', processPayment);
+}
+
+async function processPayment(e) {
+    e.preventDefault();
+
+    const payButton = document.getElementById('payButton');
+    const originalText = payButton.textContent;
+    payButton.textContent = 'Processing...';
+    payButton.disabled = true;
+
+    try {
+        // Create payment intent
+        const paymentIntentResponse = await axios.post('/api/create-payment-intent', {
+            amount: currentBookingData.pricing.total,
+            currency: 'usd'
+        });
+
+        paymentIntent = paymentIntentResponse.data;
+
+        // Simulate payment processing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Confirm payment
+        const confirmResponse = await axios.post('/api/confirm-payment', {
+            paymentIntentId: paymentIntent.id,
+            amount: currentBookingData.pricing.total,
+            paymentMethod: {
+                card: {
+                    brand: 'visa',
+                    last4: document.getElementById('cardNumber').value.slice(-4)
+                }
+            }
+        });
+
+        if (confirmResponse.data.status === 'succeeded') {
+            // Create booking
+            await createBooking(paymentIntent.id);
+        } else {
+            throw new Error('Payment failed');
+        }
+
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Payment failed: ' + (error.response?.data?.error || 'Please check your card details and try again'));
+        payButton.textContent = originalText;
+        payButton.disabled = false;
+    }
+}
+
+async function createBooking(paymentIntentId) {
+    try {
+        const bookingData = {
+            listingId: currentBookingData.listingId,
+            checkIn: document.getElementById('checkInDate').value,
+            checkOut: document.getElementById('checkOutDate').value,
+            guests: parseInt(document.getElementById('guestCount').value),
+            totalPrice: currentBookingData.pricing.total,
+            paymentIntentId,
+            guestInfo: {
+                name: document.getElementById('guestName').value,
+                email: document.getElementById('guestEmail').value,
+                phone: document.getElementById('guestPhone').value
+            },
+            specialRequests: document.getElementById('specialRequests').value
+        };
+
+        const response = await axios.post('/api/bookings', bookingData);
+
+        if (response.data.success) {
+            // Close payment modal and show success
+            document.querySelector('.fixed').remove();
+            showBookingConfirmation(response.data.booking);
+        }
+
+    } catch (error) {
+        console.error('Booking error:', error);
+        alert('Booking failed: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+function showBookingConfirmation(booking) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="p-6 text-center">
+                <div class="text-6xl mb-4">🎉</div>
+                <h2 class="text-2xl font-bold text-green-600 mb-4">Booking Confirmed!</h2>
+
+                <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                    <h3 class="font-semibold text-gray-800 mb-2">Booking Details</h3>
+                    <div class="text-sm space-y-1">
+                        <p><strong>Booking #:</strong> ${booking.bookingNumber}</p>
+                        <p><strong>Property:</strong> ${booking.listing.title}</p>
+                        <p><strong>Check-in:</strong> ${new Date(booking.checkIn).toLocaleDateString()}</p>
+                        <p><strong>Check-out:</strong> ${new Date(booking.checkOut).toLocaleDateString()}</p>
+                        <p><strong>Guests:</strong> ${booking.guests}</p>
+                        <p><strong>Total Paid:</strong> $${booking.pricing.total}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="viewMyBookings(); this.closest('.fixed').remove()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                        View My Bookings
+                    </button>
+                    <button onclick="this.closest('.fixed').remove()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors">
+                        Continue Browsing
+                    </button>
+                </div>
+
+                <p class="text-xs text-gray-500 mt-4">
+                    A confirmation email has been sent to ${booking.guest.email}
+                </p>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+async function viewMyBookings() {
+    if (!currentUser) {
+        alert('Please login to view your bookings');
+        return;
+    }
+
+    try {
+        const response = await axios.get('/api/my-bookings');
+        const bookings = response.data;
+
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl max-w-4xl w-full my-8 max-h-screen overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-800">📅 My Bookings</h2>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    ${bookings.length === 0 ? `
+                        <div class="text-center text-gray-500 py-8">
+                            <div class="text-4xl mb-4">📅</div>
+                            <p>No bookings yet</p>
+                            <button onclick="this.closest('.fixed').remove()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+                                Start Browsing Properties
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="space-y-4">
+                            ${bookings.map(booking => `
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <h3 class="font-semibold text-lg">${booking.listing.title}</h3>
+                                            <p class="text-gray-600 text-sm">${booking.listing.address}</p>
+                                            <p class="text-xs text-gray-500">Booking #${booking.bookingNumber}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                                                booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                'bg-yellow-100 text-yellow-800'
+                                            }">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                        <div>
+                                            <p class="text-gray-500">Check-in</p>
+                                            <p class="font-semibold">${new Date(booking.checkIn).toLocaleDateString()}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Check-out</p>
+                                            <p class="font-semibold">${new Date(booking.checkOut).toLocaleDateString()}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Guests</p>
+                                            <p class="font-semibold">${booking.guests}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Total</p>
+                                            <p class="font-semibold text-green-600">$${booking.pricing.total}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex space-x-2 mt-4">
+                                        <button onclick="viewBookingDetails(${booking._id})" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                            View Details
+                                        </button>
+                                        ${booking.status === 'confirmed' && new Date(booking.checkIn) > new Date() ? `
+                                            <button onclick="cancelBooking(${booking._id})" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                                Cancel
+                                            </button>
+                                        ` : ''}
+                                        <button onclick="openChatModal('${booking.listingId}', '${booking.listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                            💬 Contact Host
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error loading bookings:', error);
+        alert('Error loading bookings: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+async function viewBookingDetails(bookingId) {
+    try {
+        const response = await axios.get(`/api/bookings/${bookingId}`);
+        const booking = response.data;
+
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl max-w-2xl w-full my-8 max-h-screen overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-800">📋 Booking Details</h2>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-6">
+                    <!-- Property Info -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg mb-2">${booking.listing.title}</h3>
+                        <p class="text-gray-600">${booking.listing.address}</p>
+                        <p class="text-sm text-gray-500 mt-1">Host: ${booking.listing.hostName}</p>
+                    </div>
+
+                    <!-- Booking Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-3">Booking Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <p><strong>Booking #:</strong> ${booking.bookingNumber}</p>
+                                <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full text-xs ${
+                                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                    booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                    'bg-yellow-100 text-yellow-800'
+                                }">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></p>
+                                <p><strong>Check-in:</strong> ${new Date(booking.checkIn).toLocaleDateString()}</p>
+                                <p><strong>Check-out:</strong> ${new Date(booking.checkOut).toLocaleDateString()}</p>
+                                <p><strong>Nights:</strong> ${booking.nights}</p>
+                                <p><strong>Guests:</strong> ${booking.guests}</p>
+                                <p><strong>Booked:</strong> ${new Date(booking.createdAt).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-3">Guest Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <p><strong>Name:</strong> ${booking.guest.name}</p>
+                                <p><strong>Email:</strong> ${booking.guest.email}</p>
+                                <p><strong>Phone:</strong> ${booking.guest.phone || 'Not provided'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Breakdown -->
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Price Breakdown</h4>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>$${booking.pricing.basePrice} x ${booking.nights} nights</span>
+                                    <span>$${booking.pricing.subtotal}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Service fee</span>
+                                    <span>$${booking.pricing.serviceFee}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Cleaning fee</span>
+                                    <span>$${booking.pricing.cleaningFee}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Taxes</span>
+                                    <span>$${booking.pricing.taxes}</span>
+                                </div>
+                                <hr class="my-2">
+                                <div class="flex justify-between font-bold text-lg">
+                                    <span>Total</span>
+                                    <span>$${booking.pricing.total}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${booking.specialRequests ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-3">Special Requests</h4>
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <p class="text-sm">${booking.specialRequests}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${booking.cancellation ? `
+                        <div>
+                            <h4 class="font-semibold text-red-800 mb-3">Cancellation Details</h4>
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="text-sm space-y-2">
+                                    <p><strong>Cancelled:</strong> ${new Date(booking.cancellation.cancelledAt).toLocaleDateString()}</p>
+                                    <p><strong>Reason:</strong> ${booking.cancellation.reason}</p>
+                                    <p><strong>Refund Amount:</strong> $${booking.cancellation.refundAmount}</p>
+                                    <p><strong>Cancellation Fee:</strong> $${booking.cancellation.cancellationFee}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Actions -->
+                    <div class="flex space-x-3">
+                        ${booking.status === 'confirmed' && new Date(booking.checkIn) > new Date() ? `
+                            <button onclick="cancelBooking(${booking._id})" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                                Cancel Booking
+                            </button>
+                        ` : ''}
+                        <button onclick="openChatModal('${booking.listingId}', '${booking.listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                            💬 Contact Host
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error loading booking details:', error);
+        alert('Error loading booking details: ' + (error.response?.data?.error || 'Unknown error'));
+    }
+}
+
+async function cancelBooking(bookingId) {
+    if (!confirm('Are you sure you want to cancel this booking? Cancellation fees may apply based on our policy.')) {
+        return;
+    }
+
+    const reason = prompt('Please provide a reason for cancellation (optional):') || 'No reason provided';
+
+    try {
+        const response = await axios.post(`/api/bookings/${bookingId}/cancel`, { reason });
+
+        if (response.data.success) {
+            alert(`Booking cancelled successfully. Refund amount: $${response.data.refundAmount}`);
+
+            // Close any open modals and refresh bookings
+            document.querySelectorAll('.fixed').forEach(modal => modal.remove());
+            setTimeout(() => viewMyBookings(), 500);
+        }
+
+    } catch (error) {
+        console.error('Error cancelling booking:', error);
+        alert('Error cancelling booking: ' + (error.response?.data?.error || 'Unknown error'));
+    }
 }
