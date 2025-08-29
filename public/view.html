@@ -19,6 +19,74 @@
             overflow-x: hidden;
         }
         
+        /* Consistent Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+        }
+        
         body::before {
             content: '';
             position: fixed;
@@ -137,10 +205,10 @@
 
                     <!-- Auth Section -->
                     <div id="loginSection" class="flex space-x-2">
-                        <button onclick="showLoginModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                        <button onclick="showLoginModal()" class="btn-primary">
                             Login
                         </button>
-                        <a href="/index.html" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                        <a href="/index.html" class="btn-success text-decoration-none">
                             List Property
                         </a>
                     </div>
@@ -174,12 +242,12 @@
                         <option value="price-high" style="color: black;">Price: High to Low</option>
                     </select>
 
-                    <button id="filterButton" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105">
+                    <button id="filterButton" class="btn-primary">
                         ⚙️ Filter
                     </button>
 
-                    <button onclick="toggleView()" class="glass-effect hover:bg-white hover:bg-opacity-20 text-white px-6 py-4 rounded-2xl font-semibold transition-all duration-300 border border-white border-opacity-20">
-                        📋
+                    <button onclick="toggleView()" class="btn-secondary">
+                        📋 List View
                     </button>
                 </div>
             </div>

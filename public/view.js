@@ -365,14 +365,11 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
     loadListings();
     setupSearch();
-    setupPurchaseForm();
     setupScrollGradient();
-    setupBottomButtons();
     setupLanguageSelector();
     setupCurrencyConverter();
     setupAIChatbot();
     setupMapView();
-
 
     // Update UI text after setup
     setTimeout(() => {
@@ -714,23 +711,25 @@ function debounce(func, wait) {
 // --- Existing functions modified or kept as is ---
 
 function setupSearch() {
-    const searchTitle = document.getElementById('searchTitle');
-    const searchLocation = document.getElementById('searchLocation');
-    const countryFilter = document.getElementById('countryFilter');
-    const amenityFilter = document.getElementById('amenityFilter');
-    const sortFilter = document.getElementById('sortFilter');
-    const minPrice = document.getElementById('minPrice');
-    const maxPrice = document.getElementById('maxPrice');
-    const propertyTypeFilter = document.getElementById('propertyTypeFilter');
-    const bedroomsFilter = document.getElementById('bedroomsFilter');
-    const bathroomsFilter = document.getElementById('bathroomsFilter');
-    const petFriendlyFilter = document.getElementById('petFriendlyFilter');
-    const cityFilter = document.getElementById('cityFilter');
-    const neighborhoodFilter = document.getElementById('neighborhoodFilter');
-    const kebeleFilter = document.getElementById('kebeleFilter');
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const filterButton = document.getElementById('filterButton');
 
-    const searchBtn = document.getElementById('searchBtn');
-    const clearBtn = document.getElementById('clearBtn');
+    // Add event listeners with null checks
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(performSearch, 300));
+    }
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', performSearch);
+    }
+
+    if (filterButton) {
+        filterButton.addEventListener('click', showAdvancedFilters);
+    }
+
+    // Setup advanced filters if they exist
+    setupAdvancedFilters();
 
     if (searchBtn) searchBtn.addEventListener('click', performSearch);
     if (clearBtn) clearBtn.addEventListener('click', clearFilters);
@@ -926,25 +925,72 @@ function performSearch() {
     updateMapView(); // Update map markers if map is open
 }
 
-function clearFilters() {
-    document.getElementById('searchTitle').value = '';
-    document.getElementById('searchLocation').value = '';
-    document.getElementById('countryFilter').value = '';
-    document.getElementById('cityFilter').value = '';
-    document.getElementById('neighborhoodFilter').value = '';
-    document.getElementById('kebeleFilter').value = '';
-    document.getElementById('amenityFilter').value = '';
-    document.getElementById('minPrice').value = '';
-    document.getElementById('maxPrice').value = '';
-    document.getElementById('sortFilter').value = 'newest';
-    if (document.getElementById('propertyTypeFilter')) document.getElementById('propertyTypeFilter').value = '';
-    if (document.getElementById('bedroomsFilter')) document.getElementById('bedroomsFilter').value = '';
-    if (document.getElementById('bathroomsFilter')) document.getElementById('bathroomsFilter').value = '';
-    if (document.getElementById('petFriendlyFilter')) document.getElementById('petFriendlyFilter').checked = false;
+function performSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    
+    let searchQuery = '';
+    let sortBy = 'newest';
+    
+    if (searchInput) {
+        searchQuery = searchInput.value.toLowerCase();
+    }
+    
+    if (sortSelect) {
+        sortBy = sortSelect.value;
+    }
 
+    // Filter listings based on search query
+    filteredListings = allListings.filter(listing => {
+        if (!searchQuery) return true;
+        
+        return listing.title.toLowerCase().includes(searchQuery) ||
+               listing.description.toLowerCase().includes(searchQuery) ||
+               listing.address.toLowerCase().includes(searchQuery) ||
+               listing.country.toLowerCase().includes(searchQuery);
+    });
+
+    // Sort listings
+    switch(sortBy) {
+        case 'newest':
+            filteredListings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            break;
+        case 'oldest':
+            filteredListings.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            break;
+        case 'price-low':
+            filteredListings.sort((a, b) => a.price - b.price);
+            break;
+        case 'price-high':
+            filteredListings.sort((a, b) => b.price - a.price);
+            break;
+    }
+
+    renderListings();
+    updateResultsCount();
+}
+
+function updateResultsCount() {
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        resultsCount.textContent = filteredListings.length;
+    }
+}
+
+function showAdvancedFilters() {
+    // Implementation for advanced filters modal
+    alert('Advanced filters feature coming soon!');
+}
+
+function clearFilters() {
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    
+    if (searchInput) searchInput.value = '';
+    if (sortSelect) sortSelect.value = 'newest';
 
     filteredListings = [...allListings];
-    performSearch(); // Apply default sorting
+    performSearch();
 }
 
 function viewDetails(listingId) {
@@ -2905,4 +2951,24 @@ function getAIResponse(message) {
             return 'HomeHatch is Ethiopia\'s rental property platform. You can search, list, and rent properties. Ask me anything about how to use the platform!';
         }
     }
+}
+
+// Add missing utility functions
+function showOnMap(listingId) {
+    const listing = allListings.find(l => l._id === listingId);
+    if (listing) {
+        alert(`Showing ${listing.title} on map - Feature coming soon!`);
+    }
+}
+
+function toggleView() {
+    alert('View toggle feature coming soon!');
+}
+
+function showLoginModal() {
+    window.location.href = '/login.html';
+}
+
+function showRegisterModal() {
+    window.location.href = '/login.html';
 }
