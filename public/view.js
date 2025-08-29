@@ -729,8 +729,7 @@ function setupSearch() {
     const neighborhoodFilter = document.getElementById('neighborhoodFilter');
     const kebeleFilter = document.getElementById('kebeleFilter');
 
-
-    const searchBtn = document.getElementById('searchBtn'); // Assuming this is the main search button
+    const searchBtn = document.getElementById('searchBtn');
     const clearBtn = document.getElementById('clearBtn');
 
     if (searchBtn) searchBtn.addEventListener('click', performSearch);
@@ -755,8 +754,7 @@ function setupSearch() {
 
     // Add advanced filters setup
     setupAdvancedFilters();
-    setupMapView(); // Ensure map view button is set up
-    setupSavedSearches();
+    setupMapView();
 }
 
 function setupAdvancedFilters() {
@@ -1800,92 +1798,166 @@ function scheduleViewing(listingId, title) {
 
 function toggleMapView() {
     const mapModal = document.createElement('div');
-    mapModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    mapModal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
     mapModal.innerHTML = `
-        <div class="bg-white rounded-2xl max-w-6xl w-full h-5/6 flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h2 class="text-xl font-bold">${t('mapView')}</h2>
-                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-3xl w-full h-full flex flex-col overflow-hidden shadow-2xl border border-gray-700">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-700 bg-gradient-to-r from-blue-900 to-purple-900">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-2xl font-bold text-white">🌍 ${t('mapView')} - HomeHatch Global</h2>
+                        <div class="flex items-center space-x-2 bg-black bg-opacity-30 px-3 py-1 rounded-full">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-green-300 text-sm font-semibold">${filteredListings.length} Properties Worldwide</span>
+                        </div>
+                    </div>
+                    <button onclick="this.closest('.fixed').remove()" class="text-red-400 hover:text-red-300 text-3xl font-bold bg-black bg-opacity-30 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-50 transition-all duration-300">×</button>
+                </div>
+                
+                <!-- Map Controls Header -->
+                <div class="flex items-center justify-between mt-4">
+                    <div class="flex space-x-2">
+                        <button onclick="focusRegion('africa')" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                            🌍 Africa
+                        </button>
+                        <button onclick="focusRegion('asia')" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                            🏯 Asia
+                        </button>
+                        <button onclick="focusRegion('europe')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                            🏰 Europe
+                        </button>
+                        <button onclick="focusRegion('americas')" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                            🗽 Americas
+                        </button>
+                        <button onclick="focusRegion('oceania')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                            🏄 Oceania
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-2 bg-black bg-opacity-30 px-3 py-2 rounded-lg">
+                            <span class="text-white text-sm">View:</span>
+                            <button id="satelliteToggle" onclick="toggleSatelliteView()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition-all duration-300">
+                                🛰️ Satellite
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <div class="flex-1 flex">
-                <!-- Map Area -->
-                <div class="flex-1 bg-gradient-to-br from-green-100 to-blue-100 relative overflow-hidden">
-                    <div id="mapContainer" class="w-full h-full relative">
-                        <!-- Simulated Map with Markers -->
-                        <div class="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200">
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl opacity-20">🗺️</div>
-
-                            <!-- Property Markers with Address Labels -->
-                            ${filteredListings.map((listing, index) => {
-                                const x = 15 + (index % 6) * 12; // Better distribution
-                                const y = 15 + Math.floor(index / 6) * 15; // Stack in rows
-                                const shortAddress = listing.address.length > 25 ? listing.address.substring(0, 25) + '...' : listing.address;
-                                return `
-                                    <div class="absolute" style="left: ${x}%; top: ${y}%;">
-                                        <div class="relative group">
-                                            <button onclick="showMapListingDetails('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-xs font-bold shadow-lg transform hover:scale-110 transition-all duration-200">
-                                                📍
-                                            </button>
-                                            <div class="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-white rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 min-w-max z-10 pointer-events-none">
-                                                <div class="text-xs font-semibold text-gray-800">${listing.title}</div>
-                                                <div class="text-xs text-gray-600">${shortAddress}</div>
-                                                <div class="text-xs font-bold text-green-600">${formatPrice(listing.price)}</div>
-                                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
+                <!-- Enhanced Map Area -->
+                <div class="flex-1 relative overflow-hidden" id="worldMapContainer">
+                    <div id="mapContainer" class="w-full h-full relative bg-gradient-to-br from-blue-900 via-blue-800 to-green-900">
+                        
+                        <!-- Animated World Map Background -->
+                        <div class="absolute inset-0" id="worldMapBackground">
+                            ${generateWorldMapSVG()}
                         </div>
 
-                        <!-- Map Controls -->
-                        <div class="absolute top-4 left-4 flex flex-col space-y-2">
-                            <button onclick="zoomMapIn()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold">+</button>
-                            <button onclick="zoomMapOut()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold">−</button>
-                            <button onclick="resetMapZoom()" class="bg-white hover:bg-gray-100 shadow-lg w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold">⌂</button>
+                        <!-- Property Markers Positioned by Country -->
+                        <div id="propertyMarkers" class="absolute inset-0">
+                            ${generateWorldwideMarkers()}
                         </div>
 
-                        <!-- Legend -->
-                        <div class="absolute bottom-4 left-4 bg-white bg-opacity-90 p-3 rounded-lg shadow-lg">
-                            <h4 class="font-semibold text-sm mb-2">${t('legend')}</h4>
-                            <div class="flex items-center space-x-2 text-xs">
-                                <div class="w-4 h-4 bg-red-500 rounded-full"></div>
-                                <span>${t('availableRentals')}</span>
+                        <!-- Advanced Map Controls -->
+                        <div class="absolute top-6 left-6 flex flex-col space-y-3">
+                            <button onclick="zoomMapIn()" class="bg-black bg-opacity-70 hover:bg-opacity-90 text-white shadow-2xl w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-300 transform hover:scale-110 border border-gray-600">
+                                +
+                            </button>
+                            <button onclick="zoomMapOut()" class="bg-black bg-opacity-70 hover:bg-opacity-90 text-white shadow-2xl w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-300 transform hover:scale-110 border border-gray-600">
+                                −
+                            </button>
+                            <button onclick="resetMapZoom()" class="bg-black bg-opacity-70 hover:bg-opacity-90 text-white shadow-2xl w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold transition-all duration-300 transform hover:scale-110 border border-gray-600">
+                                ⌂
+                            </button>
+                            <button onclick="toggleFullscreen()" class="bg-black bg-opacity-70 hover:bg-opacity-90 text-white shadow-2xl w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold transition-all duration-300 transform hover:scale-110 border border-gray-600">
+                                ⛶
+                            </button>
+                        </div>
+
+                        <!-- Enhanced Legend -->
+                        <div class="absolute bottom-6 left-6 bg-black bg-opacity-80 backdrop-blur-lg p-4 rounded-2xl shadow-2xl border border-gray-600">
+                            <h4 class="font-bold text-lg mb-3 text-white">${t('legend')}</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-3 text-sm">
+                                    <div class="w-5 h-5 bg-gradient-to-r from-red-500 to-red-600 rounded-full shadow-lg"></div>
+                                    <span class="text-white">${t('availableRentals')}</span>
+                                </div>
+                                <div class="flex items-center space-x-3 text-sm">
+                                    <div class="w-5 h-5 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full shadow-lg"></div>
+                                    <span class="text-white">Premium Properties</span>
+                                </div>
+                                <div class="flex items-center space-x-3 text-sm">
+                                    <div class="w-5 h-5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-lg"></div>
+                                    <span class="text-white">Featured Locations</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-gray-600">
+                                <div class="text-xs text-gray-400">
+                                    📊 Countries: <span class="text-white font-semibold">${getUniqueCountries().length}</span><br>
+                                    💰 Avg Price: <span class="text-green-400 font-semibold">$${getAveragePrice()}</span><br>
+                                    🏠 Total Props: <span class="text-blue-400 font-semibold">${filteredListings.length}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Statistics -->
+                        <div class="absolute top-6 right-6 bg-black bg-opacity-80 backdrop-blur-lg p-4 rounded-2xl shadow-2xl border border-gray-600">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-white mb-1">${filteredListings.length}</div>
+                                <div class="text-xs text-gray-400 uppercase tracking-wider">Properties</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sidebar with Listings -->
-                <div class="w-80 bg-gray-50 border-l overflow-y-auto">
-                    <div class="p-4">
-                        <h3 class="font-bold text-lg mb-4">${t('propertiesOnMap')} (${filteredListings.length})</h3>
-                        <div class="space-y-3">
-                            ${filteredListings.map(listing => `
-                                <div id="mapListing-${listing._id}" class="bg-white p-3 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-l-4 border-transparent hover:border-blue-500" onclick="highlightMapMarker('${listing._id}')">
-                                    ${listing.images.length > 0 ? `
-                                        <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-20 object-cover rounded mb-2">
-                                    ` : ''}
-                                    <h4 class="font-semibold text-sm">${listing.title}</h4>
-                                    <div class="flex items-start mb-1">
-                                        <span class="text-red-500 mr-1 text-xs">📍</span>
-                                        <p class="text-xs text-gray-600 leading-tight">${listing.address}</p>
-                                    </div>
-                                    <div class="flex items-center mb-2">
-                                        <span class="text-gray-400 mr-1 text-xs">🌍</span>
-                                        <p class="text-xs text-gray-500">${listing.country}</p>
-                                    </div>
-                                    <p class="text-sm font-bold text-green-600">${formatPrice(listing.price)}</p>
-                                    <div class="flex space-x-1 mt-2">
-                                        <button onclick="event.stopPropagation(); viewDetails('${listing._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs flex-1">
-                                            ${t('details')}
-                                        </button>
-                                        <button onclick="event.stopPropagation(); openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs flex-1">
-                                            💬
-                                        </button>
-                                    </div>
+                <!-- Enhanced Sidebar -->
+                <div class="w-96 bg-gray-900 border-l border-gray-700 overflow-hidden flex flex-col">
+                    <!-- Filters Panel -->
+                    <div class="p-4 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900">
+                        <h3 class="font-bold text-lg mb-4 text-white">🔍 Live Filters</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="mapPriceFilter" onchange="applyMapFilters()" class="bg-gray-800 text-white border border-gray-600 rounded-lg px-2 py-1 text-sm">
+                                <option value="">All Prices</option>
+                                <option value="0-500">$0 - $500</option>
+                                <option value="500-1000">$500 - $1000</option>
+                                <option value="1000-2000">$1000 - $2000</option>
+                                <option value="2000+">$2000+</option>
+                            </select>
+                            <select id="mapCountryFilter" onchange="applyMapFilters()" class="bg-gray-800 text-white border border-gray-600 rounded-lg px-2 py-1 text-sm">
+                                <option value="">All Countries</option>
+                                ${getUniqueCountries().map(country => `<option value="${country}">🏳️ ${country}</option>`).join('')}
+                            </select>
+                            <select id="mapTypeFilter" onchange="applyMapFilters()" class="bg-gray-800 text-white border border-gray-600 rounded-lg px-2 py-1 text-sm">
+                                <option value="">All Types</option>
+                                <option value="apartment">🏢 Apartment</option>
+                                <option value="house">🏠 House</option>
+                                <option value="condo">🌆 Condo</option>
+                                <option value="studio">🏠 Studio</option>
+                            </select>
+                            <select id="mapAmenityFilter" onchange="applyMapFilters()" class="bg-gray-800 text-white border border-gray-600 rounded-lg px-2 py-1 text-sm">
+                                <option value="">All Amenities</option>
+                                <option value="WiFi">📶 WiFi</option>
+                                <option value="Parking">🚗 Parking</option>
+                                <option value="Pool">🏊 Pool</option>
+                                <option value="Gym">💪 Gym</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Properties List -->
+                    <div class="flex-1 overflow-y-auto">
+                        <div class="p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-lg text-white">🏠 ${t('propertiesOnMap')}</h3>
+                                <div class="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    ${filteredListings.length}
                                 </div>
-                            `).join('')}
+                            </div>
+                            <div class="space-y-3" id="mapPropertiesList">
+                                ${generateEnhancedPropertyCards()}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1894,23 +1966,342 @@ function toggleMapView() {
     `;
     document.body.appendChild(mapModal);
 
-    // Store current map zoom level
+    // Initialize map state
     window.mapZoomLevel = 1;
+    window.satelliteView = false;
+    window.currentRegionFocus = 'world';
 }
 
 function setupMapView() {
     // Add map toggle button if it doesn't exist
     const existingButton = document.getElementById('mapToggleBtn');
     if (!existingButton) {
-        const headerActions = document.querySelector('.flex.space-x-4') || document.querySelector('header'); // Try to find a common place for buttons
+        const headerActions = document.querySelector('.flex.space-x-4') || document.querySelector('header');
         if (headerActions) {
             const mapButton = document.createElement('button');
             mapButton.id = 'mapToggleBtn';
-            mapButton.className = 'bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors';
-            mapButton.innerHTML = '🗺️ Map View';
+            mapButton.className = 'bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg';
+            mapButton.innerHTML = '🌍 Explore Global Map';
             mapButton.onclick = toggleMapView;
             headerActions.appendChild(mapButton);
         }
+    }
+}
+
+// Enhanced map utility functions
+function generateWorldMapSVG() {
+    return `
+        <svg class="w-full h-full opacity-20" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+            <!-- Continent shapes -->
+            <!-- Africa -->
+            <path d="M 450 150 Q 480 140 510 160 L 520 200 Q 530 250 520 300 L 480 350 Q 450 360 420 340 L 410 300 Q 400 250 420 200 Z" fill="#4ade80" opacity="0.3" class="continent-shape" data-continent="africa"/>
+            
+            <!-- Europe -->
+            <path d="M 400 100 Q 450 90 500 110 L 510 130 Q 480 140 450 135 L 420 125 Q 400 115 400 100 Z" fill="#60a5fa" opacity="0.3" class="continent-shape" data-continent="europe"/>
+            
+            <!-- Asia -->
+            <path d="M 500 110 Q 600 100 700 130 L 750 180 Q 780 220 760 260 L 720 280 Q 650 290 580 270 L 520 240 Q 500 200 510 160 Z" fill="#f472b6" opacity="0.3" class="continent-shape" data-continent="asia"/>
+            
+            <!-- North America -->
+            <path d="M 150 120 Q 200 100 280 130 L 320 180 Q 300 220 260 240 L 200 250 Q 150 240 120 200 L 130 160 Q 140 140 150 120 Z" fill="#fbbf24" opacity="0.3" class="continent-shape" data-continent="americas"/>
+            
+            <!-- South America -->
+            <path d="M 200 250 Q 240 240 270 270 L 280 320 Q 270 380 240 420 L 200 440 Q 160 430 140 390 L 150 340 Q 170 290 200 250 Z" fill="#34d399" opacity="0.3" class="continent-shape" data-continent="americas"/>
+            
+            <!-- Australia/Oceania -->
+            <path d="M 650 350 Q 700 340 750 360 L 780 380 Q 770 400 740 410 L 690 415 Q 650 405 630 380 L 640 365 Q 645 355 650 350 Z" fill="#a78bfa" opacity="0.3" class="continent-shape" data-continent="oceania"/>
+        </svg>
+    `;
+}
+
+function generateWorldwideMarkers() {
+    const countryCoordinates = {
+        'Ethiopia': { x: 52, y: 32 },
+        'United States': { x: 20, y: 35 },
+        'United Kingdom': { x: 42, y: 22 },
+        'Canada': { x: 18, y: 25 },
+        'Australia': { x: 73, y: 75 },
+        'Germany': { x: 45, y: 28 },
+        'France': { x: 43, y: 30 },
+        'Japan': { x: 85, y: 35 },
+        'Brazil': { x: 28, y: 65 },
+        'South Africa': { x: 48, y: 85 },
+        'India': { x: 68, y: 45 },
+        'China': { x: 75, y: 35 },
+        'Spain': { x: 41, y: 35 },
+        'Italy': { x: 45, y: 38 },
+        'Mexico': { x: 15, y: 45 },
+        'Argentina': { x: 25, y: 80 },
+        'Egypt': { x: 48, y: 40 },
+        'Kenya': { x: 50, y: 52 },
+        'Nigeria': { x: 45, y: 45 },
+        'Morocco': { x: 40, y: 38 }
+    };
+
+    let markersHTML = '';
+    const listingsByCountry = {};
+    
+    // Group listings by country
+    filteredListings.forEach(listing => {
+        const country = listing.country || 'Unknown';
+        if (!listingsByCountry[country]) {
+            listingsByCountry[country] = [];
+        }
+        listingsByCountry[country].push(listing);
+    });
+
+    // Generate markers for each country
+    Object.keys(listingsByCountry).forEach(country => {
+        const coords = countryCoordinates[country] || { x: Math.random() * 80 + 10, y: Math.random() * 60 + 20 };
+        const listings = listingsByCountry[country];
+        const avgPrice = Math.round(listings.reduce((sum, l) => sum + l.price, 0) / listings.length);
+        
+        markersHTML += `
+            <div class="absolute marker-container" style="left: ${coords.x}%; top: ${coords.y}%;" data-country="${country}">
+                <div class="relative group">
+                    <div class="marker-pulse absolute inset-0 bg-red-500 rounded-full animate-ping opacity-30"></div>
+                    <button onclick="showCountryProperties('${country}')" class="marker-btn relative bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-2xl transform hover:scale-125 transition-all duration-300 border-2 border-white z-10">
+                        ${listings.length}
+                    </button>
+                    
+                    <div class="marker-tooltip absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 min-w-max z-20 pointer-events-none border border-gray-600">
+                        <div class="text-sm font-bold mb-1">🏳️ ${country}</div>
+                        <div class="text-xs text-gray-300">${listings.length} ${listings.length === 1 ? 'Property' : 'Properties'}</div>
+                        <div class="text-xs text-green-400 font-semibold">Avg: $${avgPrice}/mo</div>
+                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    return markersHTML;
+}
+
+function generateEnhancedPropertyCards() {
+    return filteredListings.map(listing => `
+        <div id="mapListing-${listing._id}" class="property-card bg-gradient-to-r from-gray-800 to-gray-900 p-4 rounded-2xl shadow-xl border border-gray-600 hover:border-blue-500 transition-all duration-300 cursor-pointer transform hover:scale-105" onclick="highlightMapMarker('${listing._id}')">
+            ${listing.images.length > 0 ? `
+                <div class="relative mb-3 rounded-xl overflow-hidden">
+                    <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-24 object-cover">
+                    <div class="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                        ${formatPrice(listing.price)}
+                    </div>
+                    ${listing.images.length > 1 ? `
+                        <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded-lg text-xs">
+                            +${listing.images.length - 1} photos
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+            
+            <h4 class="font-bold text-sm text-white mb-2 line-clamp-1">${listing.title}</h4>
+            
+            <div class="flex items-center mb-2">
+                <span class="text-red-400 mr-2 text-sm">📍</span>
+                <p class="text-xs text-gray-300 leading-tight line-clamp-1">${listing.address}</p>
+            </div>
+            
+            <div class="flex items-center mb-3">
+                <span class="text-blue-400 mr-2 text-sm">🌍</span>
+                <p class="text-xs text-gray-400">${listing.country}</p>
+            </div>
+
+            ${listing.amenities && listing.amenities.length > 0 ? `
+                <div class="flex flex-wrap gap-1 mb-3">
+                    ${listing.amenities.slice(0, 2).map(amenity => `
+                        <span class="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">${getAmenityIcon(amenity)} ${amenity}</span>
+                    `).join('')}
+                    ${listing.amenities.length > 2 ? `<span class="bg-gray-600 text-white px-2 py-1 rounded-full text-xs">+${listing.amenities.length - 2}</span>` : ''}
+                </div>
+            ` : ''}
+            
+            <div class="flex justify-between items-center">
+                <div class="text-lg font-bold text-green-400">${formatPrice(listing.price)}</div>
+                <div class="flex space-x-1">
+                    <button onclick="event.stopPropagation(); viewDetails('${listing._id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded-lg text-xs font-semibold transition-all duration-300">
+                        View
+                    </button>
+                    ${currentUser ? `
+                        <button onclick="event.stopPropagation(); openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded-lg text-xs font-semibold transition-all duration-300">
+                            💬
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getUniqueCountries() {
+    return [...new Set(filteredListings.map(listing => listing.country))].filter(Boolean);
+}
+
+function getAveragePrice() {
+    if (filteredListings.length === 0) return 0;
+    const total = filteredListings.reduce((sum, listing) => sum + listing.price, 0);
+    return Math.round(total / filteredListings.length);
+}
+
+function focusRegion(region) {
+    const mapContainer = document.getElementById('mapContainer');
+    const continentShapes = document.querySelectorAll('.continent-shape');
+    
+    // Reset all continent opacities
+    continentShapes.forEach(shape => {
+        shape.style.opacity = region === 'world' ? '0.3' : '0.1';
+    });
+
+    // Highlight selected region
+    const selectedShape = document.querySelector(`[data-continent="${region}"]`);
+    if (selectedShape) {
+        selectedShape.style.opacity = '0.6';
+    }
+
+    // Filter properties by region
+    const regionCountries = {
+        'africa': ['Ethiopia', 'South Africa', 'Egypt', 'Kenya', 'Nigeria', 'Morocco'],
+        'asia': ['India', 'China', 'Japan'],
+        'europe': ['United Kingdom', 'Germany', 'France', 'Spain', 'Italy'],
+        'americas': ['United States', 'Canada', 'Brazil', 'Mexico', 'Argentina'],
+        'oceania': ['Australia']
+    };
+
+    if (region !== 'world') {
+        const regionCountryList = regionCountries[region] || [];
+        const regionListings = allListings.filter(listing => 
+            regionCountryList.includes(listing.country)
+        );
+        
+        // Update markers visibility
+        const markers = document.querySelectorAll('.marker-container');
+        markers.forEach(marker => {
+            const country = marker.dataset.country;
+            if (regionCountryList.includes(country)) {
+                marker.style.display = 'block';
+                marker.style.transform = 'scale(1.2)';
+            } else {
+                marker.style.display = 'none';
+            }
+        });
+    } else {
+        // Show all markers
+        const markers = document.querySelectorAll('.marker-container');
+        markers.forEach(marker => {
+            marker.style.display = 'block';
+            marker.style.transform = 'scale(1)';
+        });
+    }
+
+    window.currentRegionFocus = region;
+}
+
+function toggleSatelliteView() {
+    const background = document.getElementById('worldMapBackground');
+    const toggleBtn = document.getElementById('satelliteToggle');
+    
+    window.satelliteView = !window.satelliteView;
+    
+    if (window.satelliteView) {
+        background.style.background = 'linear-gradient(45deg, #1a1a2e, #16213e, #0f3460)';
+        background.style.backgroundImage = 'radial-gradient(circle at 25% 25%, #ffffff08 2px, transparent 2px), radial-gradient(circle at 75% 75%, #ffffff05 1px, transparent 1px)';
+        toggleBtn.innerHTML = '🗺️ Normal';
+        toggleBtn.className = 'bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm transition-all duration-300';
+    } else {
+        background.style.background = '';
+        background.style.backgroundImage = '';
+        toggleBtn.innerHTML = '🛰️ Satellite';
+        toggleBtn.className = 'bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition-all duration-300';
+    }
+}
+
+function showCountryProperties(country) {
+    const countryListings = filteredListings.filter(listing => listing.country === country);
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-gray-600">
+            <div class="p-6 border-b border-gray-600 bg-gradient-to-r from-blue-900 to-purple-900">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-white">🏳️ Properties in ${country}</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-red-400 hover:text-red-300 text-2xl font-bold bg-black bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center">×</button>
+                </div>
+                <p class="text-gray-300 mt-2">${countryListings.length} properties available</p>
+            </div>
+            <div class="p-6">
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${countryListings.map(listing => `
+                        <div class="bg-gray-800 rounded-xl p-4 border border-gray-600 hover:border-blue-500 transition-all duration-300">
+                            ${listing.images.length > 0 ? `
+                                <img src="${listing.images[0]}" alt="${listing.title}" class="w-full h-32 object-cover rounded-lg mb-3">
+                            ` : ''}
+                            <h3 class="font-bold text-white mb-2">${listing.title}</h3>
+                            <p class="text-gray-400 text-sm mb-2">${listing.address}</p>
+                            <p class="text-green-400 font-bold text-lg mb-3">${formatPrice(listing.price)}/month</p>
+                            <div class="flex space-x-2">
+                                <button onclick="this.closest('.fixed').remove(); viewDetails('${listing._id}')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold transition-all duration-300">
+                                    View Details
+                                </button>
+                                ${currentUser ? `
+                                    <button onclick="this.closest('.fixed').remove(); openChatModal('${listing._id}', '${listing.title}')" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-sm font-semibold transition-all duration-300">
+                                        💬 Chat
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function applyMapFilters() {
+    const priceFilter = document.getElementById('mapPriceFilter')?.value;
+    const countryFilter = document.getElementById('mapCountryFilter')?.value;
+    const typeFilter = document.getElementById('mapTypeFilter')?.value;
+    const amenityFilter = document.getElementById('mapAmenityFilter')?.value;
+    
+    let filtered = allListings;
+    
+    if (priceFilter) {
+        const [min, max] = priceFilter.includes('+') ? [parseInt(priceFilter.replace('+', '')), Infinity] : priceFilter.split('-').map(Number);
+        filtered = filtered.filter(listing => listing.price >= min && (max === undefined || listing.price <= max));
+    }
+    
+    if (countryFilter) {
+        filtered = filtered.filter(listing => listing.country === countryFilter);
+    }
+    
+    if (typeFilter) {
+        filtered = filtered.filter(listing => listing.propertyType === typeFilter);
+    }
+    
+    if (amenityFilter) {
+        filtered = filtered.filter(listing => listing.amenities && listing.amenities.includes(amenityFilter));
+    }
+    
+    filteredListings = filtered;
+    
+    // Update markers and list
+    document.getElementById('propertyMarkers').innerHTML = generateWorldwideMarkers();
+    document.getElementById('mapPropertiesList').innerHTML = generateEnhancedPropertyCards();
+}
+
+function toggleFullscreen() {
+    const mapContainer = document.getElementById('worldMapContainer');
+    if (!document.fullscreenElement) {
+        mapContainer.requestFullscreen?.() || 
+        mapContainer.mozRequestFullScreen?.() || 
+        mapContainer.webkitRequestFullscreen?.() || 
+        mapContainer.msRequestFullscreen?.();
+    } else {
+        document.exitFullscreen?.() || 
+        document.mozCancelFullScreen?.() || 
+        document.webkitExitFullscreen?.() || 
+        document.msExitFullscreen?.();
     }
 }
 
