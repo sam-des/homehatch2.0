@@ -2112,6 +2112,11 @@ function toggleMapView() {
     window.mapZoomLevel = 1;
     window.satelliteView = false;
     window.currentRegionFocus = 'world';
+    
+    // Initialize interactive map after DOM is ready
+    setTimeout(() => {
+        initializeInteractiveMap();
+    }, 100);
 }
 
 function setupMapView() {
@@ -2130,29 +2135,195 @@ function setupMapView() {
     }
 }
 
-// Enhanced map utility functions
+// Enhanced map utility functions with interactive image map
+let mapTransform = { scale: 1, translateX: 0, translateY: 0 };
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let lastTranslate = { x: 0, y: 0 };
+
+function initializeInteractiveMap() {
+    const mapImage = document.getElementById('mapImage');
+    if (!mapImage) return;
+
+    // Mouse events for desktop
+    mapImage.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+
+    // Touch events for mobile
+    mapImage.addEventListener('touchstart', startDragTouch, { passive: false });
+    document.addEventListener('touchmove', dragTouch, { passive: false });
+    document.addEventListener('touchend', endDrag);
+
+    // Prevent context menu on right click
+    mapImage.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function startDrag(e) {
+    isDragging = true;
+    dragStart.x = e.clientX - lastTranslate.x;
+    dragStart.y = e.clientY - lastTranslate.y;
+    document.getElementById('mapImage').style.cursor = 'grabbing';
+}
+
+function startDragTouch(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    isDragging = true;
+    dragStart.x = touch.clientX - lastTranslate.x;
+    dragStart.y = touch.clientY - lastTranslate.y;
+}
+
+function drag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    
+    lastTranslate.x = e.clientX - dragStart.x;
+    lastTranslate.y = e.clientY - dragStart.y;
+    
+    updateMapTransform();
+}
+
+function dragTouch(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    lastTranslate.x = touch.clientX - dragStart.x;
+    lastTranslate.y = touch.clientY - dragStart.y;
+    
+    updateMapTransform();
+}
+
+function endDrag() {
+    isDragging = false;
+    const mapImage = document.getElementById('mapImage');
+    if (mapImage) {
+        mapImage.style.cursor = 'grab';
+    }
+}
+
+function updateMapTransform() {
+    const mapImage = document.getElementById('mapImage');
+    if (!mapImage) return;
+    
+    mapImage.style.transform = `scale(${mapTransform.scale}) translate(${lastTranslate.x}px, ${lastTranslate.y}px)`;
+}
+
 function generateWorldMapSVG() {
     return `
-        <svg class="w-full h-full opacity-20" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
-            <!-- Continent shapes -->
-            <!-- Africa -->
-            <path d="M 450 150 Q 480 140 510 160 L 520 200 Q 530 250 520 300 L 480 350 Q 450 360 420 340 L 410 300 Q 400 250 420 200 Z" fill="#4ade80" opacity="0.3" class="continent-shape" data-continent="africa"/>
-
-            <!-- Europe -->
-            <path d="M 400 100 Q 450 90 500 110 L 510 130 Q 480 140 450 135 L 420 125 Q 400 115 400 100 Z" fill="#60a5fa" opacity="0.3" class="continent-shape" data-continent="europe"/>
-
-            <!-- Asia -->
-            <path d="M 500 110 Q 600 100 700 130 L 750 180 Q 780 220 760 260 L 720 280 Q 650 290 580 270 L 520 240 Q 500 200 510 160 Z" fill="#f472b6" opacity="0.3" class="continent-shape" data-continent="asia"/>
-
-            <!-- North America -->
-            <path d="M 150 120 Q 200 100 280 130 L 320 180 Q 300 220 260 240 L 200 250 Q 150 240 120 200 L 130 160 Q 140 140 150 120 Z" fill="#fbbf24" opacity="0.3" class="continent-shape" data-continent="americas"/>
-
-            <!-- South America -->
-            <path d="M 200 250 Q 240 240 270 270 L 280 320 Q 270 380 240 420 L 200 440 Q 160 430 140 390 L 150 340 Q 170 290 200 250 Z" fill="#34d399" opacity="0.3" class="continent-shape" data-continent="americas"/>
-
-            <!-- Australia/Oceania -->
-            <path d="M 650 350 Q 700 340 750 360 L 780 380 Q 770 400 740 410 L 690 415 Q 650 405 630 380 L 640 365 Q 645 355 650 350 Z" fill="#a78bfa" opacity="0.3" class="continent-shape" data-continent="oceania"/>
-        </svg>
+        <div class="interactive-map-container" style="position: relative; width: 100%; height: 100%; overflow: hidden; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%); border-radius: 1rem;">
+            <!-- Interactive World Map Background -->
+            <div id="mapImage" class="map-image" style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('data:image/svg+xml;base64,${btoa(`
+                <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Detailed World Map Continents -->
+                    <!-- Africa -->
+                    <path d="M 550 180 Q 580 170 620 190 L 640 240 Q 650 300 640 380 L 600 450 Q 570 460 540 440 L 520 380 Q 510 300 530 240 Z" fill="#22c55e" opacity="0.8" stroke="#16a34a" stroke-width="2"/>
+                    
+                    <!-- Europe -->
+                    <path d="M 480 120 Q 530 110 580 130 L 600 160 Q 570 170 540 165 L 510 155 Q 480 145 480 120 Z" fill="#3b82f6" opacity="0.8" stroke="#2563eb" stroke-width="2"/>
+                    
+                    <!-- Asia -->
+                    <path d="M 580 130 Q 720 120 860 160 L 920 220 Q 950 280 930 340 L 880 370 Q 780 380 680 360 L 620 300 Q 580 240 600 190 Z" fill="#f59e0b" opacity="0.8" stroke="#d97706" stroke-width="2"/>
+                    
+                    <!-- North America -->
+                    <path d="M 180 150 Q 240 130 340 160 L 390 220 Q 370 280 320 310 L 240 320 Q 180 310 150 250 L 160 200 Q 170 170 180 150 Z" fill="#ef4444" opacity="0.8" stroke="#dc2626" stroke-width="2"/>
+                    
+                    <!-- South America -->
+                    <path d="M 240 320 Q 290 310 330 340 L 350 420 Q 340 500 310 550 L 240 580 Q 190 570 170 520 L 180 460 Q 200 380 240 320 Z" fill="#8b5cf6" opacity="0.8" stroke="#7c3aed" stroke-width="2"/>
+                    
+                    <!-- Australia -->
+                    <path d="M 800 450 Q 860 440 920 460 L 950 490 Q 940 520 910 530 L 850 535 Q 800 525 780 490 L 790 475 Q 795 465 800 450 Z" fill="#06b6d4" opacity="0.8" stroke="#0891b2" stroke-width="2"/>
+                    
+                    <!-- Ocean patterns -->
+                    <defs>
+                        <pattern id="oceanPattern" patternUnits="userSpaceOnUse" width="40" height="40">
+                            <circle cx="20" cy="20" r="2" fill="#1e40af" opacity="0.3"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#oceanPattern)"/>
+                    
+                    <!-- Grid lines -->
+                    <defs>
+                        <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+                            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#1e40af" stroke-width="1" opacity="0.2"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)"/>
+                </svg>
+                `)}');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                cursor: grab;
+                transition: transform 0.2s ease;
+                transform-origin: center center;
+            ">
+            </div>
+            
+            <!-- Interactive Controls Overlay -->
+            <div class="map-controls" style="position: absolute; top: 1rem; right: 1rem; display: flex; flex-col; gap: 0.5rem; z-index: 10;">
+                <button onclick="zoomMapIn()" class="map-control-btn" style="
+                    background: rgba(0,0,0,0.7);
+                    color: white;
+                    border: none;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 18px;
+                    font-weight: bold;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(0,0,0,0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.7)'">+</button>
+                
+                <button onclick="zoomMapOut()" class="map-control-btn" style="
+                    background: rgba(0,0,0,0.7);
+                    color: white;
+                    border: none;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 18px;
+                    font-weight: bold;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(0,0,0,0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.7)'">-</button>
+                
+                <button onclick="resetMapZoom()" class="map-control-btn" style="
+                    background: rgba(0,0,0,0.7);
+                    color: white;
+                    border: none;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: bold;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(0,0,0,0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.7)'">⌂</button>
+            </div>
+            
+            <!-- Map Navigation Info -->
+            <div class="map-info" style="
+                position: absolute;
+                bottom: 1rem;
+                left: 1rem;
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                font-size: 12px;
+                z-index: 10;
+            ">
+                🖱️ Click and drag to pan • 🔍 Use controls to zoom
+            </div>
+        </div>
     `;
 }
 
@@ -2526,29 +2697,25 @@ function highlightMapMarker(listingId) {
 }
 
 function zoomMapIn() {
-    window.mapZoomLevel = Math.min(window.mapZoomLevel + 0.2, 2);
-    updateMapZoom();
+    mapTransform.scale = Math.min(mapTransform.scale + 0.3, 3);
+    updateMapTransform();
 }
 
 function zoomMapOut() {
-    window.mapZoomLevel = Math.max(window.mapZoomLevel - 0.2, 0.5);
-    updateMapZoom();
+    mapTransform.scale = Math.max(mapTransform.scale - 0.3, 0.5);
+    updateMapTransform();
 }
 
 function resetMapZoom() {
-    window.mapZoomLevel = 1;
-    updateMapZoom();
+    mapTransform.scale = 1;
+    lastTranslate.x = 0;
+    lastTranslate.y = 0;
+    updateMapTransform();
 }
 
 function updateMapZoom() {
-    const mapContainer = document.getElementById('mapContainer');
-    if (mapContainer) {
-        const mapContent = mapContainer.querySelector('.absolute.inset-0');
-        if (mapContent) {
-            mapContent.style.transform = `scale(${window.mapZoomLevel})`;
-            mapContent.style.transformOrigin = 'center';
-        }
-    }
+    // Legacy function - now handled by updateMapTransform
+    updateMapTransform();
 }
 
 function saveCurrentSearch() {
