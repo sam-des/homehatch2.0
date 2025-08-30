@@ -370,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupCurrencyConverter();
     setupAIChatbot();
     setupMapView();
+    setupMobileFeatures();
 
     // Update UI text after setup
     setTimeout(() => {
@@ -3053,6 +3054,399 @@ function showOnMap(listingId) {
     const listing = allListings.find(l => l._id === listingId);
     if (listing) {
         alert(`Showing ${listing.title} on map - Feature coming soon!`);
+    }
+}
+
+// Mobile-specific functions
+function setupMobileFeatures() {
+    // Setup mobile menu
+    setupMobileMenu();
+    
+    // Setup touch gestures
+    setupTouchGestures();
+    
+    // Setup mobile search
+    setupMobileSearch();
+    
+    // Setup responsive modals
+    setupResponsiveModals();
+    
+    // Add PWA features
+    setupPWAFeatures();
+}
+
+function setupMobileMenu() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+
+    // Sync mobile and desktop language selectors
+    const mobileLanguageSelector = document.getElementById('mobileLanguageSelector');
+    const desktopLanguageSelector = document.getElementById('languageSelector');
+    
+    if (mobileLanguageSelector && desktopLanguageSelector) {
+        mobileLanguageSelector.value = currentLanguage;
+        mobileLanguageSelector.addEventListener('change', function(e) {
+            changeLanguage(e.target.value);
+            desktopLanguageSelector.value = e.target.value;
+        });
+    }
+
+    // Sync mobile and desktop currency selectors
+    const mobileCurrencySelector = document.getElementById('mobileCurrencySelector');
+    const desktopCurrencySelector = document.getElementById('currencySelector');
+    
+    if (mobileCurrencySelector && desktopCurrencySelector) {
+        mobileCurrencySelector.value = currentCurrency;
+        mobileCurrencySelector.addEventListener('change', function(e) {
+            currentCurrency = e.target.value;
+            localStorage.setItem('currency', currentCurrency);
+            updatePriceDisplays();
+            desktopCurrencySelector.value = e.target.value;
+        });
+    }
+}
+
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu) {
+        mobileMenu.classList.toggle('hidden');
+    }
+}
+
+function setupMobileSearch() {
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const mobileSortSelect = document.getElementById('mobileSortSelect');
+    
+    if (mobileSearchInput) {
+        mobileSearchInput.addEventListener('input', debounce(performMobileSearch, 300));
+    }
+    
+    if (mobileSortSelect) {
+        mobileSortSelect.addEventListener('change', performMobileSearch);
+    }
+}
+
+function performMobileSearch() {
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const mobileSortSelect = document.getElementById('mobileSortSelect');
+    
+    let searchQuery = '';
+    let sortBy = 'newest';
+    
+    if (mobileSearchInput) {
+        searchQuery = mobileSearchInput.value.toLowerCase();
+    }
+    
+    if (mobileSortSelect) {
+        sortBy = mobileSortSelect.value;
+    }
+    
+    // Also sync with desktop search if it exists
+    const desktopSearchInput = document.getElementById('searchInput');
+    const desktopSortSelect = document.getElementById('sortSelect');
+    
+    if (desktopSearchInput) desktopSearchInput.value = mobileSearchInput.value;
+    if (desktopSortSelect) desktopSortSelect.value = sortBy;
+    
+    // Use existing search logic
+    performSearch();
+}
+
+function showMobileFilters() {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50 p-0 md:p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-t-3xl md:rounded-2xl w-full md:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-4 md:p-6 rounded-t-3xl md:rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800">🔍 Search Filters</h2>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-6">
+                <div class="space-y-6">
+                    <!-- Price Range -->
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-3">💰 Price Range</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" id="mobileMinPrice" placeholder="Min Price" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="number" id="mobileMaxPrice" placeholder="Max Price" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-3">📍 Location</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="mobileLocationSearch" placeholder="Search by location..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="mobileCountryFilter" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Countries</option>
+                                <option value="Ethiopia">🇪🇹 Ethiopia</option>
+                                <option value="United States">🇺🇸 United States</option>
+                                <option value="Canada">🇨🇦 Canada</option>
+                                <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                                <option value="Australia">🇦🇺 Australia</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Property Type -->
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-3">🏠 Property Type</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" onclick="togglePropertyTypeFilter('apartment')" class="property-type-btn px-4 py-3 border border-gray-300 rounded-lg text-center transition-all duration-300 hover:bg-blue-50" data-type="apartment">
+                                🏢 Apartment
+                            </button>
+                            <button type="button" onclick="togglePropertyTypeFilter('house')" class="property-type-btn px-4 py-3 border border-gray-300 rounded-lg text-center transition-all duration-300 hover:bg-blue-50" data-type="house">
+                                🏠 House
+                            </button>
+                            <button type="button" onclick="togglePropertyTypeFilter('condo')" class="property-type-btn px-4 py-3 border border-gray-300 rounded-lg text-center transition-all duration-300 hover:bg-blue-50" data-type="condo">
+                                🌆 Condo
+                            </button>
+                            <button type="button" onclick="togglePropertyTypeFilter('studio')" class="property-type-btn px-4 py-3 border border-gray-300 rounded-lg text-center transition-all duration-300 hover:bg-blue-50" data-type="studio">
+                                🏠 Studio
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Amenities -->
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-3">✨ Popular Amenities</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors">
+                                <input type="checkbox" id="mobileWiFi" class="mobile-amenity-filter">
+                                <span class="text-sm">📶 WiFi</span>
+                            </label>
+                            <label class="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors">
+                                <input type="checkbox" id="mobileParking" class="mobile-amenity-filter">
+                                <span class="text-sm">🚗 Parking</span>
+                            </label>
+                            <label class="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors">
+                                <input type="checkbox" id="mobilePetFriendly" class="mobile-amenity-filter">
+                                <span class="text-sm">🐕 Pet Friendly</span>
+                            </label>
+                            <label class="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors">
+                                <input type="checkbox" id="mobileAC" class="mobile-amenity-filter">
+                                <span class="text-sm">❄️ A/C</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="sticky bottom-0 bg-white border-t border-gray-200 p-4 grid grid-cols-2 gap-3">
+                    <button onclick="clearMobileFilters()" class="btn-secondary py-3 text-center">
+                        🗑️ Clear
+                    </button>
+                    <button onclick="applyMobileFilters(); this.closest('.fixed').remove()" class="btn-primary py-3 text-center">
+                        🔍 Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function setupTouchGestures() {
+    let startX, startY, currentX, currentY;
+    
+    document.addEventListener('touchstart', function(e) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    });
+    
+    document.addEventListener('touchmove', function(e) {
+        currentX = e.touches[0].clientX;
+        currentY = e.touches[0].clientY;
+    });
+    
+    document.addEventListener('touchend', function(e) {
+        if (!startX || !startY || !currentX || !currentY) return;
+        
+        const diffX = startX - currentX;
+        const diffY = startY - currentY;
+        
+        // Horizontal swipe detection
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 100) {
+            if (diffX > 0) {
+                // Swipe left - next property in list view
+                handleSwipeLeft();
+            } else {
+                // Swipe right - previous property in list view
+                handleSwipeRight();
+            }
+        }
+        
+        // Reset values
+        startX = startY = currentX = currentY = null;
+    });
+}
+
+function handleSwipeLeft() {
+    // Navigate to next property or scroll down
+    window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+}
+
+function handleSwipeRight() {
+    // Navigate to previous property or scroll up
+    window.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
+}
+
+function setupResponsiveModals() {
+    // Detect device type
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // Add mobile-specific modal behaviors
+        document.documentElement.style.setProperty('--modal-max-height', '90vh');
+        document.documentElement.style.setProperty('--modal-border-radius', '1rem 1rem 0 0');
+    }
+}
+
+function setupPWAFeatures() {
+    // Add to homescreen prompt
+    let deferredPrompt;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show custom install button
+        showInstallPrompt();
+    });
+    
+    // Handle app installation
+    window.addEventListener('appinstalled', () => {
+        console.log('HomeHatch PWA installed');
+        deferredPrompt = null;
+    });
+}
+
+function showInstallPrompt() {
+    const installBanner = document.createElement('div');
+    installBanner.className = 'fixed top-20 left-4 right-4 md:left-auto md:right-4 md:w-80 glass-effect p-4 rounded-2xl shadow-2xl z-50 border border-white border-opacity-20';
+    installBanner.innerHTML = `
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="text-2xl">📱</div>
+                <div>
+                    <h4 class="text-white font-semibold text-sm">Install HomeHatch</h4>
+                    <p class="text-white text-opacity-70 text-xs">Add to your homescreen for quick access</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="installPWA()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors">
+                    Install
+                </button>
+                <button onclick="this.remove()" class="text-white text-opacity-70 hover:text-opacity-100 text-sm">×</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(installBanner);
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (installBanner.parentNode) {
+            installBanner.remove();
+        }
+    }, 10000);
+}
+
+async function installPWA() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        deferredPrompt = null;
+        
+        // Remove install banner
+        document.querySelector('.fixed.top-20')?.remove();
+    }
+}
+
+function clearMobileFilters() {
+    // Clear all mobile filter inputs
+    const inputs = document.querySelectorAll('#mobileMinPrice, #mobileMaxPrice, #mobileLocationSearch');
+    inputs.forEach(input => input.value = '');
+    
+    const selects = document.querySelectorAll('#mobileCountryFilter');
+    selects.forEach(select => select.selectedIndex = 0);
+    
+    const checkboxes = document.querySelectorAll('.mobile-amenity-filter');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    
+    const propertyTypeBtns = document.querySelectorAll('.property-type-btn');
+    propertyTypeBtns.forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('border-gray-300');
+    });
+}
+
+function applyMobileFilters() {
+    const minPrice = document.getElementById('mobileMinPrice')?.value;
+    const maxPrice = document.getElementById('mobileMaxPrice')?.value;
+    const location = document.getElementById('mobileLocationSearch')?.value;
+    const country = document.getElementById('mobileCountryFilter')?.value;
+    
+    // Get selected amenities
+    const selectedAmenities = [];
+    document.querySelectorAll('.mobile-amenity-filter:checked').forEach(checkbox => {
+        selectedAmenities.push(checkbox.id.replace('mobile', ''));
+    });
+    
+    // Get selected property types
+    const selectedPropertyTypes = [];
+    document.querySelectorAll('.property-type-btn.bg-blue-500').forEach(btn => {
+        selectedPropertyTypes.push(btn.dataset.type);
+    });
+    
+    // Apply filters to listings
+    filteredListings = allListings.filter(listing => {
+        const matchesPrice = (!minPrice || listing.price >= parseFloat(minPrice)) && 
+                            (!maxPrice || listing.price <= parseFloat(maxPrice));
+        const matchesLocation = !location || 
+                               listing.address.toLowerCase().includes(location.toLowerCase()) ||
+                               listing.country.toLowerCase().includes(location.toLowerCase());
+        const matchesCountry = !country || listing.country === country;
+        const matchesAmenities = selectedAmenities.length === 0 || 
+                                selectedAmenities.some(amenity => 
+                                    listing.amenities.some(listingAmenity => 
+                                        listingAmenity.toLowerCase().includes(amenity.toLowerCase())
+                                    )
+                                );
+        const matchesPropertyType = selectedPropertyTypes.length === 0 ||
+                                   selectedPropertyTypes.includes(listing.propertyType);
+        
+        return matchesPrice && matchesLocation && matchesCountry && matchesAmenities && matchesPropertyType;
+    });
+    
+    renderListings();
+    updateResultsCount();
+    
+    // Haptic feedback for mobile devices
+    if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+    }
+}
+
+function togglePropertyTypeFilter(type) {
+    const btn = document.querySelector(`[data-type="${type}"]`);
+    if (btn.classList.contains('bg-blue-500')) {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('border-gray-300');
+    } else {
+        btn.classList.add('bg-blue-500', 'text-white');
+        btn.classList.remove('border-gray-300');
     }
 }
 

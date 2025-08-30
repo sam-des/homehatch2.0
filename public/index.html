@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f172a">
     <title>HomeHatch - Rental Listings</title>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -169,6 +173,58 @@
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.12);
+                backdrop-filter: blur(15px);
+            }
+
+            .form-input {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 1rem;
+            }
+
+            .modal-content {
+                width: 95vw;
+                max-width: none;
+                margin: 0.5rem;
+                padding: 1.5rem;
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+
+            .btn-primary, .btn-secondary, .btn-success {
+                padding: 0.875rem 1.25rem;
+                font-size: 0.9rem;
+                min-height: 48px; /* Touch-friendly size */
+            }
+
+            .floating {
+                animation-duration: 4s; /* Faster on mobile to save battery */
+            }
+        }
+
+        /* Touch-friendly interactions */
+        @media (hover: none) and (pointer: coarse) {
+            .btn-primary:active, .btn-secondary:active, .btn-success:active {
+                transform: translateY(-2px);
+                opacity: 0.9;
+            }
+            
+            .card-hover:active {
+                transform: translateY(-4px) scale(1.01);
+            }
+        }
+
+        /* Prevent text selection on touch devices */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
         
         .text-gradient {
             background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
@@ -195,34 +251,34 @@
 </head>
 <body>
     <!-- Welcome/Login Screen -->
-    <div id="welcomeScreen" class="min-h-screen flex items-center justify-center px-6 relative">
-        <!-- Floating Elements -->
-        <div class="absolute top-20 left-10 w-20 h-20 bg-blue-500 bg-opacity-20 rounded-full blur-xl floating"></div>
-        <div class="absolute bottom-20 right-10 w-32 h-32 bg-purple-500 bg-opacity-20 rounded-full blur-xl floating" style="animation-delay: 2s;"></div>
-        <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-pink-500 bg-opacity-20 rounded-full blur-xl floating" style="animation-delay: 4s;"></div>
+    <div id="welcomeScreen" class="min-h-screen flex items-center justify-center px-4 md:px-6 relative">
+        <!-- Mobile-optimized Floating Elements -->
+        <div class="absolute top-20 left-5 md:left-10 w-16 md:w-20 h-16 md:h-20 bg-blue-500 bg-opacity-20 rounded-full blur-xl floating"></div>
+        <div class="absolute bottom-20 right-5 md:right-10 w-24 md:w-32 h-24 md:h-32 bg-purple-500 bg-opacity-20 rounded-full blur-xl floating" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/4 w-12 md:w-16 h-12 md:h-16 bg-pink-500 bg-opacity-20 rounded-full blur-xl floating" style="animation-delay: 4s;"></div>
         
-        <div class="max-w-lg w-full">
-            <div class="glass-effect rounded-3xl p-10 shadow-2xl animate-fade-in text-center relative overflow-hidden">
+        <div class="max-w-sm md:max-w-lg w-full">
+            <div class="glass-effect rounded-2xl md:rounded-3xl p-6 md:p-10 shadow-2xl animate-fade-in text-center relative overflow-hidden">
                 <!-- Decorative gradient overlay -->
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
                 
-                <div class="mb-10">
-                    <div class="text-6xl mb-4 floating">🏠</div>
-                    <h1 class="text-5xl font-bold text-white mb-3 neon-glow">HomeHatch</h1>
-                    <p class="text-white text-opacity-90 text-xl font-light">Find your perfect rental home</p>
-                    <div class="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
+                <div class="mb-8 md:mb-10">
+                    <div class="text-5xl md:text-6xl mb-4 floating">🏠</div>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-3 neon-glow">HomeHatch</h1>
+                    <p class="text-white text-opacity-90 text-lg md:text-xl font-light">Find your perfect rental home</p>
+                    <div class="w-20 md:w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
                 </div>
 
-                <div class="space-y-5">
-                    <button onclick="showLoginModal()" class="w-full btn-primary text-white py-5 rounded-2xl font-semibold text-lg shadow-lg relative overflow-hidden group">
+                <div class="space-y-4 md:space-y-5">
+                    <button onclick="showLoginModal()" class="w-full btn-primary text-white py-4 md:py-5 rounded-2xl font-semibold text-base md:text-lg shadow-lg relative overflow-hidden group no-select">
                         <span class="relative z-10">✨ Sign In</span>
                     </button>
 
-                    <button onclick="showRegisterModal()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-5 rounded-2xl font-semibold text-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg transform hover:scale-105">
+                    <button onclick="showRegisterModal()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-4 md:py-5 rounded-2xl font-semibold text-base md:text-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg transform hover:scale-105 no-select">
                         🚀 Create Account
                     </button>
 
-                    <div class="relative my-8">
+                    <div class="relative my-6 md:my-8">
                         <div class="absolute inset-0 flex items-center">
                             <div class="w-full border-t border-white border-opacity-20"></div>
                         </div>
@@ -231,23 +287,23 @@
                         </div>
                     </div>
 
-                    <button onclick="browseAsGuest()" class="w-full glass-effect text-white py-5 rounded-2xl font-semibold text-lg hover:bg-white hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-30 group">
+                    <button onclick="browseAsGuest()" class="w-full glass-effect text-white py-4 md:py-5 rounded-2xl font-semibold text-base md:text-lg hover:bg-white hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-30 group no-select">
                         <span class="group-hover:scale-110 transition-transform duration-300 inline-block">👀 Browse as Guest</span>
                     </button>
                 </div>
 
                 <!-- Feature highlights -->
-                <div class="mt-8 grid grid-cols-3 gap-4 text-center">
-                    <div class="feature-card rounded-xl p-3">
-                        <div class="text-2xl mb-1">🔍</div>
+                <div class="mt-6 md:mt-8 grid grid-cols-3 gap-2 md:gap-4 text-center">
+                    <div class="feature-card rounded-lg md:rounded-xl p-2 md:p-3">
+                        <div class="text-xl md:text-2xl mb-1">🔍</div>
                         <div class="text-xs text-white text-opacity-80">Search</div>
                     </div>
-                    <div class="feature-card rounded-xl p-3">
-                        <div class="text-2xl mb-1">💬</div>
+                    <div class="feature-card rounded-lg md:rounded-xl p-2 md:p-3">
+                        <div class="text-xl md:text-2xl mb-1">💬</div>
                         <div class="text-xs text-white text-opacity-80">Chat</div>
                     </div>
-                    <div class="feature-card rounded-xl p-3">
-                        <div class="text-2xl mb-1">⚡</div>
+                    <div class="feature-card rounded-lg md:rounded-xl p-2 md:p-3">
+                        <div class="text-xl md:text-2xl mb-1">⚡</div>
                         <div class="text-xs text-white text-opacity-80">Fast</div>
                     </div>
                 </div>

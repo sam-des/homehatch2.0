@@ -430,12 +430,12 @@ function renderListings() {
     const listingsContainer = document.getElementById('listings');
 
     if (listings.length === 0) {
-        listingsContainer.innerHTML = '<p class="text-gray-500">No listings yet. Add the first one!</p>';
+        listingsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">No listings yet. Add the first one!</p>';
         return;
     }
 
     listingsContainer.innerHTML = listings.map(listing => `
-        <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg card-hover overflow-hidden border border-gray-100">
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg card-hover overflow-hidden border border-gray-100 touch-manipulation">
             ${listing.images.length > 0 ? `
                 <div class="relative h-48 bg-gradient-to-r from-blue-400 to-purple-500">
                     <img src="${listing.images[0]}" alt="Property image" class="w-full h-full object-cover cursor-pointer" onclick="openImageGallery('${listing._id}', ${JSON.stringify(listing.images).replace(/"/g, '&quot;')})">
