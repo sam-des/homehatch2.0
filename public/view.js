@@ -7,11 +7,6 @@ let currentLanguage = 'en';
 let currentCurrency = 'USD';
 let exchangeRates = { USD: 1, ETB: 57.00 }; // Example rates, should be fetched dynamically
 
-// Declare missing variables at the top
-let searchTitle, searchLocation, minPrice, maxPrice, countryFilter, amenityFilter, sortFilter;
-let propertyTypeFilter, bedroomsFilter, bathroomsFilter, petFriendlyFilter;
-let cityFilter, neighborhoodFilter, kebeleFilter, searchBtn, clearBtn;
-
 // Add Amharic language support
 const translations = {
     'perMonth': {
@@ -572,11 +567,18 @@ function renderListings() {
     if (!listingsContainer) return; // Exit if container not found
 
     if (filteredListings.length === 0) {
-        listingsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500">No rentals found matching your criteria.</div>';
+        const emptyMessage = currentViewMode === 'list' ? 
+            '<div class="text-center text-gray-500 py-8">No rentals found matching your criteria.</div>' : 
+            '<div class="col-span-full text-center text-gray-500">No rentals found matching your criteria.</div>';
+        listingsContainer.innerHTML = emptyMessage;
         return;
     }
 
-    listingsContainer.innerHTML = filteredListings.map(listing => createPropertyCard(listing)).join('');
+    if (currentViewMode === 'list') {
+        listingsContainer.innerHTML = filteredListings.map(listing => createListViewCard(listing)).join('');
+    } else {
+        listingsContainer.innerHTML = filteredListings.map(listing => createPropertyCard(listing)).join('');
+    }
 }
 
 // --- Updated and New Functions ---
@@ -694,6 +696,94 @@ function getAmenityIcon(amenity) {
     return icons[amenity] || '✨';
 }
 
+// Create list view card for horizontal layout
+function createListViewCard(listing) {
+    const imageUrl = listing.images && listing.images.length > 0 ? listing.images[0] : '/placeholder.jpg';
+    const price = formatPrice(listing.price);
+    const location = formatLocation(listing);
+
+    return `
+        <div class="property-card-list glass-effect rounded-2xl overflow-hidden shadow-xl bg-white bg-opacity-10 hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-20">
+            <div class="flex flex-col md:flex-row">
+                <!-- Image Section -->
+                <div class="md:w-1/3 relative overflow-hidden">
+                    <img src="${imageUrl}" alt="${listing.title}" class="property-image w-full h-48 md:h-full object-cover">
+                    <div class="absolute top-4 right-4">
+                        <div class="glass-effect px-3 py-1 rounded-full">
+                            <span class="text-white font-bold text-lg">${price}</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1 rounded-full">
+                            <span class="text-white text-sm font-semibold">🏠 Rental</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="md:w-2/3 p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-white mb-2">${listing.title}</h3>
+                                <p class="text-gray-300 text-sm flex items-center mb-2">
+                                    <svg class="w-4 h-4 mr-1 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    ${location}
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-green-400 mb-1">${price}</div>
+                                <div class="text-xs text-gray-400">/month</div>
+                            </div>
+                        </div>
+
+                        <p class="text-gray-300 text-sm mb-4 line-clamp-3">${listing.description}</p>
+
+                        ${listing.amenities && listing.amenities.length > 0 ? `
+                            <div class="mb-4">
+                                <div class="flex flex-wrap gap-2">
+                                    ${listing.amenities.slice(0, 6).map(amenity => `
+                                        <span class="bg-gray-700 bg-opacity-50 text-gray-300 px-3 py-1 rounded-lg text-xs border border-gray-600">${getAmenityIcon(amenity)} ${amenity}</span>
+                                    `).join('')}
+                                    ${listing.amenities.length > 6 ? `<span class="bg-gray-700 bg-opacity-50 text-gray-300 px-3 py-1 rounded-lg text-xs border border-gray-600">+${listing.amenities.length - 6} more</span>` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Property Stats -->
+                        <div class="flex items-center space-x-4 mb-4 text-sm text-gray-400">
+                            ${listing.bedrooms ? `<span class="flex items-center"><span class="mr-1">🛏️</span>${listing.bedrooms} bed</span>` : ''}
+                            ${listing.bathrooms ? `<span class="flex items-center"><span class="mr-1">🚿</span>${listing.bathrooms} bath</span>` : ''}
+                            ${listing.sqft ? `<span class="flex items-center"><span class="mr-1">📏</span>${listing.sqft} sqft</span>` : ''}
+                            ${listing.petFriendly ? `<span class="flex items-center"><span class="mr-1">🐕</span>Pet OK</span>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3">
+                        <button onclick="viewDetails('${listing._id}')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105">
+                            View Details
+                        </button>
+                        <button onclick="addToFavorites('${listing._id}')" class="glass-effect hover:bg-gray-100 hover:bg-opacity-20 text-gray-300 px-4 py-3 rounded-xl transition-all duration-300 border border-gray-600" id="fav-${listing._id}">
+                            ${isInFavorites(listing._id) ? '❤️ Saved' : '🤍 Save'}
+                        </button>
+                        ${currentUser ? `
+                            <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="glass-effect hover:bg-gray-100 hover:bg-opacity-20 text-gray-300 px-4 py-3 rounded-xl transition-all duration-300 border border-gray-600">
+                                💬 Chat
+                            </button>
+                        ` : ''}
+                        <button onclick="openBookingModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg">
+                            📅 Book
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 // Helper function to format location string
 function formatLocation(listing) {
     let parts = [listing.address, listing.city, listing.country];
@@ -716,23 +806,9 @@ function debounce(func, wait) {
 // --- Existing functions modified or kept as is ---
 
 function setupSearch() {
-    // Get all filter elements
-    searchTitle = document.getElementById('searchTitle');
-    searchLocation = document.getElementById('searchLocation');
-    minPrice = document.getElementById('minPrice');
-    maxPrice = document.getElementById('maxPrice');
-    countryFilter = document.getElementById('countryFilter');
-    amenityFilter = document.getElementById('amenityFilter');
-    sortFilter = document.getElementById('sortFilter');
-    searchBtn = document.getElementById('searchBtn');
-    clearBtn = document.getElementById('clearBtn');
-
     const searchInput = document.getElementById('searchInput');
-    const sortSelect = document.getElementById('sortFilter');
+    const sortSelect = document.getElementById('sortSelect');
     const filterButton = document.getElementById('filterButton');
-    const languageSelector = document.getElementById('languageSelector');
-    const currencySelector = document.getElementById('currencySelector');
-
 
     // Add event listeners with null checks
     if (searchInput) {
@@ -777,7 +853,7 @@ function setupSearch() {
 
 function setupAdvancedFilters() {
     // Property type filter
-    propertyTypeFilter = document.createElement('select');
+    const propertyTypeFilter = document.createElement('select');
     propertyTypeFilter.id = 'propertyTypeFilter';
     propertyTypeFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     propertyTypeFilter.innerHTML = `
@@ -790,7 +866,7 @@ function setupAdvancedFilters() {
     `;
 
     // Bedrooms filter
-    bedroomsFilter = document.createElement('select');
+    const bedroomsFilter = document.createElement('select');
     bedroomsFilter.id = 'bedroomsFilter';
     bedroomsFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     bedroomsFilter.innerHTML = `
@@ -802,7 +878,7 @@ function setupAdvancedFilters() {
     `;
 
     // Bathrooms filter
-    bathroomsFilter = document.createElement('select');
+    const bathroomsFilter = document.createElement('select');
     bathroomsFilter.id = 'bathroomsFilter';
     bathroomsFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     bathroomsFilter.innerHTML = `
@@ -825,7 +901,7 @@ function setupAdvancedFilters() {
 
 
     // Add location filters for Ethiopia
-    cityFilter = document.createElement('select');
+    const cityFilter = document.createElement('select');
     cityFilter.id = 'cityFilter';
     cityFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     cityFilter.innerHTML = `
@@ -837,7 +913,7 @@ function setupAdvancedFilters() {
         <option value="Hawassa">Hawassa</option>
     `;
 
-    neighborhoodFilter = document.createElement('select');
+    const neighborhoodFilter = document.createElement('select');
     neighborhoodFilter.id = 'neighborhoodFilter';
     neighborhoodFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     neighborhoodFilter.innerHTML = `
@@ -849,7 +925,7 @@ function setupAdvancedFilters() {
         <option value="Kirkos">Kirkos</option>
     `;
 
-    kebeleFilter = document.createElement('select');
+    const kebeleFilter = document.createElement('select');
     kebeleFilter.id = 'kebeleFilter';
     kebeleFilter.className = 'px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
     kebeleFilter.innerHTML = `
@@ -2980,8 +3056,27 @@ function showOnMap(listingId) {
     }
 }
 
+let currentViewMode = 'grid'; // Default view mode
+
 function toggleView() {
-    alert('View toggle feature coming soon!');
+    const toggleBtn = event.target;
+    const listingsContainer = document.getElementById('listings');
+    
+    if (currentViewMode === 'grid') {
+        // Switch to list view
+        currentViewMode = 'list';
+        toggleBtn.innerHTML = '📊 Grid View';
+        toggleBtn.className = 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105';
+        listingsContainer.className = 'space-y-4'; // Change to list layout
+    } else {
+        // Switch to grid view
+        currentViewMode = 'grid';
+        toggleBtn.innerHTML = '📋 List View';
+        toggleBtn.className = 'btn-secondary';
+        listingsContainer.className = 'grid md:grid-cols-2 lg:grid-cols-3 gap-8'; // Back to grid layout
+    }
+    
+    renderListings();
 }
 
 function showLoginModal() {

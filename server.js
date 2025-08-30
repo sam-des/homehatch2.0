@@ -1,4 +1,3 @@
-
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
@@ -8,17 +7,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cors());
+app.use(express.json());
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public'), {
-  index: ['index.html'],
-  extensions: ['html', 'htm']
-}));
 
 // File-based storage for listings and purchases
 const fs = require('fs');
@@ -207,7 +203,7 @@ app.get('/api/listings', (req, res) => {
     try {
         const data = loadData(); // Use loadData to get the current state
         let listingsData = data.listings || listings || [];
-        
+
         // Handle sorting if requested
         const { _sort, _order } = req.query;
         if (_sort) {
@@ -222,7 +218,7 @@ app.get('/api/listings', (req, res) => {
                 return 0;
             });
         }
-        
+
         const listingsWithCoords = listingsData.map(listing => ({
             ...listing,
             coordinates: listing.coordinates || geocodeAddress(listing.address || '')
@@ -397,42 +393,24 @@ app.delete('/api/listings/:id', requireAuth, (req, res) => {
   }
 });
 
-// Serve frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
+// Serve HTML pages explicitly 
 app.get('/view', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'view.html'));
+    res.sendFile(path.join(__dirname, 'public', 'view.html'));
 });
 
-app.get('/view.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'view.html'));
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Catch-all route for SPA - must be before admin endpoints
-app.get('*', (req, res, next) => {
-  // Skip API routes
-  if (req.path.startsWith('/api/')) {
-    return next();
-  }
-  
-  // Try to serve static file first
-  const filePath = path.join(__dirname, 'public', req.path);
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    return res.sendFile(filePath);
-  }
-  
-  // Default to index.html for unknown routes
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Catch-all handler for client-side routing
+app.get('*', (req, res) => {
+    // If requesting a file with extension, let static middleware handle it
+    if (req.path.includes('.')) {
+        res.status(404).send('File not found');
+    } else {
+        // For all other routes, serve the main index.html
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
 });
 
 // Admin endpoints
@@ -882,7 +860,7 @@ app.get('/api/listings/:id/availability', (req, res) => {
   try {
     const listingId = parseInt(req.params.id);
     const listing = listings.find(l => l._id === listingId);
-    
+
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
@@ -896,7 +874,7 @@ app.get('/api/listings/:id/availability', (req, res) => {
     confirmedBookings.forEach(booking => {
       const checkIn = new Date(booking.checkIn);
       const checkOut = new Date(booking.checkOut);
-      
+
       for (let d = new Date(checkIn); d < checkOut; d.setDate(d.getDate() + 1)) {
         unavailableDates.push(d.toISOString().split('T')[0]);
       }
@@ -917,7 +895,7 @@ app.get('/api/listings/:id/availability', (req, res) => {
 app.post('/api/calculate-price', (req, res) => {
   try {
     const { listingId, checkIn, checkOut, guests } = req.body;
-    
+
     const listing = listings.find(l => l._id === parseInt(listingId));
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
@@ -926,7 +904,7 @@ app.post('/api/calculate-price', (req, res) => {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-    
+
     if (nights <= 0) {
       return res.status(400).json({ error: 'Invalid date range' });
     }
@@ -1184,7 +1162,7 @@ app.post('/api/bookings/:id/cancel', requireAuth, (req, res) => {
   try {
     const bookingId = parseInt(req.params.id);
     const { reason } = req.body;
-    
+
     const bookingIndex = bookings.findIndex(b => b._id === bookingId);
     if (bookingIndex === -1) {
       return res.status(404).json({ error: 'Booking not found' });
@@ -1327,10 +1305,11 @@ app.post('/api/payment-methods', requireAuth, (req, res) => {
   }
 });
 
-// Start server - bind to 0.0.0.0 for Replit
+// Start server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`HomeHatch server running on port ${PORT}`);
-  console.log(`Frontend: http://localhost:${PORT}`);
-  console.log(`Browse Properties: http://localhost:${PORT}/view.html`);
-  console.log(`Admin credentials: admin/admin123`);
+    console.log(`HomeHatch server running on port ${PORT}`);
+    console.log(`Frontend: http://localhost:${PORT}`);
+    console.log(`Browse Properties: http://localhost:${PORT}/view.html`);
+    console.log('Admin credentials: admin/admin123');
 });
