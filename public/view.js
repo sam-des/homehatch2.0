@@ -2440,8 +2440,70 @@ function initializeInteractiveMap() {
     document.addEventListener('touchmove', dragTouch, { passive: false });
     document.addEventListener('touchend', endDrag);
 
+    // Click event for coordinates
+    mapImage.addEventListener('click', handleMapClick);
+
     // Prevent context menu on right click
     mapImage.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function handleMapClick(e) {
+    const mapImage = document.getElementById('mapImage');
+    const coordinateDisplay = document.getElementById('coordinateDisplay');
+    if (!mapImage || !coordinateDisplay) return;
+
+    const rect = mapImage.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Convert pixel coordinates to approximate lat/lng
+    const lat = 90 - (y / rect.height) * 180;
+    const lng = (x / rect.width) * 360 - 180;
+    
+    coordinateDisplay.textContent = `📍 ${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+    
+    // Add temporary marker
+    addTemporaryMarker(x, y, lat, lng);
+}
+
+function addTemporaryMarker(x, y, lat, lng) {
+    const mapImage = document.getElementById('mapImage');
+    
+    // Remove existing temporary markers
+    const existingMarkers = mapImage.querySelectorAll('.temp-marker');
+    existingMarkers.forEach(marker => marker.remove());
+    
+    // Create new marker
+    const marker = document.createElement('div');
+    marker.className = 'temp-marker';
+    marker.style.cssText = `
+        position: absolute;
+        left: ${x - 10}px;
+        top: ${y - 10}px;
+        width: 20px;
+        height: 20px;
+        background: #ef4444;
+        border: 2px solid white;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        cursor: pointer;
+        z-index: 20;
+        animation: markerBounce 0.6s ease;
+    `;
+    
+    marker.onclick = () => {
+        alert(`📍 Coordinates: ${lat.toFixed(4)}°, ${lng.toFixed(4)}°\n\nClick "Share" to copy location link.`);
+    };
+    
+    mapImage.appendChild(marker);
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (marker.parentNode) {
+            marker.style.animation = 'fadeOut 0.5s ease';
+            setTimeout(() => marker.remove(), 500);
+        }
+    }, 10000);
 }
 
 function startDrag(e) {
@@ -2505,51 +2567,22 @@ function generateWorldMapSVG() {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-image: url('data:image/svg+xml;base64,${btoa(`
-                <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Detailed World Map Continents -->
-                    <!-- Africa -->
-                    <path d="M 550 180 Q 580 170 620 190 L 640 240 Q 650 300 640 380 L 600 450 Q 570 460 540 440 L 520 380 Q 510 300 530 240 Z" fill="#22c55e" opacity="0.8" stroke="#16a34a" stroke-width="2"/>
-                    
-                    <!-- Europe -->
-                    <path d="M 480 120 Q 530 110 580 130 L 600 160 Q 570 170 540 165 L 510 155 Q 480 145 480 120 Z" fill="#3b82f6" opacity="0.8" stroke="#2563eb" stroke-width="2"/>
-                    
-                    <!-- Asia -->
-                    <path d="M 580 130 Q 720 120 860 160 L 920 220 Q 950 280 930 340 L 880 370 Q 780 380 680 360 L 620 300 Q 580 240 600 190 Z" fill="#f59e0b" opacity="0.8" stroke="#d97706" stroke-width="2"/>
-                    
-                    <!-- North America -->
-                    <path d="M 180 150 Q 240 130 340 160 L 390 220 Q 370 280 320 310 L 240 320 Q 180 310 150 250 L 160 200 Q 170 170 180 150 Z" fill="#ef4444" opacity="0.8" stroke="#dc2626" stroke-width="2"/>
-                    
-                    <!-- South America -->
-                    <path d="M 240 320 Q 290 310 330 340 L 350 420 Q 340 500 310 550 L 240 580 Q 190 570 170 520 L 180 460 Q 200 380 240 320 Z" fill="#8b5cf6" opacity="0.8" stroke="#7c3aed" stroke-width="2"/>
-                    
-                    <!-- Australia -->
-                    <path d="M 800 450 Q 860 440 920 460 L 950 490 Q 940 520 910 530 L 850 535 Q 800 525 780 490 L 790 475 Q 795 465 800 450 Z" fill="#06b6d4" opacity="0.8" stroke="#0891b2" stroke-width="2"/>
-                    
-                    <!-- Ocean patterns -->
-                    <defs>
-                        <pattern id="oceanPattern" patternUnits="userSpaceOnUse" width="40" height="40">
-                            <circle cx="20" cy="20" r="2" fill="#1e40af" opacity="0.3"/>
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#oceanPattern)"/>
-                    
-                    <!-- Grid lines -->
-                    <defs>
-                        <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-                            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#1e40af" stroke-width="1" opacity="0.2"/>
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#grid)"/>
-                </svg>
-                `)}');
+                background: url('https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/raster/NE1_HR_LC_SR_W_DR.jpg') no-repeat center center;
                 background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
                 cursor: grab;
                 transition: transform 0.2s ease;
                 transform-origin: center center;
             ">
+                <!-- Fallback SVG World Map -->
+                <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                    <!-- World Continents -->
+                    <path d="M 550 180 Q 580 170 620 190 L 640 240 Q 650 300 640 380 L 600 450 Q 570 460 540 440 L 520 380 Q 510 300 530 240 Z" fill="#22c55e" opacity="0.6" stroke="#16a34a" stroke-width="2"/>
+                    <path d="M 480 120 Q 530 110 580 130 L 600 160 Q 570 170 540 165 L 510 155 Q 480 145 480 120 Z" fill="#3b82f6" opacity="0.6" stroke="#2563eb" stroke-width="2"/>
+                    <path d="M 580 130 Q 720 120 860 160 L 920 220 Q 950 280 930 340 L 880 370 Q 780 380 680 360 L 620 300 Q 580 240 600 190 Z" fill="#f59e0b" opacity="0.6" stroke="#d97706" stroke-width="2"/>
+                    <path d="M 180 150 Q 240 130 340 160 L 390 220 Q 370 280 320 310 L 240 320 Q 180 310 150 250 L 160 200 Q 170 170 180 150 Z" fill="#ef4444" opacity="0.6" stroke="#dc2626" stroke-width="2"/>
+                    <path d="M 240 320 Q 290 310 330 340 L 350 420 Q 340 500 310 550 L 240 580 Q 190 570 170 520 L 180 460 Q 200 380 240 320 Z" fill="#8b5cf6" opacity="0.6" stroke="#7c3aed" stroke-width="2"/>
+                    <path d="M 800 450 Q 860 440 920 460 L 950 490 Q 940 520 910 530 L 850 535 Q 800 525 780 490 L 790 475 Q 795 465 800 450 Z" fill="#06b6d4" opacity="0.6" stroke="#0891b2" stroke-width="2"/>
+                </svg>
             </div>
             
             <!-- Interactive Controls Overlay -->
@@ -2594,6 +2627,21 @@ function generateWorldMapSVG() {
                 " onmouseover="this.style.background='rgba(0,0,0,0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.7)'">⌂</button>
             </div>
             
+            <!-- Coordinate Display -->
+            <div id="coordinateDisplay" class="map-info" style="
+                position: absolute;
+                bottom: 3rem;
+                left: 1rem;
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                font-size: 12px;
+                z-index: 10;
+            ">
+                Click map to see coordinates
+            </div>
+            
             <!-- Map Navigation Info -->
             <div class="map-info" style="
                 position: absolute;
@@ -2606,7 +2654,7 @@ function generateWorldMapSVG() {
                 font-size: 12px;
                 z-index: 10;
             ">
-                🖱️ Click and drag to pan • 🔍 Use controls to zoom
+                🖱️ Click and drag to pan • 🔍 Use controls to zoom • Click to place markers
             </div>
         </div>
     `;
@@ -2982,20 +3030,67 @@ function highlightMapMarker(listingId) {
 }
 
 function zoomMapIn() {
-    mapTransform.scale = Math.min(mapTransform.scale + 0.3, 3);
-    updateMapTransform();
+    if (!window.mapZoomLevel) window.mapZoomLevel = 1;
+    window.mapZoomLevel = Math.min(window.mapZoomLevel + 0.3, 3);
+    updateMapZoom();
+    
+    // Show zoom notification
+    showMapNotification(`🔍 Zoomed in to ${(window.mapZoomLevel * 100).toFixed(0)}%`);
 }
 
 function zoomMapOut() {
-    mapTransform.scale = Math.max(mapTransform.scale - 0.3, 0.5);
-    updateMapTransform();
+    if (!window.mapZoomLevel) window.mapZoomLevel = 1;
+    window.mapZoomLevel = Math.max(window.mapZoomLevel - 0.3, 0.5);
+    updateMapZoom();
+    
+    // Show zoom notification
+    showMapNotification(`🔍 Zoomed out to ${(window.mapZoomLevel * 100).toFixed(0)}%`);
 }
 
 function resetMapZoom() {
-    mapTransform.scale = 1;
+    window.mapZoomLevel = 1;
     lastTranslate.x = 0;
     lastTranslate.y = 0;
-    updateMapTransform();
+    updateMapZoom();
+    
+    // Show reset notification
+    showMapNotification('🏠 Map reset to original view');
+}
+
+function updateMapZoom() {
+    const mapImage = document.getElementById('mapImage');
+    if (!mapImage) return;
+    
+    const scale = window.mapZoomLevel || 1;
+    const translateX = lastTranslate.x || 0;
+    const translateY = lastTranslate.y || 0;
+    
+    mapImage.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+}
+
+function showMapNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 9999;
+        animation: fadeInOut 2s ease;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 2000);
 }
 
 function updateMapZoom() {

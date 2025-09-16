@@ -252,6 +252,25 @@
         .swipe-container::-webkit-scrollbar {
             display: none;
         }
+
+        /* Map marker animations */
+        @keyframes markerBounce {
+            0% { transform: rotate(-45deg) translateY(-20px) scale(0); }
+            50% { transform: rotate(-45deg) translateY(-5px) scale(1.2); }
+            100% { transform: rotate(-45deg) translateY(0) scale(1); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: rotate(-45deg) scale(1); }
+            to { opacity: 0; transform: rotate(-45deg) scale(0.5); }
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
         
         /* Map Styles */
         #mapContainer {
