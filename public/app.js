@@ -72,6 +72,35 @@ function t(key) {
     return translations[currentLanguage][key] || translations.en[key] || key;
 }
 
+// Helper function to escape HTML to prevent XSS
+function escapeHTML(str) {
+    if (!str) return '';
+    if (typeof str !== 'string') {
+        str = String(str);
+    }
+    
+    // Create a text node and get its HTML representation
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// More comprehensive HTML escaping for security-critical cases
+function escapeHTMLStrict(str) {
+    if (!str) return '';
+    if (typeof str !== 'string') {
+        str = String(str);
+    }
+    
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+}
+
 // Load listings when page loads
 document.addEventListener('DOMContentLoaded', function() {
     // Load saved language preference
@@ -158,11 +187,11 @@ function updateAuthUI() {
                     <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-30">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
                             ${currentUser.profilePicture ?
-                                `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
-                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                                `<img src="${escapeHTMLStrict(currentUser.profilePicture)}" alt="Profile" class="w-full h-full object-cover">` :
+                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${escapeHTMLStrict(currentUser.username.charAt(0).toUpperCase())}</div>`
                             }
                         </div>
-                        <span class="hidden md:block">${currentUser.username}</span>
+                        <span class="hidden md:block">${escapeHTMLStrict(currentUser.username)}</span>
                         <svg class="w-4 h-4 transition-transform duration-200" id="profileArrow" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>
@@ -173,13 +202,13 @@ function updateAuthUI() {
                             <div class="flex items-center space-x-3">
                                 <div class="w-12 h-12 rounded-full overflow-hidden">
                                     ${currentUser.profilePicture ?
-                                        `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
-                                        `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                                        `<img src="${escapeHTMLStrict(currentUser.profilePicture)}" alt="Profile" class="w-full h-full object-cover">` :
+                                        `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${escapeHTMLStrict(currentUser.username.charAt(0).toUpperCase())}</div>`
                                     }
                                 </div>
                                 <div>
-                                    <h3 class="font-semibold text-lg">${currentUser.username}</h3>
-                                    <p class="text-sm opacity-90">${currentUser.email}</p>
+                                    <h3 class="font-semibold text-lg">${escapeHTMLStrict(currentUser.username)}</h3>
+                                    <p class="text-sm opacity-90">${escapeHTMLStrict(currentUser.email)}</p>
                                     ${currentUser.role === 'admin' ? `<span class="inline-block bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">${t('admin')}</span>` : '<span class="inline-block bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">User</span>'}
                                 </div>
                             </div>
@@ -438,43 +467,43 @@ function renderListings() {
         <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg card-hover overflow-hidden border border-gray-100 touch-manipulation">
             ${listing.images.length > 0 ? `
                 <div class="relative h-48 bg-gradient-to-r from-blue-400 to-purple-500">
-                    <img src="${listing.images[0]}" alt="Property image" class="w-full h-full object-cover cursor-pointer" onclick="openImageGallery('${listing._id}', ${JSON.stringify(listing.images).replace(/"/g, '&quot;')})">
+                    <img src="${escapeHTMLStrict(listing.images[0])}" alt="Property image" class="w-full h-full object-cover cursor-pointer" onclick="openImageGallery('${escapeHTMLStrict(listing._id)}', ${escapeHTMLStrict(JSON.stringify(listing.images)).replace(/"/g, '&quot;')})">
                     ${listing.images.length > 1 ? `
                         <div class="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-xs">
-                            +${listing.images.length - 1} photos
+                            +${parseInt(listing.images.length) - 1} photos
                         </div>
                     ` : ''}
                     <div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
-                        $${listing.price}/mo
+                        $${parseFloat(listing.price)}/mo
                     </div>
                     <div class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-lg text-xs">
-                        📍 ${listing.address.length > 30 ? listing.address.substring(0, 30) + '...' : listing.address}
+                        📍 ${escapeHTMLStrict(listing.address.length > 30 ? listing.address.substring(0, 30) + '...' : listing.address)}
                     </div>
                 </div>
             ` : `
                 <div class="h-48 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center relative">
                     <span class="text-white text-6xl">🏠</span>
                     <div class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-lg text-xs">
-                        📍 ${listing.address.length > 30 ? listing.address.substring(0, 30) + '...' : listing.address}
+                        📍 ${escapeHTMLStrict(listing.address.length > 30 ? listing.address.substring(0, 30) + '...' : listing.address)}
                     </div>
                 </div>
             `}
 
             <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-2">${listing.title}</h3>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">${escapeHTMLStrict(listing.title)}</h3>
                 <div class="bg-gray-50 rounded-lg p-3 mb-4">
                     <div class="flex items-start mb-2">
                         <span class="text-red-500 mr-2 text-lg">📍</span>
                         <div>
-                            <p class="text-gray-700 font-medium leading-tight">${listing.address}</p>
+                            <p class="text-gray-700 font-medium leading-tight">${escapeHTMLStrict(listing.address)}</p>
                             <p class="text-gray-500 text-sm flex items-center mt-1">
                                 <span class="mr-1">🌍</span>
-                                ${listing.country}
+                                ${escapeHTMLStrict(listing.country)}
                             </p>
                         </div>
                     </div>
                 </div>
-                <p class="text-gray-700 mb-4 text-sm leading-relaxed">${listing.description}</p>
+                <p class="text-gray-700 mb-4 text-sm leading-relaxed">${escapeHTMLStrict(listing.description)}</p>
 
                 <div class="mb-4">
                     <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
@@ -482,8 +511,8 @@ function renderListings() {
                         Amenities
                     </h4>
                     <div class="flex flex-wrap gap-1">
-                        ${listing.amenities.map(amenity => `
-                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${amenity.trim()}</span>
+                        ${(listing.amenities || []).map(amenity => `
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${escapeHTMLStrict(amenity.trim())}</span>
                         `).join('')}
                     </div>
                 </div>
@@ -491,9 +520,9 @@ function renderListings() {
                 <div class="mb-4">
                     <div class="text-sm text-gray-500">
                         ${currentUser || !isGuest ? `
-                            <span class="font-semibold">Contact:</span> ${listing.contact?.name || 'Anonymous'}
-                            ${listing.contact?.email ? `<br><span class="text-blue-600">${listing.contact.email}</span>` : ''}
-                            ${listing.contact?.phone ? `<br><span class="text-green-600">${listing.contact.phone}</span>` : ''}
+                            <span class="font-semibold">Contact:</span> ${escapeHTMLStrict(listing.contact?.name || 'Anonymous')}
+                            ${listing.contact?.email ? `<br><span class="text-blue-600">${escapeHTMLStrict(listing.contact.email)}</span>` : ''}
+                            ${listing.contact?.phone ? `<br><span class="text-green-600">${escapeHTMLStrict(listing.contact.phone)}</span>` : ''}
                         ` : `
                             <button onclick="showLoginModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
                                 Login to see contact
@@ -504,17 +533,17 @@ function renderListings() {
 
                 <div class="flex items-center justify-between pt-4 border-t border-gray-200">
                     <div class="text-2xl font-bold text-green-600">
-                        $${listing.price}/mo
+                        $${parseFloat(listing.price)}/mo
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="showOnMap('${listing._id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                        <button onclick="showOnMap('${escapeHTMLStrict(listing._id)}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
                             🗺️ Map
                         </button>
                         ${currentUser && !isGuest ? `
-                            <button onclick="openBookingModal('${listing._id}', '${listing.title}', ${listing.price})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            <button onclick="openBookingModal('${escapeHTMLStrict(listing._id)}', '${escapeHTMLStrict(listing.title)}', ${parseFloat(listing.price)})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
                                 📅 Book
                             </button>
-                            <button onclick="openChatModal('${listing._id}', '${listing.title}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            <button onclick="openChatModal('${escapeHTMLStrict(listing._id)}', '${escapeHTMLStrict(listing.title)}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
                                 💬 Chat
                             </button>
                         ` : `
@@ -523,7 +552,7 @@ function renderListings() {
                             </button>
                         `}
                         ${canDeleteListing(listing) ? `
-                            <button onclick="deleteListing('${listing._id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors">
+                            <button onclick="deleteListing('${escapeHTMLStrict(listing._id)}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors">
                                 🗑️
                             </button>
                         `: ''}
@@ -649,7 +678,112 @@ function openFullMap(lat, lon) {
 
 // Function to show street view
 function showStreetView(lat, lon) {
-    alert(`Street View feature coming soon!\nLocation: ${lat}, ${lon}`);
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="max-w-6xl w-full h-5/6 bg-white rounded-2xl overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <h2 class="text-xl font-bold flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd"></path>
+                        <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"></path>
+                    </svg>
+                    Street View
+                </h2>
+                <button onclick="this.closest('.fixed').remove()" class="text-white hover:text-red-200 text-2xl bg-black bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center">×</button>
+            </div>
+            <div class="h-full relative bg-gradient-to-b from-sky-400 via-sky-300 to-green-300 overflow-hidden">
+                <!-- Street View Simulation -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="mb-6">
+                            <div class="text-8xl mb-4">🏠</div>
+                            <div class="text-4xl mb-4">🌳 🚗 🚶‍♂️ 🌳</div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Street View Experience</h3>
+                        <p class="text-gray-700 mb-4">Location: ${lat.toFixed(6)}, ${lon.toFixed(6)}</p>
+                        <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 rounded">
+                            <p class="text-sm text-yellow-700">⚠️ <strong>Development Note:</strong> This is a UI prototype. For production, integrate Google Maps Street View API or Mapbox equivalent.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Street View Controls -->
+                <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4">
+                    <button onclick="rotateStreetView('left')" class="bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-4 py-2 rounded-full shadow-lg transition-all duration-200 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Turn Left
+                    </button>
+                    <button onclick="moveStreetView('forward')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg transition-all duration-200 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" transform="rotate(180)"></path>
+                        </svg>
+                        Move Forward
+                    </button>
+                    <button onclick="rotateStreetView('right')" class="bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-4 py-2 rounded-full shadow-lg transition-all duration-200 flex items-center">
+                        Turn Right
+                        <svg class="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Street View UI Elements -->
+                <div class="absolute top-4 left-4 bg-white bg-opacity-90 rounded-lg p-3 shadow-lg">
+                    <div class="text-sm font-semibold text-gray-800 mb-1">Current View</div>
+                    <div class="text-xs text-gray-600">Facing: North</div>
+                    <div class="text-xs text-gray-600">Elevation: Ground Level</div>
+                </div>
+                
+                <div class="absolute top-4 right-4 bg-white bg-opacity-90 rounded-lg p-3 shadow-lg">
+                    <div class="text-sm font-semibold text-gray-800 mb-1">Actions</div>
+                    <button onclick="openFullMap(${lat}, ${lon})" class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mb-1 block w-full">🗺️ Show Map</button>
+                    <button onclick="shareLocation(${lat}, ${lon})" class="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded block w-full">📤 Share Location</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Street view control functions
+function rotateStreetView(direction) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    notification.textContent = `Rotating ${direction}...`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 1500);
+}
+
+function moveStreetView(direction) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    notification.textContent = `Moving ${direction}...`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 1500);
+}
+
+function shareLocation(lat, lon) {
+    const url = `https://maps.google.com/?q=${lat},${lon}`;
+    if (navigator.share) {
+        navigator.share({
+            title: 'Property Location',
+            text: `Check out this property location`,
+            url: url
+        });
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Location URL copied to clipboard!');
+        });
+    }
 }
 
 // Function to fetch coordinates from an address (using a placeholder API)
@@ -960,8 +1094,8 @@ function viewAccountSettings() {
                 <div class="space-y-4">
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="font-semibold text-gray-800 mb-2">Account Information</h3>
-                        <p><strong>Username:</strong> ${currentUser.username}</p>
-                        <p><strong>Email:</strong> ${currentUser.email}</p>
+                        <p><strong>Username:</strong> ${escapeHTMLStrict(currentUser.username)}</p>
+                        <p><strong>Email:</strong> ${escapeHTMLStrict(currentUser.email)}</p>
                         <p><strong>Role:</strong> ${currentUser.role}</p>
                         <p><strong>Member Since:</strong> ${new Date(currentUser.createdAt).toLocaleDateString()}</p>
                     </div>
@@ -1117,10 +1251,10 @@ async function loadAllUsers() {
                         <tbody>
                             ${users.map(user => `
                                 <tr class="border-b hover:bg-gray-50">
-                                    <td class="px-4 py-2">${user.username}</td>
-                                    <td class="px-4 py-2">${user.email}</td>
+                                    <td class="px-4 py-2">${escapeHTMLStrict(user.username)}</td>
+                                    <td class="px-4 py-2">${escapeHTMLStrict(user.email)}</td>
                                     <td class="px-4 py-2">
-                                        <select onchange="changeUserRole('${user._id}', this.value)" class="text-sm border rounded px-2 py-1">
+                                        <select onchange="changeUserRole('${escapeHTMLStrict(user._id)}', this.value)" class="text-sm border rounded px-2 py-1">
                                             <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
                                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                                         </select>
@@ -1128,7 +1262,7 @@ async function loadAllUsers() {
                                     <td class="px-4 py-2">${new Date(user.createdAt).toLocaleDateString()}</td>
                                     <td class="px-4 py-2">
                                         ${user._id !== currentUser._id ? `
-                                            <button onclick="deleteUser('${user._id}', '${user.username}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+                                            <button onclick="deleteUser('${escapeHTMLStrict(user._id)}', '${escapeHTMLStrict(user.username)}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
                                                 Delete
                                             </button>
                                         ` : '<span class="text-gray-400 text-xs">Current User</span>'}
@@ -1563,8 +1697,8 @@ function changeProfilePicture() {
                     <div class="text-center mb-4">
                         <div class="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4">
                             ${currentUser.profilePicture ?
-                                `<img src="${currentUser.profilePicture}" alt="Current Profile" class="w-full h-full object-cover">` :
-                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                                `<img src="${escapeHTMLStrict(currentUser.profilePicture)}" alt="Current Profile" class="w-full h-full object-cover">` :
+                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">${escapeHTMLStrict(currentUser.username.charAt(0).toUpperCase())}</div>`
                             }
                         </div>
                     </div>
@@ -1917,8 +2051,8 @@ async function loadChatMessages() {
         chatContainer.innerHTML = messages.map(msg => `
             <div class="flex ${msg.userId === currentUser._id ? 'justify-end' : 'justify-start'}">
                 <div class="max-w-xs lg:max-w-md ${msg.userId === currentUser._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} rounded-lg px-3 py-2">
-                    <div class="text-xs opacity-75 mb-1">${msg.username}</div>
-                    <div class="text-sm">${msg.message}</div>
+                    <div class="text-xs opacity-75 mb-1">${escapeHTMLStrict(msg.username)}</div>
+                    <div class="text-sm">${escapeHTMLStrict(msg.message)}</div>
                     <div class="text-xs opacity-60 mt-1">${new Date(msg.timestamp).toLocaleTimeString()}</div>
                 </div>
             </div>

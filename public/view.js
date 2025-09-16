@@ -426,11 +426,11 @@ function updateHeader() {
                     <button id="profileBtn" class="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 border border-white border-opacity-30">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden">
                             ${currentUser.profilePicture ?
-                                `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
-                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                                `<img src="${escapeHTMLStrict(currentUser.profilePicture)}" alt="Profile" class="w-full h-full object-cover">` :
+                                `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">${escapeHTMLStrict(currentUser.username.charAt(0).toUpperCase())}</div>`
                             }
                         </div>
-                        <span class="hidden md:block">${currentUser.username}</span>
+                        <span class="hidden md:block">${escapeHTMLStrict(currentUser.username)}</span>
                         <svg class="w-4 h-4 transition-transform duration-200" id="profileArrow" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>
@@ -441,13 +441,13 @@ function updateHeader() {
                             <div class="flex items-center space-x-3">
                                 <div class="w-12 h-12 rounded-full overflow-hidden">
                                     ${currentUser.profilePicture ?
-                                        `<img src="${currentUser.profilePicture}" alt="Profile" class="w-full h-full object-cover">` :
-                                        `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${currentUser.username.charAt(0).toUpperCase()}</div>`
+                                        `<img src="${escapeHTMLStrict(currentUser.profilePicture)}" alt="Profile" class="w-full h-full object-cover">` :
+                                        `<div class="w-full h-full bg-white bg-opacity-20 rounded-full flex items-center justify-center text-lg font-bold">${escapeHTMLStrict(currentUser.username.charAt(0).toUpperCase())}</div>`
                                     }
                                 </div>
                                 <div>
-                                    <h3 class="font-semibold text-lg">${currentUser.username}</h3>
-                                    <p class="text-sm opacity-90">${currentUser.email}</p>
+                                    <h3 class="font-semibold text-lg">${escapeHTMLStrict(currentUser.username)}</h3>
+                                    <p class="text-sm opacity-90">${escapeHTMLStrict(currentUser.email)}</p>
                                     ${currentUser.role === 'admin' ? '<span class="inline-block bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">Administrator</span>' : '<span class="inline-block bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">User</span>'}
                                 </div>
                             </div>
@@ -1129,8 +1129,8 @@ function viewDetails(listingId) {
                         <strong>${t('contactInformation')}:</strong>
                         <div class="mt-2 space-y-1">
                             <p>Name: ${listing.contact?.name || 'Not provided'}</p>
-                            <p>Email: ${listing.contact?.email ? `<a href="mailto:${listing.contact.email}" class="text-blue-600 hover:text-blue-800 transition-colors">${listing.contact.email}</a>` : 'Not provided'}</p>
-                            <p>Phone: ${listing.contact?.phone ? `<a href="tel:${listing.contact.phone}" class="text-blue-600 hover:text-blue-600 transition-colors">${listing.contact.phone}</a>` : 'Not provided'}</p>
+                            <p>Email: ${listing.contact?.email ? `<a href="mailto:${escapeHTMLStrict(listing.contact.email)}" class="text-blue-600 hover:text-blue-800 transition-colors">${escapeHTMLStrict(listing.contact.email)}</a>` : 'Not provided'}</p>
+                            <p>Phone: ${listing.contact?.phone ? `<a href="tel:${escapeHTMLStrict(listing.contact.phone)}" class="text-blue-600 hover:text-blue-600 transition-colors">${escapeHTMLStrict(listing.contact.phone)}</a>` : 'Not provided'}</p>
                         </div>
                     </div>
                 </div>
@@ -1442,8 +1442,8 @@ async function loadChatMessages(listingId) {
         chatContainer.innerHTML = messages.map(msg => `
             <div class="flex ${msg.userId === currentUser._id ? 'justify-end' : 'justify-start'}">
                 <div class="max-w-xs lg:max-w-md ${msg.userId === currentUser._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} rounded-lg px-3 py-2">
-                    <div class="text-xs opacity-75 mb-1">${msg.username}</div>
-                    <div class="text-sm">${msg.message}</div>
+                    <div class="text-xs opacity-75 mb-1">${escapeHTMLStrict(msg.username)}</div>
+                    <div class="text-sm">${escapeHTMLStrict(msg.message)}</div>
                     <div class="text-xs opacity-60 mt-1">${new Date(msg.timestamp).toLocaleTimeString()}</div>
                 </div>
             </div>
@@ -1590,8 +1590,8 @@ function viewAccountSettings() {
                 <div class="space-y-4">
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="font-semibold text-gray-800 mb-2">Account Information</h3>
-                        <p><strong>Username:</strong> ${currentUser.username}</p>
-                        <p><strong>Email:</strong> ${currentUser.email}</p>
+                        <p><strong>Username:</strong> ${escapeHTMLStrict(currentUser.username)}</p>
+                        <p><strong>Email:</strong> ${escapeHTMLStrict(currentUser.email)}</p>
                         <p><strong>Role:</strong> ${currentUser.role}</p>
                         <p><strong>Member Since:</strong> ${new Date(currentUser.createdAt).toLocaleDateString()}</p>
                     </div>
@@ -1848,29 +1848,314 @@ function startVirtualTour(listingId) {
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
-        <div class="max-w-6xl w-full h-5/6 bg-white rounded-lg overflow-hidden">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h2 class="text-xl font-bold">🥽 Virtual Tour: ${listing.title}</h2>
-                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        <div class="max-w-7xl w-full h-5/6 bg-white rounded-2xl overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                <h2 class="text-xl font-bold flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                    </svg>
+                    🥽 Virtual Tour: ${escapeHTML(listing.title)}
+                </h2>
+                <button onclick="this.closest('.fixed').remove()" class="text-white hover:text-red-200 text-2xl bg-black bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center">×</button>
             </div>
-            <div class="h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                <div class="text-center">
-                    <div class="text-6xl mb-4">🏠</div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">360° Virtual Tour</h3>
-                    <p class="text-gray-600 mb-6">Experience this property in immersive 3D</p>
-                    <div class="space-y-4">
-                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold mr-4">📱 AR View</button>
-                        <button class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold mr-4">🖥️ Desktop Tour</button>
-                        <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold">📹 Video Tour</button>
+            <div class="h-full flex">
+                <!-- Virtual Tour Main View -->
+                <div class="flex-1 relative bg-gradient-to-br from-gray-900 via-gray-800 to-black" id="virtualTourMain">
+                    <div class="absolute inset-0 flex items-center justify-center" id="tourView">
+                        <div class="text-center text-white">
+                            <div class="mb-8">
+                                <div class="text-8xl mb-6">🏡</div>
+                                <div class="relative mx-auto w-96 h-64 bg-gradient-to-br from-amber-200 to-orange-300 rounded-xl overflow-hidden shadow-2xl">
+                                    <div class="absolute top-4 left-4 w-12 h-8 bg-blue-400 rounded"></div>
+                                    <div class="absolute top-4 right-4 w-8 h-8 bg-yellow-300 rounded-full"></div>
+                                    <div class="absolute bottom-4 left-4 right-4 h-12 bg-amber-600 rounded"></div>
+                                    <div class="absolute inset-4 bg-gradient-to-t from-amber-400 to-transparent rounded-lg"></div>
+                                </div>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-4" id="currentRoomName">Living Room</h3>
+                            <p class="text-gray-300 mb-4">Navigate through different rooms using the controls</p>
+                            <div class="bg-yellow-900 bg-opacity-50 border-l-4 border-yellow-500 p-3 rounded text-sm">
+                                <p class="text-yellow-200">⚠️ <strong>Development Note:</strong> UI prototype ready. For production: integrate PhotoSphereViewer or Panolens.js with actual 360° images.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mt-8 text-sm text-gray-500">
-                        Virtual tours coming soon! This feature will provide 360° property views.
+                    
+                    <!-- Virtual Tour Navigation Controls -->
+                    <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
+                        <button onclick="rotateVirtualTour('left')" class="bg-white bg-opacity-20 backdrop-blur text-white px-4 py-2 rounded-full hover:bg-opacity-30 transition-all duration-200 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Rotate Left
+                        </button>
+                        <button onclick="rotateVirtualTour('right')" class="bg-white bg-opacity-20 backdrop-blur text-white px-4 py-2 rounded-full hover:bg-opacity-30 transition-all duration-200 flex items-center">
+                            Rotate Right
+                            <svg class="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Tour Mode Indicator -->
+                    <div class="absolute top-6 left-6 bg-black bg-opacity-50 text-white px-4 py-2 rounded-full">
+                        <span class="text-sm">🔄 360° Mode</span>
+                    </div>
+                </div>
+                
+                <!-- Room Navigation Sidebar -->
+                <div class="w-80 bg-gray-50 p-6 overflow-y-auto">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">🏠 Room Navigation</h3>
+                    <div class="space-y-3 mb-6">
+                        <button onclick="switchRoom('living')" class="w-full text-left p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-blue-500 room-btn active" data-room="living">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🛋️</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Living Room</div>
+                                    <div class="text-xs text-gray-600">Main gathering space</div>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="switchRoom('kitchen')" class="w-full text-left p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-green-500 room-btn" data-room="kitchen">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🍳</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Kitchen</div>
+                                    <div class="text-xs text-gray-600">Modern appliances</div>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="switchRoom('bedroom')" class="w-full text-left p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-purple-500 room-btn" data-room="bedroom">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🛏️</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Master Bedroom</div>
+                                    <div class="text-xs text-gray-600">Spacious and comfortable</div>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="switchRoom('bathroom')" class="w-full text-left p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-teal-500 room-btn" data-room="bathroom">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🚿</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Bathroom</div>
+                                    <div class="text-xs text-gray-600">Recently renovated</div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <hr class="my-6">
+                    
+                    <h4 class="text-md font-semibold text-gray-800 mb-3">🎮 Tour Options</h4>
+                    <div class="space-y-3">
+                        <button onclick="startAutoTour()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg">
+                            ▶️ Start Auto Tour
+                        </button>
+                        <button onclick="toggleMeasurements()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-semibold transition-all duration-300">
+                            📏 Show Measurements
+                        </button>
+                        <button onclick="toggleHotspots()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-semibold transition-all duration-300">
+                            💡 Toggle Hotspots
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <h5 class="font-semibold text-blue-800 mb-2">💡 Navigation Tips</h5>
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• Click rooms to navigate</li>
+                            <li>• Use rotation controls to look around</li>
+                            <li>• Enable measurements for room sizes</li>
+                            <li>• Hotspots show key features</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+}
+
+// Virtual Tour Control Functions
+function rotateVirtualTour(direction) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    notification.textContent = `🔄 Rotating ${direction}...`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 1500);
+    
+    // Simulate rotation effect
+    const tourView = document.getElementById('tourView');
+    if (tourView) {
+        tourView.style.transform = direction === 'left' ? 'rotateY(-5deg)' : 'rotateY(5deg)';
+        setTimeout(() => {
+            tourView.style.transform = 'rotateY(0deg)';
+        }, 500);
+    }
+}
+
+function switchRoom(roomType) {
+    const roomName = document.getElementById('currentRoomName');
+    const roomButtons = document.querySelectorAll('.room-btn');
+    
+    // Update active button
+    roomButtons.forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-room="${roomType}"]`).classList.add('active');
+    
+    // Update room display
+    const rooms = {
+        'living': { name: 'Living Room', icon: '🛋️', desc: 'Spacious living area with modern furnishing' },
+        'kitchen': { name: 'Kitchen', icon: '🍳', desc: 'Fully equipped kitchen with premium appliances' },
+        'bedroom': { name: 'Master Bedroom', icon: '🛏️', desc: 'Comfortable bedroom with ample storage' },
+        'bathroom': { name: 'Bathroom', icon: '🚿', desc: 'Modern bathroom with elegant fixtures' }
+    };
+    
+    if (roomName && rooms[roomType]) {
+        roomName.textContent = rooms[roomType].name;
+        
+        // Show transition notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+        notification.textContent = `🚶 Moving to ${rooms[roomType].name}...`;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
+    }
+}
+
+function startAutoTour() {
+    const rooms = ['living', 'kitchen', 'bedroom', 'bathroom'];
+    let currentRoomIndex = 0;
+    
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    notification.textContent = '▶️ Starting Auto Tour...';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 2000);
+    
+    // Auto tour sequence
+    const autoTourInterval = setInterval(() => {
+        currentRoomIndex = (currentRoomIndex + 1) % rooms.length;
+        switchRoom(rooms[currentRoomIndex]);
+        
+        if (currentRoomIndex === 0) {
+            clearInterval(autoTourInterval);
+            const completeNotification = document.createElement('div');
+            completeNotification.className = 'fixed top-4 right-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            completeNotification.textContent = '✅ Auto Tour Complete!';
+            document.body.appendChild(completeNotification);
+            
+            setTimeout(() => {
+                completeNotification.remove();
+            }, 3000);
+        }
+    }, 3000);
+}
+
+function toggleMeasurements() {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    notification.textContent = '📏 Room measurements displayed';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 2500);
+    
+    // Add measurement overlay (simulated)
+    const tourView = document.getElementById('tourView');
+    if (tourView) {
+        const existingMeasurements = tourView.querySelector('.measurements');
+        if (existingMeasurements) {
+            existingMeasurements.remove();
+        } else {
+            const measurements = document.createElement('div');
+            measurements.className = 'measurements absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-sm';
+            measurements.innerHTML = `
+                <div class="bg-black bg-opacity-50 p-3 rounded-lg">
+                    <div>📐 Length: 4.5m</div>
+                    <div>📐 Width: 3.2m</div>
+                    <div>📐 Height: 2.8m</div>
+                    <div>📐 Area: 14.4m²</div>
+                </div>
+            `;
+            tourView.appendChild(measurements);
+        }
+    }
+}
+
+function toggleHotspots() {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    notification.textContent = '💡 Interactive hotspots toggled';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 2500);
+    
+    // Add hotspot indicators (simulated)
+    const tourView = document.getElementById('tourView');
+    if (tourView) {
+        const existingHotspots = tourView.querySelectorAll('.hotspot');
+        if (existingHotspots.length > 0) {
+            existingHotspots.forEach(hotspot => hotspot.remove());
+        } else {
+            const hotspots = [
+                { x: '25%', y: '30%', label: 'Premium Fixtures' },
+                { x: '75%', y: '40%', label: 'Natural Lighting' },
+                { x: '50%', y: '60%', label: 'Spacious Layout' }
+            ];
+            
+            hotspots.forEach(hotspot => {
+                const hotspotEl = document.createElement('div');
+                hotspotEl.className = 'hotspot absolute bg-red-500 w-4 h-4 rounded-full animate-pulse cursor-pointer';
+                hotspotEl.style.left = hotspot.x;
+                hotspotEl.style.top = hotspot.y;
+                hotspotEl.title = hotspot.label;
+                hotspotEl.onclick = () => {
+                    alert(`💡 ${hotspot.label}: This feature highlights the quality and design of this area.`);
+                };
+                tourView.appendChild(hotspotEl);
+            });
+        }
+    }
+}
+
+// Helper function to escape HTML to prevent XSS
+function escapeHTML(str) {
+    if (!str) return '';
+    if (typeof str !== 'string') {
+        str = String(str);
+    }
+    
+    // Create a text node and get its HTML representation
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// More comprehensive HTML escaping for security-critical cases
+function escapeHTMLStrict(str) {
+    if (!str) return '';
+    if (typeof str !== 'string') {
+        str = String(str);
+    }
+    
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
 }
 
 function scheduleViewing(listingId, title) {
@@ -3708,11 +3993,11 @@ function openBookingModal(listingId, title, price) {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                <input type="text" id="guestName" value="${currentUser.username}" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="text" id="guestName" value="${escapeHTMLStrict(currentUser.username)}" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" id="guestEmail" value="${currentUser.email}" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="email" id="guestEmail" value="${escapeHTMLStrict(currentUser.email)}" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                         <div class="mt-4">
@@ -4094,7 +4379,7 @@ function showBookingConfirmation(booking) {
                 </div>
 
                 <p class="text-xs text-gray-500 mt-4">
-                    A confirmation email has been sent to ${booking.guest.email}
+                    A confirmation email has been sent to ${escapeHTMLStrict(booking.guest.email)}
                 </p>
             </div>
         </div>
@@ -4245,8 +4530,8 @@ async function viewBookingDetails(bookingId) {
                         <div>
                             <h4 class="font-semibold text-gray-800 mb-3">Guest Information</h4>
                             <div class="space-y-2 text-sm">
-                                <p><strong>Name:</strong> ${booking.guest.name}</p>
-                                <p><strong>Email:</strong> ${booking.guest.email}</p>
+                                <p><strong>Name:</strong> ${escapeHTMLStrict(booking.guest.name)}</p>
+                                <p><strong>Email:</strong> ${escapeHTMLStrict(booking.guest.email)}</p>
                                 <p><strong>Phone:</strong> ${booking.guest.phone || 'Not provided'}</p>
                             </div>
                         </div>
